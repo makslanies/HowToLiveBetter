@@ -34,7 +34,7 @@ const scrub = (s) => String(s).replace(/(sk-|Bearer\s+)[A-Za-z0-9_.-]+/g, '$1***
 
 // Журнал суточного расхода: тариф даёт 200 обращений в сутки и 10 в 10 секунд. blockedUntil — когда сбросится квота.
 const USAGE = 'ru-work/research/usage.json';
-const DAILY = Number(opt('daily-limit', '190'));
+const DAILY = Number(opt('daily-limit', '480'));   // тариф PRO: 500 обращений в сутки (с 2026-10-06; раньше было 200)
 let lastCall = 0;
 function usageGuard() {
   const u = existsSync(USAGE) ? JSON.parse(readFileSync(USAGE, 'utf8')) : { blockedUntil: 0, calls: [] };

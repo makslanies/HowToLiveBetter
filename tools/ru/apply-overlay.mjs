@@ -17,7 +17,8 @@ for (const name of names) {
   for (const { entry, lines, kind } of items) {
     const i = parts.findIndex((p) => p.startsWith(`### ${entry}. `));
     if (i < 0) { console.error(`  ${name}: записи ${entry} нет`); continue; }
-    if (kind === 'price') parts[i] = parts[i].replace(/^- Цена в России[^\n]*\n/gm, '');   // обновлённые цены заменяют старую строку, а не дописываются второй
+    if (kind === 'price') parts[i] = parts[i].replace(/^- Цена в России[^\n]*\n/gm, '');
+    if (kind === 'russia') parts[i] = parts[i].replace(/^- (?:(?:Простыми словами|Затраты|Выгода|Примечания) \(Россия\)|Источники \(Россия\)):[^\n]*\n/gm, '');   // новый черновик российских полей заменяет прежний из слоя   // обновлённые цены заменяют старую строку, а не дописываются второй
     // Supplements belong to the entry, not to a section footer such as «Лицензия».
     const footer = parts[i].search(/^## /m);
     if (footer >= 0) {
