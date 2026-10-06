@@ -5,6 +5,7 @@
 //   publish   записать подтверждённые цены в слой правок ru-work/overlay (строка «- Цена в России (…)»)
 //   node tools/ru/prices.mjs scan | research [--limit 20] | verify | review | publish
 //   review --file <JSON>: ручная рецензия [{what, unit, ok, reason}]
+//   import-manual --file <JSON>: результаты ручной проверки страниц, без API
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { parseBook, keyOf } from './parse.mjs';
 
@@ -34,6 +35,27 @@ async function chat(system, user) {
 }
 const isPeriodic = (unit) => /курс|месяц|год|день|недел|сутк/i.test(unit || '');
 const pool = async (list, n, fn) => { let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < list.length) { const x = list[i++]; await fn(x); } })); };
+
+if (cmd === 'import-manual') {
+  const ver = load('verified.json', {});
+  const decisions = JSON.parse(readFileSync(opt('file', ''), 'utf8'));
+  for (const d of decisions) {
+    if (!ver[d.key] || !['accepted', 'rejected'].includes(d.status) || !d.reason) throw new Error(`Некорректное ручное решение: ${d.key}`);
+    if (d.status !== 'accepted') continue;
+    const good = d.good || [];
+    if (new Set(good.map((g) => new URL(g.url).hostname.replace(/^www\./, ''))).size < 2 || good.some((g) => !/^https?:/.test(g.url) || !g.quote || !Number.isFinite(g.price_rub) || g.price_rub <= 0)) throw new Error(`Нужны две независимые страницы с ценой: ${d.key}`);
+    if (!(d.min_rub > 0 && d.max_rub >= d.min_rub) || !d.unit || !/^\d{4}-\d{2}-\d{2}$/.test(d.at)) throw new Error(`Не определены цена, единица или дата: ${d.key}`);
+    if (d.examples && d.examples.some((e) => !e.label || !e.unit || !Number.isFinite(e.price_rub) || !good.some((g) => g.url === e.url && g.price_rub === e.price_rub))) throw new Error(`Пример не подтверждён источником: ${d.key}`);
+  }
+  for (const d of decisions) {
+    const old = ver[d.key];
+    if (d.status === 'accepted') ver[d.key] = { ...old, ...d, unit: old.unit, display_unit: d.unit, pack: d.display_pack || d.pack, price_note: d.price_note || d.reason, ok: true, review: true, review_by: 'manual-live', review_reason: d.reason };
+    else Object.assign(old, { review: false, review_by: 'manual-live', review_reason: d.reason });
+  }
+  save('verified.json', ver);
+  console.error(`Ручная проверка: принято ${decisions.filter((d) => d.status === 'accepted').length}, отклонено ${decisions.filter((d) => d.status === 'rejected').length}`);
+  process.exit(0);
+}
 
 // ---------- 1. scan ----------
 if (cmd === 'scan') {
@@ -161,22 +183,25 @@ if (cmd === 'publish') {
     return /^[А-ЯЁ][а-яё]/.test(x) ? x[0].toLowerCase() + x.slice(1) : x;   // «Упаковка» → «упаковка», сокращения не трогаем
   };
   const byEntry = {};
-  for (const v of Object.values(ver).filter((x) => x.ok && x.review === true && Number.isFinite(x.min_rub) && Number.isFinite(x.max_rub) && x.min_rub > 0 && x.max_rub >= x.min_rub && x.max_rub / x.min_rub <= 15 && (!isPeriodic(x.unit) || (x.pack && x.packs_min > 0 && x.packs_max >= x.packs_min)))) for (const k of v.entries) (byEntry[k] ||= []).push(v);
+  for (const v of Object.values(ver).filter((x) => x.ok && x.review === true && Number.isFinite(x.min_rub) && Number.isFinite(x.max_rub) && x.min_rub > 0 && x.max_rub >= x.min_rub && x.max_rub / x.min_rub <= 15 && (x.examples?.length || !isPeriodic(x.display_unit || x.unit) || (x.price_only && x.pack) || (x.pack && x.packs_min > 0 && x.packs_max >= x.packs_min)))) for (const k of v.entries) (byEntry[k] ||= []).push(v);
   mkdirSync('ru-work/overlay', { recursive: true });
   const perFile = {};
   for (const [key, list] of Object.entries(byEntry)) {
     const [sec, n] = key.split('-'); const f = files[sec]; if (!f) continue;
     const date = list[0].at.split('-').reverse().join('.');
     const range = (a, b) => (a === b ? fmt(a) : `от ${fmt(a)} до ${fmt(b)}`);
-    const parts = list.map((v) => {
+    const unique = [...new Map(list.map((v) => [JSON.stringify([v.what, v.display_unit || v.unit, v.pack, v.min_rub, v.max_rub, v.examples]), v])).values()];
+    const parts = unique.map((v) => {
+      const unit = v.display_unit || v.unit;
+      if (v.examples?.length) return `${v.what}: примеры предложений — ${v.examples.map((e) => `${e.label}: ${e.from ? 'от ' : ''}${fmt(e.price_rub)} ₽ ${e.unit}`).join('; ')}${v.price_note ? '. ' + v.price_note.replace(/[.\s]+$/, '') : ''}`;
+      if (v.price_only && v.pack) return `${v.what}: ${clean(v.pack, Infinity)} стоит ${range(v.min_rub, v.max_rub)} ₽${v.price_note ? '. ' + v.price_note.replace(/[.\s]+$/, '') : '. Указана цена упаковки, а не расход за месяц, год или полный курс'}`;
       if (v.pack && v.packs_min > 0 && v.packs_max >= v.packs_min) {
         const packTxt = clean(v.pack, Infinity); const packOk = Boolean(packTxt);
-        if (v.price_only) return `${v.what}: ${packOk ? packTxt : 'одна упаковка'} стоит ${range(v.min_rub, v.max_rub)} ₽. Стоимость полного курса зависит от назначенной дозировки и длительности; цена упаковки не является ценой курса`;
-        const per = v.unit.replace(/^за /, 'на ');
+        const per = unit.replace(/^за /, 'на ');
         const n = v.packs_min === v.packs_max ? v.packs_min : `${v.packs_min}–${v.packs_max}`;
         return `${v.what}: ${packOk ? packTxt : 'одна упаковка'} стоит ${range(v.min_rub, v.max_rub)} ₽; ${per} расход — около ${n} уп., то есть примерно ${range(v.packs_min * v.min_rub, v.packs_max * v.max_rub)} ₽${v.calc ? ' (расчёт: ' + clean(v.calc, Infinity) + ')' : ''}`;
       }
-      return `${v.what}${v.unit ? ' (' + v.unit + ')' : ''}: ${range(v.min_rub, v.max_rub)} ₽`;
+      return `${v.what}${unit ? ' (' + unit + ')' : ''}: ${range(v.min_rub, v.max_rub)} ₽${v.price_note ? '. ' + v.price_note.replace(/[.\s]+$/, '') : ''}`;
     });
     const srcs = [...new Set(list.flatMap((v) => v.good.map((g) => g.url)))];
     const line = `- Цена в России (ориентир на ${date}): ${parts.join('; ')}. Цены в российских магазинах и клиниках меняются и зависят от региона. Источники цен: ${srcs.map((u) => `<${u}>`).join('; ')}`;

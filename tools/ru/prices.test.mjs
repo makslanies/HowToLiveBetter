@@ -32,13 +32,41 @@ test('publish excludes unreviewed and rejected prices and removes stale overlay 
     const first = JSON.parse(readFileSync(join(dir, 'ru-work/overlay/01-first.json'), 'utf8'));
     assert.deepEqual(first.map((x) => x.entry), [2, 4]);
     assert.match(first[0].lines[0], /0,5/);
-    assert.match(first[1].lines[0], /не является ценой курса/);
+    assert.match(first[1].lines[0], /не расход за месяц, год или полный курс/);
     assert.doesNotMatch(first[1].lines[0], /нужно около/);
     const second = JSON.parse(readFileSync(join(dir, 'ru-work/overlay/02-second.json'), 'utf8'));
     assert.deepEqual(second, [{ entry: 2, lines: ['- В России: сохранить'] }]);
     const before = readFileSync(join(dir, 'ru-work/overlay/01-first.json'), 'utf8');
     run();
     assert.equal(readFileSync(join(dir, 'ru-work/overlay/01-first.json'), 'utf8'), before);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('manual import is atomic and requires independent sources and supported examples', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ru-prices-import-'));
+  try {
+    mkdirSync(join(dir, 'ru-work/prices'), { recursive: true });
+    const path = join(dir, 'ru-work/prices/verified.json');
+    const original = JSON.stringify({ item: { unit: 'за курс', entries: ['1-1'], review: false } });
+    writeFileSync(path, original);
+    const good = [{ url: 'https://one.example/p', price_rub: 100, quote: '100' }, { url: 'https://two.example/p', price_rub: 200, quote: '200' }];
+    const accepted = { key: 'item', status: 'accepted', reason: 'Только упаковка', what: 'товар', unit: 'за упаковку', at: '2026-10-06', min_rub: 100, max_rub: 200, good };
+    const run = (decisions) => {
+      const file = join(dir, 'decisions.json');
+      writeFileSync(file, JSON.stringify(decisions));
+      return spawnSync(process.execPath, [fileURLToPath(new URL('./prices.mjs', import.meta.url)), 'import-manual', '--file', file], { cwd: dir, encoding: 'utf8' });
+    };
+    assert.notEqual(run([accepted, { key: 'missing', status: 'rejected', reason: 'Нет' }]).status, 0);
+    assert.equal(readFileSync(path, 'utf8'), original);
+    assert.notEqual(run([{ ...accepted, good: [good[0], { ...good[1], url: 'https://www.one.example/p2' }] }]).status, 0);
+    assert.notEqual(run([{ ...accepted, examples: [{ label: 'пример', unit: 'за упаковку', url: good[0].url, price_rub: 999 }] }]).status, 0);
+    assert.equal(run([accepted]).status, 0);
+    const imported = JSON.parse(readFileSync(path, 'utf8')).item;
+    assert.equal(imported.unit, 'за курс');
+    assert.equal(imported.display_unit, 'за упаковку');
+    assert.equal(imported.review, true);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
