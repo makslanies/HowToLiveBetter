@@ -4,6 +4,7 @@
 //   node tools/ru/build-index.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { stats, faq } from './geo-data.mjs';
+import { COUNTRY_GUIDE } from './country-fields.mjs';
 
 // репозиторий русской версии (ссылка в шапке); оригинал остаётся только в подвале и README как указание авторов
 const MY_REPO = (process.env.RU_REPO_URL || 'https://github.com/makslanies/HowToLiveBetter').replace(/\/$/, '');
@@ -219,6 +220,38 @@ sub("  renderText(f.cost, e.cost, terms);\n", "  renderText(f.cost, e.cost, term
 sub('<p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него:', '<p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него: <a href="contents/">оглавление со ссылками на все разделы и пункты</a>,');
 sub('при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>.</div>', 'при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>. <a href="contents/">Оглавление без JavaScript</a>.</div>');
 
+// Country-aware fields use the same model as static pages and offline output.
+const countryModel = readFileSync('tools/ru/country-fields.mjs', 'utf8').replace(/^export /gm, '');
+sub('function renderCard(card, terms, key){', countryModel + '\n' + snip('country-card.js') + '\nfunction renderCard(card, terms, key){');
+sub('if ((m = /^- Затраты:\\s*(.*)$/.exec(line))) entry.cost = m[1];', 'if (readCountryField(entry, line)) continue;\n      else if ((m = /^- Затраты:\\s*(.*)$/.exec(line))) entry.cost = m[1];');
+sub('entry.src = m[1];', 'entry.src = m[1]; entry.srcOriginal = m[1];');
+// Braces matter: retain the else-if parser chain.
+sub('else if ((m = /^- Источники:\\s*(.*)$/.exec(line))) entry.src = m[1]; entry.srcOriginal = m[1];', 'else if ((m = /^- Источники:\\s*(.*)$/.exec(line))) { entry.src = m[1]; entry.srcOriginal = m[1]; }');
+sub("else if ((m = /^- Источники \\(Россия\\):\\s*(.*)$/.exec(line))) entry.src += ' ; Россия: ' + m[1];", "else if ((m = /^- Источники \\(Россия\\):\\s*(.*)$/.exec(line))) { entry.srcRussia = m[1]; entry.src += ' ; Россия: ' + m[1]; }");
+sub("else if ((m = /^- Источники цен \\(Россия\\):\\s*(.*)$/.exec(line))) entry.src += ' ; Цены в России: ' + m[1];", "else if ((m = /^- Источники цен \\(Россия\\):\\s*(.*)$/.exec(line))) { entry.srcPrices = m[1]; entry.src += ' ; Цены в России: ' + m[1]; }");
+sub('<div class="k ru-k" hidden>В России (российские данные)</div><div class="v ru" hidden></div>', '');
+sub('<p class="human"></p>', '<div class="human"></div>');
+sub('  renderText(f.cost, e.cost, terms);', "  const sc = SCOPE[e.sec + '-' + e.n]; const view = countryView(e, sc);\n  renderCountryField(f.cost, 'cost', e, view, terms);");
+sub('  f.human.hidden = !e.human;\n  if (e.human) renderText(f.human, e.human, terms);', "  renderCountryField(f.human, 'human', e, view, terms);");
+sub('  renderText(f.gain, e.gain, terms);', "  renderCountryField(f.gain, 'gain', e, view, terms);");
+re(/  \{ const sc = SCOPE\[e.sec \+ '-' \+ e.n\]; const on = !!sc[\s\S]*?if \(e.ru\) renderText\(f.ru, e.ru, terms\);/, "  f.scope.hidden = !view.notice;\n  f.scope.textContent = view.notice;");
+sub('  renderText(f.note, e.note, terms);', "  renderCountryField(f.note, 'note', e, view, terms);");
+sub('const nSrc = renderSrc(f.src, e.src, terms);', 'const nSrc = renderCountrySources(f.src, e, sc, terms);');
+sub("'Есть российские данные'", "'Российские данные: частично'");
+sub('`Доказательность ${e.grade}`', '`Доказательность ${e.grade} · исходная версия`');
+sub("'Выгодность: ' +", "'Выгодность исходной версии: ' +");
+sub("  const inBody = (e.title+e.human+e.cost+e.gain+e.note).toLowerCase();", "  const inBody = (e.title+e.human+e.cost+e.gain+e.note+e.ru).toLowerCase();");
+sub('p.textContent = e.human;', "p.textContent = countrySummary(e, SCOPE[e.sec + '-' + e.n]);");
+sub('    CUR_SEC = s.n;\n    for (const para of s.intro){', "    const countryIntro = document.createElement('p'); countryIntro.className = 'scope'; countryIntro.textContent = COUNTRY_GUIDE + ' Российские данные есть у ' + s.entries.filter(e => e.ru).length + ' из ' + s.entries.length + ' пунктов раздела. Введение ниже относится к исходной версии.'; block.append(countryIntro);\n    CUR_SEC = s.n;\n    for (const para of s.intro){");
+sub('a.title = e.title;', "a.title = e.title + ' · ' + countryStatus(e, SCOPE[e.sec + '-' + e.n]);");
+sub("ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'), ", '');
+sub('.scope{font-size:13px', '.country-part + .country-part{margin-top:10px}.source-country{font-weight:600;margin:12px 0 6px}\n.scope{font-size:13px');
+re(/Законы, органы, телефоны и выплаты в тексте китайские \(КНР\)\. Там, где проверена российская версия, под пунктом есть строка «В России»\. Где её нет, российская проверка ещё не проведена\./, COUNTRY_GUIDE);
+sub('<div class="gt">Выгодность <small>', '<div class="gt">Выгодность исходной версии <small>');
+sub('<div class="gt">Доказательность <small>', '<div class="gt">Доказательность исходной версии <small>');
+sub('<p>Тексты и теги берутся', '<p>Фильтры затрат и оценки относятся к исходной версии. Российские условия смотрите в полях с подписью «Россия».</p>\n    <p>Тексты и теги берутся');
+
+s = s.replace(/^[\t ]+$/gm, '');
 writeFileSync('ru/index.html', s);
 const left = s.split('\n').map((l, i) => [i + 1, l]).filter(([, l]) => /[一-鿿]/.test(l) && !/^\s*(\/\/|\/\*|\*)/.test(l) && !/\/\/.*[一-鿿]/.test(l.replace(/'[^']*'/g, '')) );
 console.error(`ru/index.html записан, ${s.length} знаков. Строк с китайским вне комментариев: ${left.length}`);

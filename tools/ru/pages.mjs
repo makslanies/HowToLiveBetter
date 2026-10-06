@@ -4,6 +4,7 @@
 import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { parseBook, keyOf, LENS, LABEL } from './parse.mjs';
+import { COUNTRY_GUIDE, countryView, countrySummary, countryStatus, sourceGroups } from './country-fields.mjs';
 
 const TITLE = 'Руководство по жизни с высокой отдачей';
 const UPSTREAM = 'https://github.com/eternity4719/HowToLiveBetter';
@@ -105,7 +106,7 @@ ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\
 <main>
 ${body}
 </main>
-<footer>Обновлено: <time datetime="${new Date().toISOString().slice(0, 10)}">${new Date().toISOString().slice(0, 10).split('-').reverse().join('.')}</time>. Неофициальный русский перевод книги «高性价比人生指南» по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru" rel="noopener">CC BY 4.0</a>. Законы, органы и выплаты в тексте китайские (КНР); российская версия проверена только там, где есть строка «В России».<br><a href="${root}privacy/">Политика конфиденциальности</a> · <a href="#cookie-settings" data-cookie-settings>Настройки cookie</a></footer>
+<footer>Обновлено: <time datetime="${new Date().toISOString().slice(0, 10)}">${new Date().toISOString().slice(0, 10).split('-').reverse().join('.')}</time>. Неофициальный русский перевод книги «高性价比人生指南» по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru" rel="noopener">CC BY 4.0</a>. ${esc(COUNTRY_GUIDE)}<br><a href="${root}privacy/">Политика конфиденциальности</a> · <a href="#cookie-settings" data-cookie-settings>Настройки cookie</a></footer>
 <script src="${root}assets/analytics.js" defer></script>
 </body>
 </html>
@@ -114,12 +115,6 @@ ${body}
 
 // Пометка «что в пункте китайское, что российское» (ru/scope.json, классификация tools/ru/classify.mjs)
 const scopeBadge = (sc) => (!sc ? '' : `<li class="badge ${sc.t === 'u' ? 'hi' : 'warn'}">${sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны'}</li>`);
-const scopeNote = (sc, hasRu) => {
-  if (!sc || sc.t === 'u') return '';
-  const lead = sc.t === 'c' ? 'Пункт построен на китайских нормах (КНР): законы, органы, выплаты или номера в нём китайские.' : 'В пункте есть и общее для всех стран, и китайское (законы, органы, выплаты, номера).';
-  const tail = hasRu ? 'Российские данные есть в блоке «В России» ниже.' : 'Российская версия пока не проверена: переносить правила на другую страну нельзя.';
-  return `<p class="scope"><strong>Как в Китае.</strong> ${esc(lead)} ${esc(sc.why || '')} ${tail}</p>`;
-};
 
 export function generatePages({ out, site = '', relatedPath = 'ru/related.json' }) {
   const secs = parseBook();
@@ -149,27 +144,32 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
     // ссылки на пункты строим от корня сайта, чтобы не зависеть от глубины
     const rel = (related[keyOf(e)] || []).map((k) => byKey[k]).filter(Boolean);
     nRel += rel.length;
-    const srcItems = splitSrc(e.src).map((x) => `<li>${f(x)}</li>`).join('');
+    const sc = scope[keyOf(e)];
+    const view = countryView(e, sc);
+    const field = (name, key, human = false) => {
+      if (!e[key] && !view.russian) return '';
+      const original = e[key] ? `<p${human ? ' class="human"' : ''}>${view.labeled ? `<strong>${esc(view.original)}.</strong> ` : ''}${f(e[key])}</p>` : '';
+      const russian = view.russian ? `<p${human ? ' class="human"' : ''}><strong>Россия.</strong> ${f(view.russian[key])}</p>` : '';
+      return `<section class="country-field" data-field="${key}"><h2>${name}</h2>${original}${russian}${key === 'cost' && e.price ? `<h3>Цена в России (ориентир)</h3><p>${f(e.price)}</p>` : ''}</section>`;
+    };
+    const srcItems = sourceGroups(e, sc).map((g) => `<h3>${esc(g.title)}</h3><ol>${splitSrc(g.text).map((x) => `<li>${f(x)}</li>`).join('')}</ol>`).join('');
     const prev = flat[idx - 1], next = flat[idx + 1];
-    const badges = [e.ratio ? badge(`Выгодность: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade}`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), scopeBadge(scope[keyOf(e)]), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Есть российская проверка', 'hi') : ''].join('');
-    const desc = firstSentence(e.human || e.gain || e.title);
+    const badges = [e.ratio ? badge(`Выгодность исходной версии: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade} · исходная версия`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), scopeBadge(scope[keyOf(e)]), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Российские данные: частично') : ''].join('');
+    const desc = firstSentence(countrySummary(e, sc) || e.title);
     const canonical = url(`p/${keyOf(e)}/`);
     const body = `<nav class="crumbs" aria-label="Навигация"><a href="${root}contents/">Оглавление</a> › <a href="${root}s/${e.sec}/">${e.sec}. ${esc(sec.title)}</a> › пункт ${e.n}</nav>
 <article>
 <h1>${e.n}. ${esc(e.title)}</h1>
 <ul class="badges">${badges}</ul>
-${e.human ? `<p class="human">${f(e.human)}</p>` : ''}
-${scopeNote(scope[keyOf(e)], !!e.ru)}
-<h2>Затраты</h2>
-<p>${f(e.cost)}</p>
-${e.price ? `<h2>Цена в России (ориентир)</h2>\n<p>${f(e.price)}</p>` : ''}
-<h2>Выгода</h2>
-<p>${f(e.gain)}</p>
-${e.ru ? `<h2>В России (российские данные)</h2>\n<p>${f(e.ru)}</p>` : ''}
-${e.note ? `<h2>Примечания</h2>\n<p>${f(e.note)}</p>` : ''}
-<section class="src"><h2>Источники</h2>\n<ol>${srcItems}</ol></section>
+${view.notice ? `<p class="scope">${esc(view.notice)}</p>` : ''}
+<p class="note">Оценки выше относятся к исходной версии; отдельная оценка российского варианта не проводилась.</p>
+${field('Простыми словами', 'human', true)}
+${field('Затраты', 'cost')}
+${field('Выгода', 'gain')}
+${field('Примечания', 'note')}
+<section class="src"><h2>Источники</h2>\n${srcItems}</section>
 </article>
-${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul>${rel.map((r) => `<li><a href="${root}p/${keyOf(r)}/">Раздел ${r.sec}, пункт ${r.n}: ${esc(r.title)}</a></li>`).join('')}</ul></aside>` : ''}
+${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul>${rel.map((r) => `<li><a href="${root}p/${keyOf(r)}/">Раздел ${r.sec}, пункт ${r.n}: ${esc(r.title)}</a><span class="sub">${esc(countryStatus(r, scope[keyOf(r)]))}</span></li>`).join('')}</ul></aside>` : ''}
 <nav class="pager" aria-label="Соседние пункты"><span>${prev ? `← <a href="${root}p/${keyOf(prev)}/">${prev.sec}.${prev.n} ${esc(prev.title.slice(0, 50))}…</a>` : ''}</span><span>${next ? `<a href="${root}p/${keyOf(next)}/">${next.sec}.${next.n} ${esc(next.title.slice(0, 50))}…</a> →` : ''}</span></nav>
 <p class="note"><a href="${root}#e-${e.sec}-${e.n}">Открыть этот пункт в поиске с фильтрами</a></p>`;
     const cites = [...new Set([...(e.src.matchAll(/https?:\/\/[^\s<>()；;]+/g))].map((m) => m[0].replace(/[.,;]+$/, '')))].slice(0, 8);
@@ -185,9 +185,10 @@ ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul
     const c = { ...makeCtx(secs, root), root };
     const r = (t, o = {}) => { const x = inline(t, c, { sec: s.n, bare: true, ...o }); nLinks += x.links; return x.html; };
     const intro = s.intro.map((p) => `<p>${r(p)}</p>`).join('\n');
-    const list = s.entries.map((e) => `<li><a href="${root}p/${keyOf(e)}/">${e.n}. ${esc(e.title)}</a><span class="sub">${esc(firstSentence(e.human || e.gain, 150))}</span></li>`).join('\n');
+    const list = s.entries.map((e) => `<li><a href="${root}p/${keyOf(e)}/">${e.n}. ${esc(e.title)}</a><span class="sub">${esc(countryStatus(e, scope[keyOf(e)]))}</span><span class="sub">${esc(firstSentence(e.human || e.gain, 150))}</span>${e.ru ? `<span class="sub">Россия: ${esc(firstSentence(countryView(e, scope[keyOf(e)]).russian.human, 150))}</span>` : ''}</li>`).join('\n');
     const body = `<nav class="crumbs" aria-label="Навигация"><a href="${root}contents/">Оглавление</a> › раздел ${s.n}</nav>
 <h1>${s.n}. ${esc(s.title)}</h1>
+<p class="scope">${esc(COUNTRY_GUIDE)} Российские данные есть у ${s.entries.filter((e) => e.ru).length} из ${s.entries.length} пунктов этого раздела. Введение ниже относится к исходной версии.</p>
 ${intro}
 <h2>Пункты раздела (${s.entries.length})</h2>
 <ol class="list" style="padding-left:0;list-style:none">${list}</ol>
@@ -205,6 +206,7 @@ ${intro}
     const items = secs.map((s) => { const x = inline(toc.get(s.n) || '', c, {}); nLinks += x.links; return `<li><a href="${root}s/${s.n}/">${s.n}. ${esc(s.title)}</a> <small>(${s.entries.length})</small><span class="sub">${x.html}</span></li>`; }).join('\n');
     const body = `<h1>${TITLE}: оглавление</h1>
 <p>${all.length} пунктов в ${secs.length} разделах. В каждом пункте: что вы тратите, что получаете, насколько надёжны доказательства и откуда сведения. Для поиска и фильтров по стоимости откройте <a href="${root}">главную страницу</a>.</p>
+<p class="scope">${esc(COUNTRY_GUIDE)}</p>
 <ol class="list" style="padding-left:0;list-style:none">${items}</ol>`;
     put('contents', page({ root, title: `Оглавление · ${TITLE}`, desc: `Оглавление: ${secs.length} разделов и ${all.length} пунктов руководства по жизни с высокой отдачей.`, canonical: url('contents/'), body }));
     urls.push('contents/', 'about/', 'privacy/');

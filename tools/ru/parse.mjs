@@ -1,6 +1,7 @@
 // Разбор ru/book/*.md в структуру: разделы, введения, записи с полями и тегом стоимости.
 // Общий для страниц (pages.mjs), «Смотрите также» (related.mjs) и проверок.
 import { readFileSync, readdirSync } from 'node:fs';
+import { readCountryField } from './country-fields.mjs';
 
 const COST_W = { money: { '0': 0, '少': 1, '多': 2 }, time: { '少': 0, '中': 1, '多': 2 }, will: { '否': 0, '些': 1, '是': 2 } };
 export const LENS = { '死亡率': 'для жизни', '金钱': 'для денег', '时间': 'для времени и сил', '自由': 'для свободы' };
@@ -32,13 +33,15 @@ export function parseBook(dir = 'ru/book') {
         else if ((x = /^- Простыми словами:\s*(.*)$/.exec(l))) e.human = x[1];
         else if ((x = /^- Выгода:\s*(.*)$/.exec(l))) e.gain = x[1];
         else if ((x = /^- Уровень доказательств:\s*([ABC])/.exec(l))) e.grade = x[1];
-        else if ((x = /^- Источники:\s*(.*)$/.exec(l))) e.src = x[1];
-        else if ((x = /^- Источники \(Россия\):\s*(.*)$/.exec(l))) e.src += ' ; Россия: ' + x[1];
-        else if ((x = /^- Источники цен \(Россия\):\s*(.*)$/.exec(l))) e.src += ' ; Цены в России: ' + x[1];
+        else if (readCountryField(e, l)) continue;
+        else if ((x = /^- Источники:\s*(.*)$/.exec(l))) e.srcOriginal = x[1];
+        else if ((x = /^- Источники \(Россия\):\s*(.*)$/.exec(l))) e.srcRussia = x[1];
+        else if ((x = /^- Источники цен \(Россия\):\s*(.*)$/.exec(l))) e.srcPrices = x[1];
         else if ((x = /^- В России:\s*(.*)$/.exec(l))) e.ru = (e.ru ? e.ru + ' ' : '') + x[1];
         else if ((x = /^- Примечание к «В России»:\s*(.*)$/.exec(l))) e.ru = (e.ru ? e.ru + ' ' : '') + x[1];
         else if ((x = /^- Примечания:\s*(.*)$/.exec(l))) e.note = x[1];
       }
+      e.src = [e.srcOriginal, e.srcRussia, e.srcPrices].filter(Boolean).join(' ; ');
       e.dispute = /^Спорно/.test(e.note);
       e.ratio = ratioOf(e.tag);
       sec.entries.push(e);

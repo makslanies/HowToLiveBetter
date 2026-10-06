@@ -48,7 +48,7 @@ export function validate() {
       for (const [name, re] of FIELDS) if (!re.test(p)) E(`${where}: нет поля «${name}»`);
       const g = /^- Уровень доказательств:\s*([ABC])/m.exec(p); if (g) stats[g[1]]++;
       if (/^- Примечания:\s*Спорно/m.test(p)) stats.disputes++;
-      if (/^- В России:/m.test(p)) stats.russia++;
+      if (/^- (?:В России|(?:Простыми словами|Затраты|Выгода|Примечания) \(Россия\)):/m.test(p)) stats.russia++;
       // китайский вне источников, комментариев и скобок
       for (const l of p.split('\n')) {
         if (/^(<!--|- Источники)/.test(l)) continue;

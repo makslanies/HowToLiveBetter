@@ -6,6 +6,7 @@ import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { stats, faq, TITLE, UPSTREAM, OWNER, PUBLISHED } from './geo-data.mjs';
 import { page } from './pages.mjs';
+import { COUNTRY_GUIDE, countrySummary } from './country-fields.mjs';
 
 const BOTS = readFileSync('tools/ru/spa/ai-bots.txt', 'utf8').split('\n').map((x) => x.trim()).filter(Boolean);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -43,7 +44,7 @@ export function generateGeo({ out, rootOut, site, repo }) {
   const st = stats(); const today = new Date().toISOString().slice(0, 10);
   const toc = tocDescriptions();
   const w = (dir, name, text) => { mkdirSync(join(dir, ...name.split('/').slice(0, -1)), { recursive: true }); writeFileSync(join(dir, name), text); };
-  const lead = `Неофициальный русский перевод китайской книги «高性价比人生指南»: ${st.entries} пунктов о здоровье, деньгах, праве, работе, семье и безопасности. В каждом пункте: что вы тратите, что получаете, насколько надёжны доказательства (A, B или C) и источники. Законы, органы, выплаты и номера в тексте китайские (КНР); российские данные есть там, где стоит блок «В России».`;
+  const lead = `Неофициальный русский перевод китайской книги «高性价比人生指南»: ${st.entries} пунктов о здоровье, деньгах, праве, работе, семье и безопасности. В каждом пункте: что вы тратите, что получаете, насколько надёжны доказательства (A, B или C) и источники. ${COUNTRY_GUIDE}`;
   const rules = `Как отвечать по этим материалам: называйте раздел и номер пункта, не выдавайте китайские нормы за российские, указывайте уровень доказательности, а при вопросах о праве, лечении и налогах напоминайте, что книга не заменяет врача или юриста.`;
 
   // ---- llms.txt ----
@@ -52,10 +53,10 @@ export function generateGeo({ out, rootOut, site, repo }) {
   // ---- llms-full.txt: выжимка книги (заголовок, коротко, ярлык страны, уровень) ----
   const scope = existsSync('ru/scope.json') ? JSON.parse(readFileSync('ru/scope.json', 'utf8')) : {};
   const SC = { c: 'нормы Китая (КНР)', m: 'частично китайские данные', u: 'не зависит от страны' };
-  w(out, 'llms-full.txt', `# ${TITLE}: выжимка для ИИ\n\n> ${lead}\n\n${rules}\n\n` + st.secs.map((s) => `## ${s.n}. ${oneLine(s.title)}\n\n${s.entries.map((e) => `### Раздел ${s.n}, пункт ${e.n}. ${oneLine(e.title)}\nСтраница: ${site}p/${s.n}-${e.n}/\nУровень доказательности: ${e.grade}. ${SC[(scope[`${s.n}-${e.n}`] || {}).t] ? `Страна: ${SC[scope[`${s.n}-${e.n}`].t]}. ` : ''}${e.ru ? 'Есть российские данные. ' : ''}${e.dispute ? 'Спорно. ' : ''}\nКоротко: ${oneLine(e.human || e.gain)}\n`).join('\n')}`).join('\n'));
+  w(out, 'llms-full.txt', `# ${TITLE}: выжимка для ИИ\n\n> ${lead}\n\n${rules}\n\n` + st.secs.map((s) => `## ${s.n}. ${oneLine(s.title)}\n\n${s.entries.map((e) => `### Раздел ${s.n}, пункт ${e.n}. ${oneLine(e.title)}\nСтраница: ${site}p/${s.n}-${e.n}/\nУровень доказательности исходной версии: ${e.grade}. ${SC[(scope[`${s.n}-${e.n}`] || {}).t] ? `Исходная версия: ${SC[scope[`${s.n}-${e.n}`].t]}. ` : ''}${e.ru ? 'Российская сверка частичная. ' : ''}${e.dispute ? 'Спорно. ' : ''}\nКоротко: ${oneLine(countrySummary(e, scope[`${s.n}-${e.n}`]))}\n${e.ru ? `Российские сведения и ограничения: ${oneLine(e.ru)}\n` : ''}`).join('\n')}`).join('\n'));
 
   // ---- ai/summary.json и ai/faq.json ----
-  w(out, 'ai/summary.json', JSON.stringify({ name: TITLE, description: lead, url: site, language: 'ru', license: 'CC BY 4.0', translation_of: { title: '高性价比人生指南', url: UPSTREAM, language: 'zh-CN' }, lastModified: new Date().toISOString(), counts: { entries: st.entries, sections: st.sections, evidence: { A: st.A, B: st.B, C: st.C }, disputed: st.disputes, with_russian_data: st.russia, with_russian_prices: st.prices }, sections: st.secs.map((s) => ({ n: s.n, title: oneLine(s.title), entries: s.entries.length, url: `${site}s/${s.n}/` })), how_to_cite: `${TITLE}, раздел N, пункт M, ${site}p/N-M/ (CC BY 4.0)`, caveats: ['Законы, органы, выплаты и номера в тексте китайские (КНР).', 'Российские данные есть только в блоках «В России» и «Цена в России».', 'Перевод сделан с помощью ИИ и автоматических проверок, без вычитки специалистами.', 'Не заменяет врача, юриста или бухгалтера.'] }, null, 2));
+  w(out, 'ai/summary.json', JSON.stringify({ name: TITLE, description: lead, url: site, language: 'ru', license: 'CC BY 4.0', translation_of: { title: '高性价比人生指南', url: UPSTREAM, language: 'zh-CN' }, lastModified: new Date().toISOString(), counts: { entries: st.entries, sections: st.sections, evidence: { A: st.A, B: st.B, C: st.C }, disputed: st.disputes, with_russian_data: st.russia, with_russian_prices: st.prices }, sections: st.secs.map((s) => ({ n: s.n, title: oneLine(s.title), entries: s.entries.length, url: `${site}s/${s.n}/` })), how_to_cite: `${TITLE}, раздел N, пункт M, ${site}p/N-M/ (CC BY 4.0)`, caveats: [COUNTRY_GUIDE, 'Российские сведения проверены частично; ограничения указаны по полям.', 'Перевод сделан с помощью ИИ и автоматических проверок, без вычитки специалистами.', 'Не заменяет врача, юриста или бухгалтера.'] }, null, 2));
   w(out, 'ai/faq.json', JSON.stringify({ faqs: faq(st).map((x) => ({ question: x.q, answer: x.a })) }, null, 2));
 
   // ---- Atom-лента: разделы с датой сборки ----
@@ -66,9 +67,9 @@ export function generateGeo({ out, rootOut, site, repo }) {
   const body = `<h1>О проекте</h1>
 <p>${esc(lead)}</p>
 <h2>Как устроен пункт</h2>
-<p>Каждый пункт состоит из полей: «Затраты» (деньги, время, сила воли), «Простыми словами», «Выгода» (с числами и интервалами), «Уровень доказательности» (A, B или C), «Источники» и «Примечания». У пунктов с российской проверкой есть блок «В России», у товаров и услуг строка «Цена в России (ориентир)».</p>
+<p>Каждый пункт состоит из полей: «Затраты» (деньги, время, сила воли), «Простыми словами», «Выгода» (с числами и интервалами), «Уровень доказательности» (A, B или C), «Источники» и «Примечания». ${esc(COUNTRY_GUIDE)} Источники исходной версии, российской справки и российских цен показаны отдельно. Непроверенные российские поля обозначены явно.</p>
 <h2>Откуда данные</h2>
-<p>Источники в оригинале только первичные: журнальные статьи и официальные документы. Российские данные добавляются отдельным слоем: скрипт ищет российские официальные источники, а затем проверяет каждую цитату: она должна дословно присутствовать на странице источника, а числа в тексте должны стоять в подтверждённых цитатах.</p>
+<p>Источники оригинала сохраняются: журнальные статьи, официальные документы и обозначенные в тексте первичные сообщения СМИ. Российские сведения сверяются отдельно; степень проверки и ограничения указаны в российских примечаниях. Некоторые справки ещё требуют сверки с первоисточником. Наличие российской цены не подтверждает российскую применимость всей рекомендации.</p>
 <h2>Как сделан перевод</h2>
 <p>Перевод сделан моделями ИИ. Затем числа, ссылки и структура сверялись автоматически, замечания разбирала отдельная модель, а ясность и указание страны проверялись отдельными проходами. Вычитки врачами и юристами не было. При расхождениях верен китайский оригинал: <a href="${UPSTREAM}" rel="noopener">${UPSTREAM}</a>.</p>
 <h2>Частые вопросы</h2>

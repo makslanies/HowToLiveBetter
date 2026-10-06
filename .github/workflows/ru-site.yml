@@ -55,6 +55,8 @@ jobs:
           node tools/ru/build.mjs \
             --repo-url "${{ github.server_url }}/${{ github.repository }}" \
             --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+      - name: Проверить структуру Китая и России на всех страницах
+        run: node --test tools/ru/country-fields.test.mjs tools/ru/prices.test.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: HowToLiveBetter-ru-offline
