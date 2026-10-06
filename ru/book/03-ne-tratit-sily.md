@@ -123,7 +123,8 @@
 - Уровень доказательств: B
 - Источники: Jahncke, Hygge, Halin, Green & Dimberg (2011). Open-plan office noise: Cognitive performance and restoration. Journal of Environmental Psychology. <https://doi.org/10.1016/j.jenvp.2011.07.002>
 - Примечания: Есть только одно лабораторное исследование. Больше всего в шуме мешает речь, слова которой можно разобрать. Наушники с белым шумом в этом помогают, но в этом исследовании наушники не проверяли.
-- Цена в России (ориентир на 06.10.2026): беруши (за пару): от 178 до 304 ₽. Цены в российских магазинах и клиниках меняются и зависят от региона. Источники цен: <https://medicamarket.ru/product/berushi_trevel_drim_polipropilenovye_so_shnurkom_2sht>; <https://uteka.ru/product/berushi-moldex-rockets-vkladishi-protivoshumnie-440187/>; <https://labinsk.asna.ru/cards/berushi_silikonovye_n2.html>
+- Цена в России (ориентир на 06.10.2026): беруши (за пару): от 178 до 304 ₽. Цены в российских магазинах и клиниках меняются и зависят от региона.
+- Источники цен (Россия): [medicamarket.ru — беруши: 178 ₽](https://medicamarket.ru/product/berushi_trevel_drim_polipropilenovye_so_shnurkom_2sht) (проверено 06.10.2026) ; Цены в России: [uteka.ru — беруши: 234 ₽](https://uteka.ru/product/berushi-moldex-rockets-vkladishi-protivoshumnie-440187/) (проверено 06.10.2026) ; Цены в России: [labinsk.asna.ru — беруши: 304 ₽](https://labinsk.asna.ru/cards/berushi_silikonovye_n2.html) (проверено 06.10.2026)
 
 ### 13. Не работайте больше 49 часов в неделю
 <!-- 成本标签: 钱=少 时间=少 毅力=些 收益=大 口径=时间 -->

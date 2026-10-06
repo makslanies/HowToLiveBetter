@@ -203,9 +203,13 @@ if (cmd === 'publish') {
       }
       return `${v.what}${unit ? ' (' + unit + ')' : ''}: ${range(v.min_rub, v.max_rub)} ₽${v.price_note ? '. ' + v.price_note.replace(/[.\s]+$/, '') : ''}`;
     });
-    const srcs = [...new Set(list.flatMap((v) => v.good.map((g) => g.url)))];
-    const line = `- Цена в России (ориентир на ${date}): ${parts.join('; ')}. Цены в российских магазинах и клиниках меняются и зависят от региона. Источники цен: ${srcs.map((u) => `<${u}>`).join('; ')}`;
-    (perFile[f] ||= []).push({ entry: Number(n), kind: 'price', lines: [line] });
+    const sources = [...new Map(unique.flatMap((v) => v.good.map((g) => {
+      const host = new URL(g.url).hostname.replace(/^www\./, '');
+      const label = `${host} — ${v.what.replace(/[\[\]]/g, '')}: ${fmt(g.price_rub)} ₽`;
+      return [`${g.url}|${v.what}`, `[${label}](${g.url}) (проверено ${v.at.split('-').reverse().join('.')})`];
+    }))).values()];
+    const line = `- Цена в России (ориентир на ${date}): ${parts.join('; ')}. Цены в российских магазинах и клиниках меняются и зависят от региона.`;
+    (perFile[f] ||= []).push({ entry: Number(n), kind: 'price', lines: [line, `- Источники цен (Россия): ${sources.join(' ; Цены в России: ')}`] });
   }
   // Удаляем отклонённые цены и из разделов, где больше нет принятых позиций.
   for (const f of new Set([...Object.keys(perFile), ...readdirSync('ru-work/overlay').filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, ''))])) {

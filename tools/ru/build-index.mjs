@@ -196,6 +196,7 @@ sub(".rel a{color:var(--brand-1)}", ".rel a{color:var(--brand-1)}\n.scope{font-s
 // строка «Цена в России (ориентир)» под «Затратами»
 sub("title:m[2].trim(), ru:'', cost:''", "title:m[2].trim(), price:'', ru:'', cost:''");
 sub("else if ((m = /^- Примечания:\\s*(.*)$/.exec(line))) entry.note = m[1];", "else if ((m = /^- Примечания:\\s*(.*)$/.exec(line))) entry.note = m[1];\n      else if ((m = /^- Цена в России[^:]*:\\s*(.*)$/.exec(line))) entry.price = m[1];");
+sub("else if ((m = /^- Цена в России[^:]*:\\s*(.*)$/.exec(line))) entry.price = m[1];", "else if ((m = /^- Цена в России[^:]*:\\s*(.*)$/.exec(line))) entry.price = m[1];\n      else if ((m = /^- Источники цен \\(Россия\\):\\s*(.*)$/.exec(line))) entry.src += ' ; Цены в России: ' + m[1];");
 sub('<div class="k">Затраты</div><div class="v cost"></div>', '<div class="k">Затраты</div><div class="v cost"></div>\n          <div class="k price-k" hidden>Цена в России (ориентир)</div><div class="v price" hidden></div>');
 sub("f:{scope:c.querySelector('.scope'),", "f:{price:c.querySelector('.price'), priceK:c.querySelector('.price-k'), scope:c.querySelector('.scope'),");
 sub("  renderText(f.cost, e.cost, terms);\n", "  renderText(f.cost, e.cost, terms);\n  f.price.hidden = f.priceK.hidden = !e.price;\n  if (e.price) renderText(f.price, e.price, terms);\n");

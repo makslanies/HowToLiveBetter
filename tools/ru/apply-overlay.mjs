@@ -12,7 +12,7 @@ for (const name of names) {
   if (!existsSync(path)) { console.error(`нет ${path}`); continue; }
   const items = JSON.parse(readFileSync(`ru-work/overlay/${name.replace(/\.md$/, '.json')}`, 'utf8'));
   // строки цен приходят только из слоя правок: стираем все прежние и накладываем актуальные (отсеянные позиции не остаются)
-  const parts = readFileSync(path, 'utf8').replace(/^- Цена в России[^\n]*\n/gm, '').split(/^(?=### )/m);
+  const parts = readFileSync(path, 'utf8').replace(/^- (?:Цена в России|Источники цен \(Россия\))[^\n]*\n/gm, '').split(/^(?=### )/m);
   let added = 0, skipped = 0;
   for (const { entry, lines, kind } of items) {
     const i = parts.findIndex((p) => p.startsWith(`### ${entry}. `));

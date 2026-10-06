@@ -15,7 +15,7 @@ test('publish excludes unreviewed and rejected prices and removes stale overlay 
     mkdirSync(join(dir, 'ru-work/overlay'), { recursive: true });
     writeFileSync(join(dir, 'ru/book/01-first.md'), '');
     writeFileSync(join(dir, 'ru/book/02-second.md'), '');
-    const base = { what: 'товар', unit: 'за штуку', ok: true, min_rub: 0.5, max_rub: 2, at: '2026-10-06', good: [{ url: 'https://example.org/price' }], entries: ['1-1'] };
+    const base = { what: 'товар', unit: 'за штуку', ok: true, min_rub: 0.5, max_rub: 2, at: '2026-10-06', good: [{ url: 'https://example.org/price', price_rub: 0.5 }], entries: ['1-1'] };
     json('ru-work/prices/verified.json', {
       pending: base,
       rejected: { ...base, review: false, entries: ['2-1'] },
@@ -32,6 +32,9 @@ test('publish excludes unreviewed and rejected prices and removes stale overlay 
     const first = JSON.parse(readFileSync(join(dir, 'ru-work/overlay/01-first.json'), 'utf8'));
     assert.deepEqual(first.map((x) => x.entry), [2, 4]);
     assert.match(first[0].lines[0], /0,5/);
+    assert.match(first[0].lines[1], /Источники цен \(Россия\): \[example.org — товар: 0,5 ₽\]/);
+    assert.match(first[0].lines[1], /проверено 06.10.2026/);
+    assert.doesNotMatch(first[0].lines[0], /https:/);
     assert.match(first[1].lines[0], /не расход за месяц, год или полный курс/);
     assert.doesNotMatch(first[1].lines[0], /нужно около/);
     const second = JSON.parse(readFileSync(join(dir, 'ru-work/overlay/02-second.json'), 'utf8'));
