@@ -4,3 +4,4 @@
 
 - **改这本书**（增删条目、改正文、动工具脚本）：规则全在 [CLAUDE.md](CLAUDE.md) 里，全部适用，先读完再动手。文件名叫 CLAUDE.md 只是历史原因，内容与工具无关。
 - **用这本书回答问题**（有人问该不该做、值不值、怎么选、出事了先做什么、能领哪笔钱、犯不犯法）：按 [skills/life-decision-guide/SKILL.md](skills/life-decision-guide/SKILL.md) 执行，先查条目再答，答复里注明出自第几节第几条。装到别的目录去用的办法见 [skills/life-decision-guide/README.md](skills/life-decision-guide/README.md)。
+- **Отвечать по русской версии книги** (вопрос на русском: стоит ли, выгодно ли, как выбрать, что делать в первую очередь, на что рассчитывать, не нарушает ли это закон): действуйте по [skills/life-decision-guide-ru/SKILL.md](skills/life-decision-guide-ru/SKILL.md). Книга китайская, поэтому законы, органы и телефоны в ней китайские, а там, где проверена российская версия, под пунктом стоит строка «В России:». Установка в другие папки описана в [skills/life-decision-guide-ru/README.md](skills/life-decision-guide-ru/README.md).
