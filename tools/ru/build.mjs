@@ -55,6 +55,8 @@ writeFileSync(`${OUT}/site/index.html`, indexHtml);
 cpSync('ru/README.md', `${OUT}/site/README.md`);
 cpSync('ru/book', `${OUT}/site/book`, { recursive: true });
 writeFileSync(`${OUT}/site/.nojekyll`, '');
+// подтверждение прав на сайт в Яндекс Вебмастере: файл с кодом в корне сайта
+writeFileSync(`${OUT}/site/yandex_0d7702b9fd71adfe.html`, '<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n    <body>Verification: 0d7702b9fd71adfe</body>\n</html>');
 writeFileSync(`${OUT}/site/robots.txt`, `User-agent: *\nAllow: /\n${SITE ? `Sitemap: ${SITE}sitemap.xml\n` : ''}`);
 
 if (existsSync('ru/related.json')) cpSync('ru/related.json', `${OUT}/site/related.json`);

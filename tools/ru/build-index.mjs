@@ -19,8 +19,8 @@ re(/<title>.*?<\/title>/, `<title>${TITLE} · меньше денег, врем�
 re(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${DESC}">`);
 re(/<meta name="keywords" content="[^"]*">/, '<meta name="keywords" content="долголетие,здоровье,доказательная медицина,экономия,защита от мошенников,первая помощь,юридические красные линии,безработица,выгодность">');
 re(/<meta name="author" content="[^"]*">/, `<meta name="author" content="${TITLE}">`);
-// подтверждение прав на сайт в Яндекс Вебмастере и Google Search Console (только на главной странице)
-sub('<meta name="viewport"', '<meta name="yandex-verification" content="0d7702b9fd71adfe" />\n<meta name="google-site-verification" content="wLzQi1ukjxvHhg1tqMvbR_SGp3KLrD01b5IqgRD3LW4" />\n<meta name="viewport"');
+// подтверждение прав на сайт в Google Search Console (только на главной странице); Яндекс подтверждается файлом в корне, его кладёт build.mjs
+sub('<meta name="viewport"', '<meta name="google-site-verification" content="wLzQi1ukjxvHhg1tqMvbR_SGp3KLrD01b5IqgRD3LW4" />\n<meta name="viewport"');
 re(/<meta property="og:site_name" content="[^"]*">/, `<meta property="og:site_name" content="${TITLE}">`);
 re(/<meta property="og:locale" content="[^"]*">/, '<meta property="og:locale" content="ru_RU">');
 re(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${TITLE}">`);
