@@ -32,8 +32,10 @@ test('publish excludes unreviewed and rejected prices and removes stale overlay 
     const first = JSON.parse(readFileSync(join(dir, 'ru-work/overlay/01-first.json'), 'utf8'));
     assert.deepEqual(first.map((x) => x.entry), [2, 4]);
     assert.match(first[0].lines[0], /0,5/);
-    assert.match(first[0].lines[1], /Источники цен \(Россия\): \[example.org — товар: 0,5 ₽\]/);
-    assert.match(first[0].lines[1], /проверено 06.10.2026/);
+    assert.match(first[0].lines[1], /Источники цен \(Россия\): example.org — товар: 0,5 ₽/);
+    assert.match(first[0].lines[1], /Проверено 06.10.2026/);
+    assert.match(first[0].lines[1], /<https:\/\/example.org\/price>/);
+    assert.doesNotMatch(first[0].lines[1], /\]\(/);
     assert.doesNotMatch(first[0].lines[0], /https:/);
     assert.match(first[1].lines[0], /не расход за месяц, год или полный курс/);
     assert.doesNotMatch(first[1].lines[0], /нужно около/);

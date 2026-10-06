@@ -206,7 +206,7 @@ if (cmd === 'publish') {
     const sources = [...new Map(unique.flatMap((v) => v.good.map((g) => {
       const host = new URL(g.url).hostname.replace(/^www\./, '');
       const label = `${host} — ${v.what.replace(/[\[\]]/g, '')}: ${fmt(g.price_rub)} ₽`;
-      return [`${g.url}|${v.what}`, `[${label}](${g.url}) (проверено ${v.at.split('-').reverse().join('.')})`];
+      return [`${g.url}|${v.what}`, `${label}. Проверено ${v.at.split('-').reverse().join('.')}. <${g.url}>`];
     }))).values()];
     const line = `- Цена в России (ориентир на ${date}): ${parts.join('; ')}. Цены в российских магазинах и клиниках меняются и зависят от региона.`;
     (perFile[f] ||= []).push({ entry: Number(n), kind: 'price', lines: [line, `- Источники цен (Россия): ${sources.join(' ; Цены в России: ')}`] });
