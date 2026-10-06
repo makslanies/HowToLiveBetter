@@ -2,3 +2,10 @@
 .junie/
 node_modules/
 dist/
+.env
+ru-work/research/pdf/
+ru-work/book.before-triage/
+.DS_Store
+ru-work/test/
+dist-ru/
+ru-work/
