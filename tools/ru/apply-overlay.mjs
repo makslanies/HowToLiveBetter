@@ -11,11 +11,13 @@ for (const name of names) {
   const path = `ru/book/${name}`;
   if (!existsSync(path)) { console.error(`нет ${path}`); continue; }
   const items = JSON.parse(readFileSync(`ru-work/overlay/${name.replace(/\.md$/, '.json')}`, 'utf8'));
-  const parts = readFileSync(path, 'utf8').split(/^(?=### )/m);
+  // строки цен приходят только из слоя правок: стираем все прежние и накладываем актуальные (отсеянные позиции не остаются)
+  const parts = readFileSync(path, 'utf8').replace(/^- Цена в России[^\n]*\n/gm, '').split(/^(?=### )/m);
   let added = 0, skipped = 0;
-  for (const { entry, lines } of items) {
+  for (const { entry, lines, kind } of items) {
     const i = parts.findIndex((p) => p.startsWith(`### ${entry}. `));
     if (i < 0) { console.error(`  ${name}: записи ${entry} нет`); continue; }
+    if (kind === 'price') parts[i] = parts[i].replace(/^- Цена в России[^\n]*\n/gm, '');   // обновлённые цены заменяют старую строку, а не дописываются второй
     const fresh = lines.filter((l) => !parts[i].includes(l));
     if (!fresh.length) { skipped++; continue; }
     parts[i] = parts[i].replace(/\n*$/, '\n') + fresh.join('\n') + '\n\n';

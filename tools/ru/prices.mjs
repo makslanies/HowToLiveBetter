@@ -3,7 +3,8 @@
 //   research  найти российские цены через веб-поиск OpenAI (по одному запросу на товар)                       → ru-work/prices/results.json
 //   verify    открыть страницы-источники и проверить, что цена там есть; нужно минимум 2 подтверждённых      → ru-work/prices/verified.json
 //   publish   записать подтверждённые цены в слой правок ru-work/overlay (строка «- Цена в России (…)»)
-//   node tools/ru/prices.mjs scan | research [--limit 20] | verify | publish
+//   node tools/ru/prices.mjs scan | research [--limit 20] | verify | review | publish
+//   review --file <JSON>: ручная рецензия [{what, unit, ok, reason}]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { parseBook, keyOf } from './parse.mjs';
 
@@ -112,13 +113,55 @@ if (cmd === 'verify') {
   console.error(`подтверждено (≥2 источника): ${all.filter((x) => x.ok).length} из ${all.length}`);
 }
 
+// ---------- 3б. review: независимая модель отклоняет сомнительные цены ----------
+if (cmd === 'review') {
+  const ver = load('verified.json', {}); const items = load('items.json', {});
+  const reviewFile = opt('file', '');
+  if (reviewFile) {
+    const decisions = JSON.parse(readFileSync(reviewFile, 'utf8'));
+    for (const d of decisions) {
+      const k = normKey(d.what) + '|' + normKey(d.unit || '');
+      if (!ver[k] || typeof d.ok !== 'boolean' || !d.reason) throw new Error(`Некорректная рецензия: ${k}`);
+    }
+    for (const d of decisions) {
+      const v = ver[normKey(d.what) + '|' + normKey(d.unit || '')];
+      v.review = d.ok; v.review_reason = d.reason; v.review_by = 'manual';
+      v.price_only = d.price_only === true;
+      if (d.display_pack) v.pack = d.display_pack;
+    }
+    save('verified.json', ver);
+    console.error(`Сохранено ручных решений: ${decisions.length}`);
+    process.exit(0);
+  }
+  const cn = {}; for (const v of Object.values(items)) for (const i of v.items) cn[normKey(i.what) + '|' + normKey(i.unit || '')] = i.cn_price;
+  const SYSTEM = 'Ты проверяющий. Дана позиция: что за товар или услуга, за какую единицу, как цена названа в китайском тексте книги, какой диапазон в рублях нашёл поиск, сколько упаковок взято на период, и цитаты из магазинов. Реши, можно ли показать читателю такую строку цены. Отклони (ok=false), если: в диапазон явно попали разные товары, дозировки или классы (например, обычный товар и премиальный набор); единица цены неясна или не совпадает с китайским описанием; число упаковок на период взято с ошибкой; цена правдоподобна только для другой единицы (упаковка вместо курса и наоборот); магазины продают иное, чем «what». Если сомневаешься, отклоняй. Ответ JSON: {"ok":true,"reason":"одно предложение"}';
+  const todo = Object.entries(ver).filter(([, v]) => v.ok && v.review === undefined);
+  console.error('рецензия: ' + todo.length + ' позиций');
+  await pool(todo, 4, async ([k, v]) => {
+    const key = normKey(v.what) + '|' + normKey(v.unit || '');
+    const d = await chat(SYSTEM, JSON.stringify({ what: v.what, unit: v.unit, китайский_текст: cn[key] || '', диапазон_руб: [v.min_rub, v.max_rub], упаковка: v.pack, упаковок_на_период: [v.packs_min, v.packs_max], цитаты: v.good.map((g) => ({ сайт: new URL(g.url).hostname, цитата: g.quote, цена: g.price_rub })) }));
+    v.review = d.ok === true; v.review_reason = String(d.reason || '').slice(0, 200);
+    save('verified.json', ver);
+  });
+  save('verified.json', ver);
+  const all = Object.values(ver).filter((x) => x.ok);
+  console.error('принято рецензентом: ' + all.filter((x) => x.review).length + ' из ' + all.length);
+  for (const x of all.filter((x) => x.review === false)) console.error('  ⛔ ' + x.what + ' (' + x.unit + '): ' + x.review_reason);
+}
+
 // ---------- 4. publish ----------
 if (cmd === 'publish') {
   const ver = load('verified.json', {});
   const files = Object.fromEntries(readdirSync('ru/book').filter((f) => /^\d\d-/.test(f)).map((f) => [String(Number(f.slice(0, 2))), f.replace(/\.md$/, '')]));
-  const fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const fmt = (n) => new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n);
+  const clean = (t, max) => {
+    let x = String(t || '').replace(/\(\s*\[[^\]]*\]\([^)]*\)\s*\)/g, '').replace(/\[[^\]]*\]\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+    x = x.split(/;\s*(?:цены|цена|в sources|sources)/i)[0].replace(/\bsources?\b/gi, '').replace(/\s+/g, ' ').replace(/[.\s]+$/, '');
+    if (x.length > max) x = x.slice(0, max - 1).replace(/\s+\S*$/, '') + '…';
+    return /^[А-ЯЁ][а-яё]/.test(x) ? x[0].toLowerCase() + x.slice(1) : x;   // «Упаковка» → «упаковка», сокращения не трогаем
+  };
   const byEntry = {};
-  for (const v of Object.values(ver).filter((x) => x.ok)) for (const k of v.entries) (byEntry[k] ||= []).push(v);
+  for (const v of Object.values(ver).filter((x) => x.ok && x.review === true && Number.isFinite(x.min_rub) && Number.isFinite(x.max_rub) && x.min_rub > 0 && x.max_rub >= x.min_rub && x.max_rub / x.min_rub <= 15 && (!isPeriodic(x.unit) || (x.pack && x.packs_min > 0 && x.packs_max >= x.packs_min)))) for (const k of v.entries) (byEntry[k] ||= []).push(v);
   mkdirSync('ru-work/overlay', { recursive: true });
   const perFile = {};
   for (const [key, list] of Object.entries(byEntry)) {
@@ -126,14 +169,22 @@ if (cmd === 'publish') {
     const date = list[0].at.split('-').reverse().join('.');
     const range = (a, b) => (a === b ? fmt(a) : `от ${fmt(a)} до ${fmt(b)}`);
     const parts = list.map((v) => {
-      if (v.pack && v.packs_min > 0 && v.packs_max >= v.packs_min) return `${v.what}: ${v.pack} стоит ${range(v.min_rub, v.max_rub)} ₽; на ${v.unit.replace(/^за /, '')} нужно около ${v.packs_min === v.packs_max ? v.packs_min : `${v.packs_min}–${v.packs_max}`} таких упаковок, то есть примерно ${range(Math.round(v.packs_min * v.min_rub), Math.round(v.packs_max * v.max_rub))} ₽ (расчёт${v.calc ? ': ' + v.calc.replace(/[.\s]+$/, '') : ''})`;
+      if (v.pack && v.packs_min > 0 && v.packs_max >= v.packs_min) {
+        const packTxt = clean(v.pack, Infinity); const packOk = Boolean(packTxt);
+        if (v.price_only) return `${v.what}: ${packOk ? packTxt : 'одна упаковка'} стоит ${range(v.min_rub, v.max_rub)} ₽. Стоимость полного курса зависит от назначенной дозировки и длительности; цена упаковки не является ценой курса`;
+        const per = v.unit.replace(/^за /, 'на ');
+        const n = v.packs_min === v.packs_max ? v.packs_min : `${v.packs_min}–${v.packs_max}`;
+        return `${v.what}: ${packOk ? packTxt : 'одна упаковка'} стоит ${range(v.min_rub, v.max_rub)} ₽; ${per} расход — около ${n} уп., то есть примерно ${range(v.packs_min * v.min_rub, v.packs_max * v.max_rub)} ₽${v.calc ? ' (расчёт: ' + clean(v.calc, Infinity) + ')' : ''}`;
+      }
       return `${v.what}${v.unit ? ' (' + v.unit + ')' : ''}: ${range(v.min_rub, v.max_rub)} ₽`;
     });
-    const srcs = [...new Set(list.flatMap((v) => v.good.map((g) => g.url)))].slice(0, 4);
+    const srcs = [...new Set(list.flatMap((v) => v.good.map((g) => g.url)))];
     const line = `- Цена в России (ориентир на ${date}): ${parts.join('; ')}. Цены в российских магазинах и клиниках меняются и зависят от региона. Источники цен: ${srcs.map((u) => `<${u}>`).join('; ')}`;
     (perFile[f] ||= []).push({ entry: Number(n), kind: 'price', lines: [line] });
   }
-  for (const [f, items] of Object.entries(perFile)) {
+  // Удаляем отклонённые цены и из разделов, где больше нет принятых позиций.
+  for (const f of new Set([...Object.keys(perFile), ...readdirSync('ru-work/overlay').filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, ''))])) {
+    const items = perFile[f] || [];
     const path = `ru-work/overlay/${f}.json`;
     const ov = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : [];
     const rest2 = ov.filter((x) => x.kind !== 'price');
