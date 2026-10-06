@@ -81,6 +81,7 @@ console.error(`  GEO: llms.txt, llms-full.txt, ai/*.json, feed.xml, about/, priv
   if (!h.includes(foot) || !h.includes('</body>')) { console.error('ОШИБКА: в index.html нет подвала или </body> для счётчика'); process.exit(1); }
   h = h.replace(foot, () => '<a href="contents/">Оглавление без JavaScript</a>. <a href="privacy/">Политика конфиденциальности</a> · <a href="#cookie-settings" data-cookie-settings>Настройки cookie</a></div>');
   h = h.replace('</body>', () => '<script src="assets/analytics.js" defer></script>\n</body>');
+  h = h.replace('href="about/"', () => `href="${SITE}about/"`);   // абсолютная ссылка «О проекте»: так её находят и люди, и проверяющие инструменты
   writeFileSync(f, h);
 }
 

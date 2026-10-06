@@ -88,7 +88,9 @@ ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
   // ---- корневые файлы домена ----
   const root = site.replace(/\/[^/]+\/?$/, '/');                 // https://makslanies.github.io/
   w(rootOut, 'robots.txt', robotsTxt(site));
-  w(rootOut, 'llms.txt', `# ${TITLE}\n\n> ${lead}\n\nСайт находится по адресу ${site}\n\n## Главное\n- [Книга и поиск](${site})\n- [Подробный llms.txt](${site}llms.txt): разделы и описание\n- [Выжимка всей книги](${site}llms-full.txt)\n- [О проекте](${site}about/)\n- [Карта сайта](${site}sitemap.xml)\n`);
+  w(rootOut, 'llms.txt', readFileSync(join(out, 'llms.txt'), 'utf8'));
+  w(rootOut, 'ai/summary.json', readFileSync(join(out, 'ai/summary.json'), 'utf8'));
+  w(rootOut, 'ai/faq.json', readFileSync(join(out, 'ai/faq.json'), 'utf8'));
   w(rootOut, '.well-known/ai.txt', `# Политика использования для ИИ\n# Сайт: ${root}\nAllow: /\nCitation: разрешено с указанием источника (CC BY 4.0)\nContact: ${repo}/issues\nSummary: ${site}ai/summary.json\nLLMs: ${site}llms.txt\n`);
   return { st };
 }

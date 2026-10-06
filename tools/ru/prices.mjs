@@ -31,6 +31,7 @@ async function chat(system, user) {
   }
   return {};
 }
+const isPeriodic = (unit) => /курс|месяц|год|день|недел|сутк/i.test(unit || '');
 const pool = async (list, n, fn) => { let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < list.length) { const x = list[i++]; await fn(x); } })); };
 
 // ---------- 1. scan ----------
@@ -57,7 +58,8 @@ if (cmd === 'research') {
   console.error(`нужно найти цен: ${todo.size}, в этом запуске ${list.length}`);
   let done = 0;
   await pool(list, 4, async ([k, it]) => {
-    const input = `Найди актуальные цены в российских интернет-магазинах, клиниках или сервисах: «${it.what}», цена ${it.unit || 'за штуку'}. В китайском тексте цена такая: «${it.cn_price}» (по ней понятно, какой класс товара или услуги имеется в виду: обычный, бытовой, не премиум). Дай типичный диапазон в рублях (нижняя и верхняя цена обычного варианта, без акций и без крайностей), цену в рублях за ту же единицу, и 3–5 разных российских сайтов со ссылкой на страницу товара или прайс и ТОЧНОЙ цитатой цены, как она написана на странице. Только российские сайты и цены в рублях. Ответ только JSON: {"item":"","unit":"","min_rub":0,"max_rub":0,"note":"","sources":[{"url":"","quote":"","price_rub":0}]}`;
+    const input = isPeriodic(it.unit) ? `Найди актуальные цены в российских интернет-магазинах и аптеках: «${it.what}». Нужна цена за период: ${it.unit}. В китайском тексте цена такая: «${it.cn_price}» (по ней понятен класс товара или услуги). Важно: в sources давай цену ОДНОЙ УПАКОВКИ (одной единицы продажи) в рублях, как она написана на странице, а не стоимость курса. Отдельно укажи: pack (что в упаковке, например «упаковка 7 пластырей»), packs_min и packs_max (сколько таких упаковок нужно на указанный период при обычной дозировке из инструкции) и calc (одна фраза, как посчитал число упаковок). Дай 3–5 разных российских сайтов со ссылкой на страницу товара и ТОЧНОЙ цитатой цены. Только российские сайты. min_rub и max_rub: диапазон цены одной упаковки. Ответ только JSON: {"item":"","unit":"","pack":"","packs_min":0,"packs_max":0,"calc":"","min_rub":0,"max_rub":0,"note":"","sources":[{"url":"","quote":"","price_rub":0}]}` :
+      `Найди актуальные цены в российских интернет-магазинах, клиниках или сервисах: «${it.what}», цена ${it.unit || 'за штуку'}. В китайском тексте цена такая: «${it.cn_price}» (по ней понятно, какой класс товара или услуги имеется в виду: обычный, бытовой, не премиум). Дай типичный диапазон в рублях (нижняя и верхняя цена обычного варианта, без акций и без крайностей), цену в рублях за ту же единицу, и 3–5 разных российских сайтов со ссылкой на страницу товара или прайс и ТОЧНОЙ цитатой цены, как она написана на странице. Только российские сайты и цены в рублях. Ответ только JSON: {"item":"","unit":"","min_rub":0,"max_rub":0,"note":"","sources":[{"url":"","quote":"","price_rub":0}]}`;
     for (let a = 1; a <= 3; a++) {
       try {
         const r = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }, body: JSON.stringify({ model: MODEL, tools: [{ type: 'web_search' }], input }), signal: AbortSignal.timeout(240000) });
@@ -93,6 +95,7 @@ if (cmd === 'verify') {
   const todo = Object.entries(res).filter(([k, v]) => v.answer && !ver[k]);
   console.error(`проверяю ${todo.length} позиций`);
   await pool(todo, 4, async ([k, v]) => {
+    if (isPeriodic(v.unit) && !v.answer.pack) { ver[k] = { what: v.what, unit: v.unit, entries: v.entries, ok: false, good: [], bad: [{ why: 'цена за период без указания упаковки, нужен пересчёт' }], at: v.at }; save('verified.json', ver); return; }
     const good = [], bad = [];
     for (const s of (v.answer.sources || []).slice(0, 5)) {
       try {
@@ -102,7 +105,7 @@ if (cmd === 'verify') {
       } catch (e) { bad.push({ url: s.url, why: String(e.message).slice(0, 50) }); }
     }
     const prices = good.map((g) => g.price_rub).filter((x) => x > 0).sort((a, b) => a - b);
-    ver[k] = { what: v.what, unit: v.unit, entries: v.entries, ok: good.length >= 2, good, bad, min_rub: prices[0], max_rub: prices[prices.length - 1], at: v.at };
+    ver[k] = { what: v.what, unit: v.unit, entries: v.entries, ok: good.length >= 2, good, bad, min_rub: prices[0], max_rub: prices[prices.length - 1], pack: v.answer.pack, packs_min: v.answer.packs_min, packs_max: v.answer.packs_max, calc: v.answer.calc, at: v.at };
     save('verified.json', ver);
   });
   const all = Object.values(ver);
@@ -121,7 +124,11 @@ if (cmd === 'publish') {
   for (const [key, list] of Object.entries(byEntry)) {
     const [sec, n] = key.split('-'); const f = files[sec]; if (!f) continue;
     const date = list[0].at.split('-').reverse().join('.');
-    const parts = list.map((v) => `${v.what}${v.unit ? ' (' + v.unit + ')' : ''}: ${v.min_rub === v.max_rub ? fmt(v.min_rub) : `от ${fmt(v.min_rub)} до ${fmt(v.max_rub)}`} ₽`);
+    const range = (a, b) => (a === b ? fmt(a) : `от ${fmt(a)} до ${fmt(b)}`);
+    const parts = list.map((v) => {
+      if (v.pack && v.packs_min > 0 && v.packs_max >= v.packs_min) return `${v.what}: ${v.pack} стоит ${range(v.min_rub, v.max_rub)} ₽; на ${v.unit.replace(/^за /, '')} нужно около ${v.packs_min === v.packs_max ? v.packs_min : `${v.packs_min}–${v.packs_max}`} таких упаковок, то есть примерно ${range(Math.round(v.packs_min * v.min_rub), Math.round(v.packs_max * v.max_rub))} ₽ (расчёт${v.calc ? ': ' + v.calc.replace(/[.\s]+$/, '') : ''})`;
+      return `${v.what}${v.unit ? ' (' + v.unit + ')' : ''}: ${range(v.min_rub, v.max_rub)} ₽`;
+    });
     const srcs = [...new Set(list.flatMap((v) => v.good.map((g) => g.url)))].slice(0, 4);
     const line = `- Цена в России (ориентир на ${date}): ${parts.join('; ')}. Цены в российских магазинах и клиниках меняются и зависят от региона. Источники цен: ${srcs.map((u) => `<${u}>`).join('; ')}`;
     (perFile[f] ||= []).push({ entry: Number(n), kind: 'price', lines: [line] });
