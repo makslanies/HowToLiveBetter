@@ -110,6 +110,7 @@ sub('else if ((m = /^- 收益：(.*)$/.exec(line))) entry.gain = m[1];', 'else i
 sub('else if ((m = /^- 证据等级：\\s*([ABC])/.exec(line))) entry.grade = m[1];', 'else if ((m = /^- Уровень доказательств:\\s*([ABC])/.exec(line))) entry.grade = m[1];');
 sub('else if ((m = /^- 来源：(.*)$/.exec(line))) entry.src = m[1];', 'else if ((m = /^- Источники:\\s*(.*)$/.exec(line))) entry.src = m[1];\n      else if ((m = /^- В России:\\s*(.*)$/.exec(line))) entry.ru = (entry.ru ? entry.ru + \' \' : \'\') + m[1];\n      else if ((m = /^- Источники \\(Россия\\):\\s*(.*)$/.exec(line))) entry.src += \'; Россия: \' + m[1];\n      else if ((m = /^- Примечание к «В России»:\\s*(.*)$/.exec(line))) entry.ru = (entry.ru ? entry.ru + \' \' : \'\') + m[1];');
 sub('else if ((m = /^- 备注：(.*)$/.exec(line))) entry.note = m[1];', 'else if ((m = /^- Примечания:\\s*(.*)$/.exec(line))) entry.note = m[1];');
+sub("entry.src += '; Россия: '", "entry.src += ' ; Россия: '");
 sub("title:m[2].trim(), cost:'', human:''", "title:m[2].trim(), ru:'', cost:'', human:''");
 sub('e.dispute = /^争议/.test(e.note);', 'e.dispute = /^Спорно/.test(e.note);');
 sub('e.todo = /待核实|TODO/.test(e.src + e.gain + e.note + e.cost);', 'e.todo = /требует проверки|TODO|待核实/.test(e.src + e.gain + e.note + e.cost + e.ru);');

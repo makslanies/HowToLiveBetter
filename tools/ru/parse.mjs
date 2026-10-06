@@ -33,7 +33,7 @@ export function parseBook(dir = 'ru/book') {
         else if ((x = /^- Выгода:\s*(.*)$/.exec(l))) e.gain = x[1];
         else if ((x = /^- Уровень доказательств:\s*([ABC])/.exec(l))) e.grade = x[1];
         else if ((x = /^- Источники:\s*(.*)$/.exec(l))) e.src = x[1];
-        else if ((x = /^- Источники \(Россия\):\s*(.*)$/.exec(l))) e.src += '; Россия: ' + x[1];
+        else if ((x = /^- Источники \(Россия\):\s*(.*)$/.exec(l))) e.src += ' ; Россия: ' + x[1];
         else if ((x = /^- Источники цен \(Россия\):\s*(.*)$/.exec(l))) e.src += ' ; Цены в России: ' + x[1];
         else if ((x = /^- В России:\s*(.*)$/.exec(l))) e.ru = (e.ru ? e.ru + ' ' : '') + x[1];
         else if ((x = /^- Примечание к «В России»:\s*(.*)$/.exec(l))) e.ru = (e.ru ? e.ru + ' ' : '') + x[1];

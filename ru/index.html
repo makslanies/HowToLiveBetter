@@ -510,7 +510,7 @@ function parseReadme(md){
       else if ((m = /^- Уровень доказательств:\s*([ABC])/.exec(line))) entry.grade = m[1];
       else if ((m = /^- Источники:\s*(.*)$/.exec(line))) entry.src = m[1];
       else if ((m = /^- В России:\s*(.*)$/.exec(line))) entry.ru = (entry.ru ? entry.ru + ' ' : '') + m[1];
-      else if ((m = /^- Источники \(Россия\):\s*(.*)$/.exec(line))) entry.src += '; Россия: ' + m[1];
+      else if ((m = /^- Источники \(Россия\):\s*(.*)$/.exec(line))) entry.src += ' ; Россия: ' + m[1];
       else if ((m = /^- Примечание к «В России»:\s*(.*)$/.exec(line))) entry.ru = (entry.ru ? entry.ru + ' ' : '') + m[1];
       else if ((m = /^- Примечания:\s*(.*)$/.exec(line))) entry.note = m[1];
       else if ((m = /^- Цена в России[^:]*:\s*(.*)$/.exec(line))) entry.price = m[1];
