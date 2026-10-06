@@ -73,7 +73,16 @@ writeFileSync(`${OUT}/site/robots.txt`, robotsTxt(SITE));
   writeFileSync(f, h.replace('</head>', () => ld + '</head>'));
   indexHtml = readFileSync(f, 'utf8');            // офлайн-версия берёт уже готовую главную
 }
-console.error(`  GEO: llms.txt, llms-full.txt, ai/*.json, feed.xml, about/; корневые файлы домена в ${OUT}/root`);
+console.error(`  GEO: llms.txt, llms-full.txt, ai/*.json, feed.xml, about/, privacy/; корневые файлы домена в ${OUT}/root`);
+// Яндекс Метрика только в онлайн-версии, и только после согласия (assets/analytics.js); indexHtml для офлайн-файла остаётся без неё
+{
+  const f = `${OUT}/site/index.html`; let h = readFileSync(f, 'utf8');
+  const foot = '<a href="contents/">Оглавление без JavaScript</a>.</div>';
+  if (!h.includes(foot) || !h.includes('</body>')) { console.error('ОШИБКА: в index.html нет подвала или </body> для счётчика'); process.exit(1); }
+  h = h.replace(foot, () => '<a href="contents/">Оглавление без JavaScript</a>. <a href="privacy/">Политика конфиденциальности</a> · <a href="#cookie-settings" data-cookie-settings>Настройки cookie</a></div>');
+  h = h.replace('</body>', () => '<script src="assets/analytics.js" defer></script>\n</body>');
+  writeFileSync(f, h);
+}
 
 const pg = generatePages({ out: `${OUT}/site`, site: SITE });
 console.error(`  страниц ${pg.pages} (разделов ${pg.sections}, пунктов ${pg.entries}), ссылок на пункты в тексте ${pg.refLinks}, «Смотрите также» ${pg.relatedLinks}, битых внутренних ссылок ${pg.broken.length}`);
@@ -96,6 +105,7 @@ must('<div class="foot">', 'подвала');
 off = off.replace('<div class="foot">', `<div class="foot">Офлайн-копия от ${stamp} (МСК)${commit ? `, коммит ${commit}` : ''}. Текст продолжает обновляться, в онлайн-версии он новее.<br>`);
 if (REPO) off = off.replaceAll('href="README.md"', `href="${REPO}/blob/main/ru/README.md"`).replaceAll('href="book/"', `href="${REPO}/tree/main/ru/book"`);
 if (SITE) off = off.replaceAll('<a class="title" href="./"', `<a class="title" href="${SITE}"`);
+if (/mc\.yandex\.ru|analytics\.js|data-cookie-settings/.test(off)) { console.error('ОШИБКА: в офлайн-файл попал счётчик или окно cookie: он не должен отправлять данные из чужого файла'); process.exit(1); }
 writeFileSync(`${OUT}/HowToLiveBetter-ru.html`, off);
 
 // ---- 6 (для артефактов) ----

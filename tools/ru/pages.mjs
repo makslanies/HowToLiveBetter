@@ -105,7 +105,8 @@ ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\
 <main>
 ${body}
 </main>
-<footer>Обновлено: <time datetime="${new Date().toISOString().slice(0, 10)}">${new Date().toISOString().slice(0, 10).split('-').reverse().join('.')}</time>. Неофициальный русский перевод книги «高性价比人生指南» по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru" rel="noopener">CC BY 4.0</a>. Законы, органы и выплаты в тексте китайские (КНР); российская версия проверена только там, где есть строка «В России».</footer>
+<footer>Обновлено: <time datetime="${new Date().toISOString().slice(0, 10)}">${new Date().toISOString().slice(0, 10).split('-').reverse().join('.')}</time>. Неофициальный русский перевод книги «高性价比人生指南» по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru" rel="noopener">CC BY 4.0</a>. Законы, органы и выплаты в тексте китайские (КНР); российская версия проверена только там, где есть строка «В России».<br><a href="${root}privacy/">Политика конфиденциальности</a> · <a href="#cookie-settings" data-cookie-settings>Настройки cookie</a></footer>
+<script src="${root}assets/analytics.js" defer></script>
 </body>
 </html>
 `;
@@ -133,6 +134,7 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
 
   mkdirSync(join(out, 'assets'), { recursive: true });
   writeFileSync(join(out, 'assets/page.css'), CSS);
+  writeFileSync(join(out, 'assets/analytics.js'), readFileSync('tools/ru/spa/analytics.js', 'utf8'));
 
   const badge = (t, cls = '') => `<li class="badge ${cls}">${esc(t)}</li>`;
 
@@ -205,7 +207,7 @@ ${intro}
 <p>${all.length} пунктов в ${secs.length} разделах. В каждом пункте: что вы тратите, что получаете, насколько надёжны доказательства и откуда сведения. Для поиска и фильтров по стоимости откройте <a href="${root}">главную страницу</a>.</p>
 <ol class="list" style="padding-left:0;list-style:none">${items}</ol>`;
     put('contents', page({ root, title: `Оглавление · ${TITLE}`, desc: `Оглавление: ${secs.length} разделов и ${all.length} пунктов руководства по жизни с высокой отдачей.`, canonical: url('contents/'), body }));
-    urls.push('contents/');
+    urls.push('contents/', 'about/', 'privacy/');
   }
 
   // sitemap

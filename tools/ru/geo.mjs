@@ -80,6 +80,11 @@ ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
   const ld = { '@context': 'https://schema.org', '@type': 'AboutPage', name: 'О проекте', url: `${site}about/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@id': `${site}#project` } };
   w(out, 'about/index.html', page({ root: '../', title: `О проекте · ${TITLE}`, desc: cut(lead, 155), canonical: `${site}about/`, body, ld }));
 
+  // ---- privacy/index.html ----
+  const tpl = readFileSync('tools/ru/spa/privacy-body.txt', 'utf8');
+  const fillIn = (t) => t.replace(/\$\{(\w+)\}/g, (_, k) => ({ TITLE, OWNER_URL: OWNER.url, OWNER_NAME: OWNER.name, REPO: repo, TODAY: today, TODAY_RU: today.split('-').reverse().join('.') })[k] ?? '');
+  w(out, 'privacy/index.html', page({ root: '../', title: `Политика конфиденциальности и cookie · ${TITLE}`, desc: 'Какие данные собирает сайт, как работает Яндекс Метрика и как отказаться от cookie.', canonical: `${site}privacy/`, body: fillIn(tpl), ld: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Политика конфиденциальности и cookie', url: `${site}privacy/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` } } }));
+
   // ---- корневые файлы домена ----
   const root = site.replace(/\/[^/]+\/?$/, '/');                 // https://makslanies.github.io/
   w(rootOut, 'robots.txt', robotsTxt(site));
