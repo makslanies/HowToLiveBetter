@@ -65,7 +65,8 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 :focus-visible{outline:2px solid var(--brand-1);outline-offset:2px;border-radius:4px}
 mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
 /* 正文里的「第 X 条」交叉引用：点一下就地看那条说什么，不用自己翻过去 */
-.xref{color:var(--brand-1);cursor:pointer;border-bottom:1px dashed currentColor}
+.xref{color:var(--brand-1);cursor:pointer;border-bottom:1px dashed currentColor;text-decoration:none}
+.rel a{color:var(--brand-1)}
 .xref:hover{color:var(--brand-2);border-bottom-style:solid}
 #xref-pop{position:absolute;z-index:80;width:min(430px,calc(100vw - 28px));background:var(--bg-elv);border:1px solid var(--divider);border-radius:10px;box-shadow:var(--shadow);padding:11px 13px;font-size:13.5px;line-height:1.75}
 #xref-pop .xp-h{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px}
@@ -313,7 +314,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
 <noscript>
   <div style="max-width:760px;margin:0 auto;padding:32px 20px;line-height:1.7">
     <h1>Руководство по жизни с высокой отдачей</h1>
-    <p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него: оглавление в <a href="README.md">README.md</a>, разделы в папке <a href="book/">book/</a>.</p>
+    <p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него: <a href="contents/">оглавление со ссылками на все разделы и пункты</a>, оглавление в <a href="README.md">README.md</a>, разделы в папке <a href="book/">book/</a>.</p>
   </div>
 </noscript>
 
@@ -422,7 +423,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
         <div><button id="reset2">Сбросить фильтры</button></div>
       </div>
     </div>
-    <div class="foot">Единица счёта указана в самих пунктах: разделы 1 и 2 считают общую смертность или отдельные причины смерти, разделы 3 и 4 силы и время, раздел 5 деньги, раздел 7 деньги и социальные гарантии, разделы 8 и 9 деньги и личную свободу. Между собой они не пересчитываются. Источники проверялись по оригиналу (<a href="https://github.com/eternity4719/HowToLiveBetter/tree/main/docs">журнал проверки на китайском</a>). Текст опубликован по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru">CC BY 4.0</a>: при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>.</div>
+    <div class="foot">Единица счёта указана в самих пунктах: разделы 1 и 2 считают общую смертность или отдельные причины смерти, разделы 3 и 4 силы и время, раздел 5 деньги, раздел 7 деньги и социальные гарантии, разделы 8 и 9 деньги и личную свободу. Между собой они не пересчитываются. Источники проверялись по оригиналу (<a href="https://github.com/eternity4719/HowToLiveBetter/tree/main/docs">журнал проверки на китайском</a>). Текст опубликован по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru">CC BY 4.0</a>: при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>. <a href="contents/">Оглавление без JavaScript</a>.</div>
   </div>
 </main>
 
@@ -687,7 +688,11 @@ const NUMS = '(?:с\\s+)?\\d+(?:\\s*(?:,|и)\\s*\\d+)*(?:\\s*(?:–|—|-|по)\
 // 最后那一段认「见第 9 节」「走第 8、9 节的法律路径」这种不带条号的整节指路，
 // 全书有 135 处，以前一律是死字（2026-09-20 用户在第 5 节撞到的「（见第 9 节）」）。
 // 它必须排在最后：前面几段先吃掉「第 9 节第 3 条」，剩下的才轮到它。
-const XREF_RE = new RegExp(`раздел(?:а|е|у|ом)?\\s+(\\d+),\\s*пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})|пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})\\s+раздел(?:а|е|у|ом)?\\s+(\\d+)|раздел(?:а|е|у|ом|ы|ов)?\\s+(\\d+(?:\\s*(?:,|и)\\s*\\d+)*)`, 'gi');
+const XREF_MAIN = `раздел(?:а|е|у|ом)?\\s+(\\d+),\\s*пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})|пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})\\s+раздел(?:а|е|у|ом)?\\s+(\\d+)|раздел(?:а|е|у|ом|ы|ов)?\\s+(\\d+(?:\\s*(?:,|и)\\s*\\d+)*)`;
+const XREF_RE = new RegExp(`${XREF_MAIN}|пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})(?=\\s*\\()`, 'gi');
+const XREF_BARE_RE = new RegExp(`${XREF_MAIN}|пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})`, 'gi');
+let BARE = false;   // во введениях разделов «пункт N» без раздела значит пункт этого раздела
+let RELATED = {};   // «Смотрите также»: ключ пункта → ключи похожих (related.json)
 // 「8 到 10」摊成 8、9、10；上限 40 是防着把法条条款号那种大范围摊成几百个键
 const xrefKeys = (sec, spec) => {
   const ns = [];
@@ -703,16 +708,17 @@ const xrefKeys = (sec, spec) => {
   return ns.map(n => `${sec}-${n}`).filter(k => ITEMS.has(k));
 };
 function xrefInto(el, s, terms){
-  XREF_RE.lastIndex = 0; let m, last = 0, any = false;
-  while ((m = XREF_RE.exec(s))){
+  const RE = BARE ? XREF_BARE_RE : XREF_RE; RE.lastIndex = 0; let m, last = 0, any = false;
+  while ((m = RE.exec(s))){
     // 整节指路的键写成 's9'，和条目键 '9-15' 分得开
     const keys = m[5] != null
       ? String(m[5]).split(/\s*(?:,|и)\s*/).map(x => x.trim()).filter(x => SECS.has(x)).map(x => 's' + x)
-      : xrefKeys(m[1] ?? m[4] ?? CUR_SEC, m[2] ?? m[3] ?? '');
+      : xrefKeys(m[1] ?? m[4] ?? CUR_SEC, m[2] ?? m[3] ?? m[6] ?? '');
     if (!keys.length) continue;
     highlightInto(el, s.slice(last, m.index), terms);
-    const a = document.createElement('span');
+    const a = document.createElement('a');
     a.className = 'xref'; a.tabIndex = 0; a.dataset.keys = keys.join(',');
+    a.href = keys[0][0] === 's' ? 's/' + keys[0].slice(1) + '/' : 'p/' + keys[0] + '/';
     a.textContent = m[0];
     el.appendChild(a);
     last = m.index + m[0].length; any = true;
@@ -863,8 +869,10 @@ addEventListener('popstate', ev => {
   else if (typeof st.xrefY === 'number') scrollTo({ top: st.xrefY });
 });
 document.addEventListener('click', ev => {
+  const g = ev.target.closest?.('.rel a[data-go]');
+  if (g){ if (!(ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey)){ ev.preventDefault(); gotoItem(g.dataset.go, g.closest('.card')?.id || ''); } return; }
   const a = ev.target.closest?.('.xref');
-  if (a){ showXref(a); return; }
+  if (a){ if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return; ev.preventDefault(); showXref(a); return; }
   if (!ev.target.closest?.('#xref-pop')) POP.hidden = true;
 });
 document.addEventListener('keydown', ev => {
@@ -949,13 +957,13 @@ function build(sections){
     CUR_SEC = s.n;
     for (const para of s.intro){
       const p = document.createElement('p'); p.className = 'intro';
-      renderText(p, para, [], false); block.appendChild(p);
+      BARE = true; renderText(p, para, [], false); BARE = false; block.appendChild(p);
     }
     for (const e of s.entries){
       const id = `e-${e.sec}-${e.n}`;
       const c = document.createElement('article'); c.className='card'; c.id = id;
       c.innerHTML = `
-        <div class="card-h"><span class="idx">${e.n}</span><h3 class="t"></h3><a class="anchor" href="#${id}" aria-label="Ссылка на пункт">#</a></div>
+        <div class="card-h"><span class="idx">${e.n}</span><h3 class="t"></h3><a class="anchor" href="#${id}" aria-label="Ссылка на пункт">#</a><a class="anchor" href="p/${e.sec}-${e.n}/" aria-label="Отдельная страница пункта" title="Отдельная страница">↗</a></div>
         <div class="badges"></div>
         <p class="human"></p>
         <div class="rows">
@@ -963,6 +971,7 @@ function build(sections){
           <div class="k">Выгода</div><div class="v gain"></div>
           <div class="k ru-k" hidden>В России</div><div class="v ru" hidden></div>
           <div class="k">Примечания</div><div class="v note"></div>
+          <div class="k rel-k" hidden>Смотрите также</div><div class="v rel" hidden></div>
         </div>
         <details class="src"><summary>Источники<span class="cnt"></span></summary><div class="body"></div></details>`;
       const badges = c.querySelector('.badges');
@@ -977,7 +986,7 @@ function build(sections){
       if (e.dispute) add('danger', 'Спорно');
       if (e.todo) add('warn', 'Есть непроверенное');
       block.appendChild(c);
-      const card = {e, el:c, key:null, vis:false, f:{ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'), t:c.querySelector('.t'), cost:c.querySelector('.cost'), human:c.querySelector('.human'), gain:c.querySelector('.gain'), note:c.querySelector('.note'), src:c.querySelector('.src .body'), srcN:c.querySelector('.src summary .cnt'), details:c.querySelector('.src')}};
+      const card = {e, el:c, key:null, vis:false, f:{rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'), t:c.querySelector('.t'), cost:c.querySelector('.cost'), human:c.querySelector('.human'), gain:c.querySelector('.gain'), note:c.querySelector('.note'), src:c.querySelector('.src .body'), srcN:c.querySelector('.src summary .cnt'), details:c.querySelector('.src')}};
       renderCard(card, [], '');
       CARDS.push(card); CARD_OF.set(c, card); CARD_IO.observe(c);
     }
@@ -1032,6 +1041,17 @@ function renderCard(card, terms, key){
   renderText(f.gain, e.gain, terms);
   f.ru.hidden = f.ruK.hidden = !e.ru;
   if (e.ru) renderText(f.ru, e.ru, terms);
+  const rk = RELATED[e.sec + '-' + e.n] || [];
+  f.rel.hidden = f.relK.hidden = !rk.length;
+  if (rk.length && !f.rel.firstChild){
+    rk.forEach((k, i) => {
+      const t = ITEMS.get(k); if (!t) return;
+      if (i) f.rel.append('; ');
+      const a = document.createElement('a'); a.href = '#e-' + k; a.dataset.go = k;
+      a.textContent = `раздел ${t.sec}, пункт ${t.n}: ${t.title}`;
+      f.rel.append(a);
+    });
+  }
   renderText(f.note, e.note, terms);
   const nSrc = renderSrc(f.src, e.src, terms);
   f.srcN.textContent = nSrc > 1 ? ` · ${nSrc}` : '';
@@ -1410,6 +1430,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !TIP.hid
     const t1 = performance.now();
     const sections = parseReadme(parts.join('\n\n'));
     if (!sections.length) throw new Error('empty');
+    RELATED = EMBED ? (EMBED.related || {}) : await readText('related.json').then((t) => JSON.parse(t), () => ({}));
     GLOSS = parseGlossary(md);
     PERF.log('解析正文', t1, files.length + ' 个文件');
     status.remove();

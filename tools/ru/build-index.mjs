@@ -161,6 +161,29 @@ sub('/^\\[← 回总目录\\]/.test(ln)', '/^\\[← (?:Вернуться|К о�
 // длинные статьи в русской версии не встроены: перехват ссылок на docs/ выключаем, ссылки ведут на оригинал
 sub("const DOC_PREFIX = REPO_BLOB + 'docs/';", "const DOC_PREFIX = 'x-disabled:docs/';");
 
+
+// ---------- настоящие ссылки между пунктами, «Смотрите также», отдельные страницы ----------
+const snip = (n) => readFileSync(`tools/ru/spa/${n}`, 'utf8').trimEnd();
+re(/const XREF_RE = new RegExp\(`[^`]*`, 'gi'\);/, snip('xref-re.js'));
+sub("XREF_RE.lastIndex = 0; let m, last = 0, any = false;\n  while ((m = XREF_RE.exec(s))){", "const RE = BARE ? XREF_BARE_RE : XREF_RE; RE.lastIndex = 0; let m, last = 0, any = false;\n  while ((m = RE.exec(s))){");
+sub("xrefKeys(m[1] ?? m[4] ?? CUR_SEC, m[2] ?? m[3] ?? '')", "xrefKeys(m[1] ?? m[4] ?? CUR_SEC, m[2] ?? m[3] ?? m[6] ?? '')");
+// сноска становится ссылкой с адресом: средний клик и Ctrl/Cmd открывают отдельную страницу, обычный клик показывает окошко
+sub("const a = document.createElement('span');\n    a.className = 'xref'; a.tabIndex = 0; a.dataset.keys = keys.join(',');", "const a = document.createElement('a');\n    a.className = 'xref'; a.tabIndex = 0; a.dataset.keys = keys.join(',');\n    a.href = keys[0][0] === 's' ? 's/' + keys[0].slice(1) + '/' : 'p/' + keys[0] + '/';");
+sub("  if (a){ showXref(a); return; }", "  if (a){ if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return; ev.preventDefault(); showXref(a); return; }");
+sub("document.addEventListener('click', ev => {\n  const a = ev.target.closest?.('.xref');", "document.addEventListener('click', ev => {\n  const g = ev.target.closest?.('.rel a[data-go]');\n  if (g){ if (!(ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey)){ ev.preventDefault(); gotoItem(g.dataset.go, g.closest('.card')?.id || ''); } return; }\n  const a = ev.target.closest?.('.xref');");
+sub(".xref{color:var(--brand-1);cursor:pointer;border-bottom:1px dashed currentColor}", ".xref{color:var(--brand-1);cursor:pointer;border-bottom:1px dashed currentColor;text-decoration:none}\n.rel a{color:var(--brand-1)}");
+sub("renderText(p, para, [], false); block.appendChild(p);", "BARE = true; renderText(p, para, [], false); BARE = false; block.appendChild(p);");
+// ссылка на отдельную страницу в шапке карточки
+sub('aria-label="Ссылка на пункт">#</a></div>', 'aria-label="Ссылка на пункт">#</a><a class="anchor" href="p/${e.sec}-${e.n}/" aria-label="Отдельная страница пункта" title="Отдельная страница">↗</a></div>');
+// строка «Смотрите также»
+sub('<div class="k">Примечания</div><div class="v note"></div>', '<div class="k">Примечания</div><div class="v note"></div>\n          <div class="k rel-k" hidden>Смотрите также</div><div class="v rel" hidden></div>');
+sub("f:{ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'),", "f:{rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'),");
+sub("  if (e.ru) renderText(f.ru, e.ru, terms);\n", "  if (e.ru) renderText(f.ru, e.ru, terms);\n" + snip('related-card.js') + "\n");
+sub("    GLOSS = parseGlossary(md);", "    RELATED = EMBED ? (EMBED.related || {}) : await readText('related.json').then((t) => JSON.parse(t), () => ({}));\n    GLOSS = parseGlossary(md);");
+// путь к оглавлению для читателей без JavaScript и для поисковиков
+sub('<p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него:', '<p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него: <a href="contents/">оглавление со ссылками на все разделы и пункты</a>,');
+sub('при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>.</div>', 'при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>. <a href="contents/">Оглавление без JavaScript</a>.</div>');
+
 writeFileSync('ru/index.html', s);
 const left = s.split('\n').map((l, i) => [i + 1, l]).filter(([, l]) => /[一-鿿]/.test(l) && !/^\s*(\/\/|\/\*|\*)/.test(l) && !/\/\/.*[一-鿿]/.test(l.replace(/'[^']*'/g, '')) );
 console.error(`ru/index.html записан, ${s.length} знаков. Строк с китайским вне комментариев: ${left.length}`);

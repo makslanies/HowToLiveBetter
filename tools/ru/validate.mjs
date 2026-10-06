@@ -81,6 +81,16 @@ export function validate() {
   if (bad.length > 25) W(`… и ещё ${bad.length - 25} битых сносок`);
   stats.xrefs = xrefs; stats.badXrefs = bad.length;
 
+  // «Смотрите также»: ключи должны существовать
+  if (existsSync('ru/related.json')) {
+    const rel = JSON.parse(readFileSync('ru/related.json', 'utf8'));
+    const keys = new Set(Object.entries(counts).flatMap(([sec, n]) => Array.from({ length: n }, (_, i) => `${sec}-${i + 1}`)));
+    let bad = 0;
+    for (const [k, list] of Object.entries(rel)) { if (!keys.has(k)) bad++; for (const x of list) { if (!keys.has(x) || x === k) bad++; } }
+    if (bad) E(`related.json: ${bad} ссылок на несуществующие пункты`);
+    stats.related = Object.values(rel).flat().length;
+  }
+
   // счётчики в тексте
   const declared = [...new Set([...(readFileSync('ru/index.html', 'utf8') + readme).matchAll(/(\d{3})\s+пункт/g)].map((m) => Number(m[1])))];
   for (const d of declared.filter((x) => x >= 500)) if (d !== stats.entries) W(`в тексте заявлено «${d} пунктов», по факту ${stats.entries}`);
