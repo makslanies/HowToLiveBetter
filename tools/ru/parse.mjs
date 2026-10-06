@@ -23,11 +23,12 @@ export function parseBook(dir = 'ru/book') {
     for (const p of parts.slice(1)) {
       const hm = /^### (\d+)\. (.+)$/.exec(p.split('\n')[0]);
       if (!hm) continue;
-      const e = { sec: sec.n, n: Number(hm[1]), title: hm[2].trim(), tag: {}, cost: '', human: '', gain: '', grade: '', src: '', note: '', ru: '' };
+      const e = { sec: sec.n, n: Number(hm[1]), title: hm[2].trim(), tag: {}, cost: '', price: '', human: '', gain: '', grade: '', src: '', note: '', ru: '' };
       for (const l of p.split('\n').slice(1)) {
         let x;
         if ((x = /^<!--\s*成本标签:\s*(.*?)\s*-->/.exec(l))) { for (const kv of x[1].split(/\s+/)) { const [k, v] = kv.split('='); ({ '钱': () => (e.tag.money = v), '时间': () => (e.tag.time = v), '毅力': () => (e.tag.will = v), '收益': () => (e.tag.level = v), '口径': () => (e.tag.lens = v) })[k]?.(); } }
         else if ((x = /^- Затраты:\s*(.*)$/.exec(l))) e.cost = x[1];
+        else if ((x = /^- Цена в России[^:]*:\s*(.*)$/.exec(l))) e.price = x[1];
         else if ((x = /^- Простыми словами:\s*(.*)$/.exec(l))) e.human = x[1];
         else if ((x = /^- Выгода:\s*(.*)$/.exec(l))) e.gain = x[1];
         else if ((x = /^- Уровень доказательств:\s*([ABC])/.exec(l))) e.grade = x[1];

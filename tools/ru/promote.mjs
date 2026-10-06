@@ -40,7 +40,7 @@ for (const [sec, list] of Object.entries(bySec)) {
   const ovPath = `ru-work/overlay/${files[sec].replace(/\.md$/, '.json')}`;
   const ov = existsSync(ovPath) ? JSON.parse(readFileSync(ovPath, 'utf8')) : [];
   for (const p of list) {
-    if (ov.some((x) => x.entry === p.n)) { skipped++; continue; }   // ручной слой не перезаписываем
+    if (ov.some((x) => x.entry === p.n && x.kind !== 'price')) { skipped++; continue; }   // ручной слой не перезаписываем
     const srcLine = `- Источники (Россия): ${p.srcs.map((s) => `${s.title} <${s.url}>`).join('; ')}. Прочитано ${today}.`;
     const note = `- Примечание к «В России»: цитаты проверены автоматически, юридическая и медицинская проверка не проводилась.${p.flagged ? ' Российский источник отличается от китайского: сверьте с оригиналом.' : ''}`;
     ov.push({ entry: p.n, lines: [`- В России: ${p.draft.replace(/\n+/g, ' ')}`, srcLine, note] });

@@ -7,7 +7,7 @@
 // Результат — ru-work/research/<файл>-<N>.md для ручной проверки. В книгу сам ничего не пишет.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { basename } from 'node:path';
-import { fetchPdfText, excerpt, isDirectFetchUrl } from './lib.mjs';
+import { fetchPdfText, excerpt, isDirectFetchUrl, fetchIpsText, articleOf } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const file = args.find((a) => !a.startsWith('--'));
@@ -17,7 +17,10 @@ const MODEL = opt('model', 'gpt-6.1-sol');
 const MAX_CREDITS = Number(opt('max-credits', '40'));   // жёсткий потолок на запись; 1 кредит = 0.10 ₽
 const REPLAN = args.includes('--replan');
 const MANUAL_URLS = opt('urls', '');            // --urls a,b: не искать, а читать эти адреса (для проверки без квоты)
-const NO_LAWS = args.includes('--no-laws');
+// ВНИМАНИЕ (2026-10-06): ИПС pravo.gov.ru/proxy/ips/?doc_itself отдаёт ПЕРВОНАЧАЛЬНУЮ редакцию кодексов (ТК РФ от 30.12.2001, УК РФ от 1996),
+// без поздних изменений. Для действующего права это не годится (ст. 236 ТК РФ там с «1/300 ставки рефинансирования», сейчас иначе).
+// Поэтому путь «закон → статья» выключен; включается только флагом --use-original-edition для случаев, где нужна именно первая редакция.
+const NO_LAWS = !args.includes('--use-original-edition');
 let credits = 0;
 const COST = { search: 1, read: 1, fetch: 3, extract: 4 };
 if (!file) { console.error('node tools/ru-work/research.mjs <ru/book/NN.md> --entry N'); process.exit(2); }
@@ -127,30 +130,47 @@ for (const url of urls) {
 
 // ---- 2б. статьи законов: акт читается целиком один раз и кэшируется ----
 mkdirSync('ru-work/research/laws', { recursive: true });
+// Номера документов в ИПС (проверяются по заголовку при каждом чтении, неверный номер не примется)
+const KNOWN_ND = [
+  [/уголовн\w+ кодекс(?!.*процесс)/i, '102041891', /Уголовный кодекс/i],
+  [/трудов\w+ кодекс/i, '102074279', /Трудовой кодекс/i],
+  [/гражданск\w+ кодекс.*(втор|част\w* 2)/i, '102039276', /Гражданский кодекс/i],
+  [/гражданск\w+ кодекс.*(перв|част\w* 1)/i, '102033239', /Гражданский кодекс/i],
+  [/семейн\w+ кодекс/i, '102038925', /Семейный кодекс/i],
+  [/административн\w+ правонарушен|коап/i, '102074277', /административных правонарушениях/i],
+  [/налогов\w+ кодекс.*(перв|част\w* 1)/i, '102054722', /Налоговый кодекс/i],
+  [/жилищн\w+ кодекс/i, '102090645', /Жилищный кодекс/i],
+  [/уголовно-процессуальн\w+ кодекс|упк/i, '102073942', /Уголовно-процессуальный/i],
+];
 async function lawText(name) {
   const key = name.toLowerCase().replace(/[^a-zа-я0-9]+/g, '-').slice(0, 70);
   const cache = `ru-work/research/laws/${key}.json`;
-  if (existsSync(cache)) return JSON.parse(readFileSync(cache, 'utf8'));
-  const res = await srez('search', { query: `${name} официальный текст`, num: 3, language: 'ru', includeDomains: ['pravo.gov.ru'] });
-  const hit = (res.results || [])[0];
-  if (!hit) return null;
-  const p = await srez('read', { url: hit.url, maxChars: 900000 });
-  const md = p.markdown || p.content || '';
-  const rec = { name, url: hit.url, title: hit.title, chars: md.length, text: md };
-  if (md.length > 5000) writeFileSync(cache, JSON.stringify(rec));
-  return rec;
+  if (existsSync(cache)) { const r = JSON.parse(readFileSync(cache, 'utf8')); if (r.nd) return { ...r, text: await fetchIpsText(r.nd) }; }
+  const cands = [];
+  for (const [re, nd, expect] of KNOWN_ND) if (re.test(name)) cands.push({ nd, expect });
+  if (!cands.length) {                      // не кодекс из списка: номер документа берём из выдачи SREZAI (1 запрос)
+    const res = await srez('search', { query: name, num: 5, language: 'ru', includeDomains: ['pravo.gov.ru'] });
+    for (const r of res.results || []) { const m = /[?&]nd=(\d+)/.exec(r.url); if (m && !cands.some((c) => c.nd === m[1])) cands.push({ nd: m[1], expect: null }); }
+  }
+  const words = (name.toLowerCase().match(/[а-яё]{5,}/g) || []);
+  for (const c of cands.slice(0, 3)) {
+    let text; try { text = await fetchIpsText(c.nd); } catch { continue; }
+    const head = text.slice(0, 700);
+    const ok = c.expect ? c.expect.test(head) : words.filter((w) => head.toLowerCase().includes(w.slice(0, 6))).length >= Math.min(2, words.length);
+    if (!ok) { console.error(`  nd=${c.nd} не похож на «${name}», пропускаю`); continue; }
+    const rec = { name, nd: c.nd, url: `http://pravo.gov.ru/proxy/ips/?docbody=&nd=${c.nd}` };
+    writeFileSync(cache, JSON.stringify(rec));
+    return { ...rec, text };
+  }
+  return null;
 }
-function article(text, art) {
-  const re = new RegExp(`(?:^|\\n)[#*\\s]*Статья ${String(art).replace('.', '\\.')}\\.[\\s\\S]*?(?=\\n[#*\\s]*Статья \\d+(?:\\.\\d+)?\\.|$)`);
-  const m = re.exec(text);
-  return m ? m[0].trim().slice(0, 7000) : null;
-}
+const article = articleOf;
 for (const { name, article: art } of (NO_LAWS ? [] : (plan.laws || []).slice(0, 3))) {
   try {
     const law = await lawText(name);
     if (!law) { console.error(`  закон не найден: ${name}`); continue; }
     const ex = article(law.text, art);
-    if (!ex) { console.error(`  в ${name} (${law.chars} знаков) статьи ${art} не нашлось`); continue; }
+    if (!ex) { console.error(`  в ${name} (${law.text.length} знаков) статьи ${art} не нашлось`); continue; }
     pages.push({ url: law.url, title: `${name}, статья ${art}`, md: ex });
     console.error(`  найдена ${name}, ст. ${art} (${ex.length} знаков)`);
   } catch (e) { console.error(`  закон ${name}: ${e.message}`); }

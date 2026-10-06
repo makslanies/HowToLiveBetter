@@ -51,3 +51,37 @@ export function excerpt(text, keywords, maxChars = 7000) {
 
 // Нужно ли пробовать прямое скачивание вместо SREZAI
 export const isDirectFetchUrl = (u) => /apicr\.minzdrav\.gov\.ru|apiportalcr\.minzdrav\.gov\.ru|\.pdf(\?|$)/i.test(u);
+
+// Официальный текст законов: ИПС «Законодательство России» на pravo.gov.ru. Запрос doc_itself отдаёт документ целиком (кодировка windows-1251).
+// SREZAI для этого не нужен, квота не тратится. Сайт нестабилен (бывают 502 и обрывы), поэтому повторы.
+const IPS = 'ru-work/research/ips';
+export async function fetchIpsText(nd) {
+  mkdirSync(IPS, { recursive: true });
+  const f = `${IPS}/${nd}.txt`;
+  if (existsSync(f)) return readFileSync(f, 'utf8');
+  for (let i = 0; i < 4; i++) {
+    try {
+      const r = await fetch(`http://pravo.gov.ru/proxy/ips/?doc_itself=&nd=${nd}&page=1&rdk=0`, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(60000) });
+      if (r.ok) {
+        const html = new TextDecoder('windows-1251').decode(await r.arrayBuffer());
+        const t = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+        if (t.length > 3000) { writeFileSync(f, t); return t; }
+      }
+    } catch { /* повтор */ }
+    await new Promise((res) => setTimeout(res, 3000 * (i + 1)));
+  }
+  throw new Error(`ИПС не отдал документ nd=${nd}`);
+}
+
+// Статья целиком. В тексте есть оглавление («Статья 1. Статья 2. …»), поэтому из всех вхождений берём самое длинное.
+export function articleOf(text, art) {
+  const re = new RegExp(`Статья ${String(art).replace('.', '\\.')}\\.\\s`, 'g');
+  let best = null, m;
+  while ((m = re.exec(text))) {
+    const rest = text.slice(m.index + 8);
+    const n = /\sСтатья \d+(?:\.\d+)?\.\s/.exec(rest);
+    const chunk = text.slice(m.index, m.index + 8 + (n ? n.index : 6000));
+    if (!best || chunk.length > best.length) best = chunk;
+  }
+  return best ? best.slice(0, 7000) : null;
+}

@@ -21,7 +21,7 @@ main{max-width:780px;margin:0 auto;padding:8px 20px 40px}h1{font-size:26px;line-
 .badge.hi{color:var(--ok)}.badge.warn{color:var(--bad)}.human{background:var(--soft);border-left:4px solid var(--brand);padding:10px 14px;border-radius:6px}
 .src ol{padding-left:22px;font-size:14px;color:var(--t2);word-break:break-word}.related ul,.list{padding-left:20px}.list li{margin:.5em 0}.list .sub{display:block;font-size:14px;color:var(--t2)}
 .pager{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
-.note{font-size:14px;color:var(--t2);margin-top:24px}footer{border-top:1px solid var(--line);margin-top:20px}`;
+.note{font-size:14px;color:var(--t2);margin-top:24px}.scope{font-size:14px;color:var(--t2);margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:var(--soft);border-radius:4px}footer{border-top:1px solid var(--line);margin-top:20px}`;
 
 // ---------- текст ----------
 const NUMS = '(?:с\\s+)?\\d+(?:\\s*(?:,|и)\\s*\\d+)*(?:\\s*(?:–|—|-|по)\\s*\\d+)?';
@@ -82,7 +82,7 @@ function splitSrc(text) {
 const firstSentence = (s, max = 160) => { const t = unmd(s).replace(/\*\*/g, '').replace(/\s+/g, ' ').trim(); const m = /^(.{40,}?[.!?…])(\s|$)/.exec(t); const r = m ? m[1] : t; return r.length > max ? r.slice(0, max - 1).replace(/\s+\S*$/, '') + '…' : r; };
 
 // ---------- страницы ----------
-function page({ root, title, desc, canonical, body, ld }) {
+export function page({ root, title, desc, canonical, body, ld }) {
   return `<!doctype html>
 <html lang="ru">
 <head>
@@ -96,22 +96,34 @@ ${canonical ? `<link rel="canonical" href="${esc(canonical)}">\n<meta property="
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <link rel="stylesheet" href="${root}assets/page.css">
+<link rel="alternate" type="application/atom+xml" title="${TITLE}" href="${root}feed.xml">
+<meta property="article:modified_time" content="${new Date().toISOString().slice(0, 10)}">
 ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` : ''}
 </head>
 <body>
-<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a></header>
+<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}about/">О проекте</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a></header>
 <main>
 ${body}
 </main>
-<footer>Неофициальный русский перевод книги «高性价比人生指南» по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru" rel="noopener">CC BY 4.0</a>. Законы, органы и выплаты в тексте китайские (КНР); российская версия проверена только там, где есть строка «В России».</footer>
+<footer>Обновлено: <time datetime="${new Date().toISOString().slice(0, 10)}">${new Date().toISOString().slice(0, 10).split('-').reverse().join('.')}</time>. Неофициальный русский перевод книги «高性价比人生指南» по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru" rel="noopener">CC BY 4.0</a>. Законы, органы и выплаты в тексте китайские (КНР); российская версия проверена только там, где есть строка «В России».</footer>
 </body>
 </html>
 `;
 }
 
+// Пометка «что в пункте китайское, что российское» (ru/scope.json, классификация tools/ru/classify.mjs)
+const scopeBadge = (sc) => (!sc ? '' : `<li class="badge ${sc.t === 'u' ? 'hi' : 'warn'}">${sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны'}</li>`);
+const scopeNote = (sc, hasRu) => {
+  if (!sc || sc.t === 'u') return '';
+  const lead = sc.t === 'c' ? 'Пункт построен на китайских нормах (КНР): законы, органы, выплаты или номера в нём китайские.' : 'В пункте есть и общее для всех стран, и китайское (законы, органы, выплаты, номера).';
+  const tail = hasRu ? 'Российские данные есть в блоке «В России» ниже.' : 'Российская версия пока не проверена: переносить правила на другую страну нельзя.';
+  return `<p class="scope"><strong>Как в Китае.</strong> ${esc(lead)} ${esc(sc.why || '')} ${tail}</p>`;
+};
+
 export function generatePages({ out, site = '', relatedPath = 'ru/related.json' }) {
   const secs = parseBook();
   const all = secs.flatMap((s) => s.entries);
+  const scope = existsSync('ru/scope.json') ? JSON.parse(readFileSync('ru/scope.json', 'utf8')) : {};
   const related = existsSync(relatedPath) ? JSON.parse(readFileSync(relatedPath, 'utf8')) : {};
   const byKey = Object.fromEntries(all.map((e) => [keyOf(e), e]));
   const url = (p) => (site ? `${site.replace(/\/?$/, '/')}${p}` : '');
@@ -137,7 +149,7 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
     nRel += rel.length;
     const srcItems = splitSrc(e.src).map((x) => `<li>${f(x)}</li>`).join('');
     const prev = flat[idx - 1], next = flat[idx + 1];
-    const badges = [e.ratio ? badge(`Выгодность: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade}`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Есть российская проверка', 'hi') : ''].join('');
+    const badges = [e.ratio ? badge(`Выгодность: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade}`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), scopeBadge(scope[keyOf(e)]), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Есть российская проверка', 'hi') : ''].join('');
     const desc = firstSentence(e.human || e.gain || e.title);
     const canonical = url(`p/${keyOf(e)}/`);
     const body = `<nav class="crumbs" aria-label="Навигация"><a href="${root}contents/">Оглавление</a> › <a href="${root}s/${e.sec}/">${e.sec}. ${esc(sec.title)}</a> › пункт ${e.n}</nav>
@@ -145,18 +157,22 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
 <h1>${e.n}. ${esc(e.title)}</h1>
 <ul class="badges">${badges}</ul>
 ${e.human ? `<p class="human">${f(e.human)}</p>` : ''}
+${scopeNote(scope[keyOf(e)], !!e.ru)}
 <h2>Затраты</h2>
 <p>${f(e.cost)}</p>
+${e.price ? `<h2>Цена в России (ориентир)</h2>\n<p>${f(e.price)}</p>` : ''}
 <h2>Выгода</h2>
 <p>${f(e.gain)}</p>
-${e.ru ? `<h2>В России</h2>\n<p>${f(e.ru)}</p>` : ''}
+${e.ru ? `<h2>В России (российские данные)</h2>\n<p>${f(e.ru)}</p>` : ''}
 ${e.note ? `<h2>Примечания</h2>\n<p>${f(e.note)}</p>` : ''}
 <section class="src"><h2>Источники</h2>\n<ol>${srcItems}</ol></section>
 </article>
 ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul>${rel.map((r) => `<li><a href="${root}p/${keyOf(r)}/">Раздел ${r.sec}, пункт ${r.n}: ${esc(r.title)}</a></li>`).join('')}</ul></aside>` : ''}
 <nav class="pager" aria-label="Соседние пункты"><span>${prev ? `← <a href="${root}p/${keyOf(prev)}/">${prev.sec}.${prev.n} ${esc(prev.title.slice(0, 50))}…</a>` : ''}</span><span>${next ? `<a href="${root}p/${keyOf(next)}/">${next.sec}.${next.n} ${esc(next.title.slice(0, 50))}…</a> →` : ''}</span></nav>
 <p class="note"><a href="${root}#e-${e.sec}-${e.n}">Открыть этот пункт в поиске с фильтрами</a></p>`;
-    const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: e.title.slice(0, 110), description: desc, inLanguage: 'ru', url: canonical || undefined, isPartOf: { '@type': 'Book', name: TITLE }, articleSection: sec.title, license: 'https://creativecommons.org/licenses/by/4.0/' };
+    const cites = [...new Set([...(e.src.matchAll(/https?:\/\/[^\s<>()；;]+/g))].map((m) => m[0].replace(/[.,;]+$/, '')))].slice(0, 8);
+    const today = new Date().toISOString().slice(0, 10);
+    const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: e.title.slice(0, 110), description: desc, inLanguage: 'ru', url: canonical || undefined, mainEntityOfPage: canonical || undefined, datePublished: '2026-10-06', dateModified: today, author: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, publisher: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, translator: { '@type': 'Person', name: 'makslanies', url: 'https://github.com/makslanies' }, isBasedOn: { '@type': 'Book', name: '高性价比人生指南', inLanguage: 'zh-CN', url: UPSTREAM }, isPartOf: { '@type': 'Book', name: TITLE }, articleSection: sec.title, license: 'https://creativecommons.org/licenses/by/4.0/', citation: cites.length ? cites : undefined, about: e.ru ? 'Содержит российские данные' : undefined };
     put(`p/${keyOf(e)}`, page({ root, title: `${e.title} · раздел ${e.sec} · ${TITLE}`, desc, canonical, body, ld }));
     urls.push(`p/${keyOf(e)}/`);
   });

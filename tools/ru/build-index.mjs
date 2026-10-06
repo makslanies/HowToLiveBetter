@@ -3,6 +3,7 @@
 // переводятся подписи, названия полей, сноски «раздел N, пункт M». Аналитику, рекламу и донаты вырезает.
 //   node tools/ru/build-index.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
+import { stats, faq } from './geo-data.mjs';
 
 // репозиторий русской версии (ссылка в шапке); оригинал остаётся только в подвале и README как указание авторов
 const MY_REPO = (process.env.RU_REPO_URL || 'https://github.com/makslanies/HowToLiveBetter').replace(/\/$/, '');
@@ -182,6 +183,36 @@ sub('<div class="k">Примечания</div><div class="v note"></div>', '<div
 sub("f:{ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'),", "f:{rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'),");
 sub("  if (e.ru) renderText(f.ru, e.ru, terms);\n", "  if (e.ru) renderText(f.ru, e.ru, terms);\n" + snip('related-card.js') + "\n");
 sub("    GLOSS = parseGlossary(md);", "    RELATED = EMBED ? (EMBED.related || {}) : await readText('related.json').then((t) => JSON.parse(t), () => ({}));\n    GLOSS = parseGlossary(md);");
+// пометка «что китайское, что российское»: ярлык в карточке и пояснение под «Простыми словами»
+sub("let RELATED = {};", "let RELATED = {};\nlet SCOPE = {};   // ru/scope.json: ключ пункта → {t: c|m|u, why}");
+sub('<p class="human"></p>', '<p class="human"></p>\n        <p class="scope" hidden></p>');
+sub("f:{rel:c.querySelector('.rel'),", "f:{scope:c.querySelector('.scope'), rel:c.querySelector('.rel'),");
+sub("      if (e.dispute) add('danger', 'Спорно');", "      { const sc = SCOPE[e.sec + '-' + e.n]; if (sc) add(sc.t === 'u' ? 'plain' : 'warn', sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны'); }\n      if (e.ru) add('plain', 'Есть российские данные');\n      if (e.dispute) add('danger', 'Спорно');");
+sub("  f.ru.hidden = f.ruK.hidden = !e.ru;", "  { const sc = SCOPE[e.sec + '-' + e.n]; const on = !!sc && sc.t !== 'u'; f.scope.hidden = !on; if (on) f.scope.textContent = 'Как в Китае. ' + (sc.t === 'c' ? 'Пункт построен на китайских нормах (КНР): законы, органы, выплаты или номера в нём китайские. ' : 'В пункте есть и общее для всех стран, и китайское (законы, органы, выплаты, номера). ') + (sc.why || '') + (e.ru ? ' Российские данные есть в строке «В России» ниже.' : ' Российская версия пока не проверена: переносить правила на другую страну нельзя.'); }\n  f.ru.hidden = f.ruK.hidden = !e.ru;");
+sub("<div class=\"k ru-k\" hidden>В России</div>", "<div class=\"k ru-k\" hidden>В России (российские данные)</div>");
+sub("    RELATED = EMBED ?", "    SCOPE = EMBED ? (EMBED.scope || {}) : await readText('scope.json').then((t) => JSON.parse(t), () => ({}));\n    RELATED = EMBED ?");
+sub(".rel a{color:var(--brand-1)}", ".rel a{color:var(--brand-1)}\n.scope{font-size:13px;color:var(--t2);margin:0 0 10px;padding:6px 10px;border-left:3px solid var(--yellow-1);background:var(--yellow-soft);border-radius:4px}");
+
+// строка «Цена в России (ориентир)» под «Затратами»
+sub("title:m[2].trim(), ru:'', cost:''", "title:m[2].trim(), price:'', ru:'', cost:''");
+sub("else if ((m = /^- Примечания:\\s*(.*)$/.exec(line))) entry.note = m[1];", "else if ((m = /^- Примечания:\\s*(.*)$/.exec(line))) entry.note = m[1];\n      else if ((m = /^- Цена в России[^:]*:\\s*(.*)$/.exec(line))) entry.price = m[1];");
+sub('<div class="k">Затраты</div><div class="v cost"></div>', '<div class="k">Затраты</div><div class="v cost"></div>\n          <div class="k price-k" hidden>Цена в России (ориентир)</div><div class="v price" hidden></div>');
+sub("f:{scope:c.querySelector('.scope'),", "f:{price:c.querySelector('.price'), priceK:c.querySelector('.price-k'), scope:c.querySelector('.scope'),");
+sub("  renderText(f.cost, e.cost, terms);\n", "  renderText(f.cost, e.cost, terms);\n  f.price.hidden = f.priceK.hidden = !e.price;\n  if (e.price) renderText(f.price, e.price, terms);\n");
+
+// GEO: видимый статический блок «О книге», частые вопросы и ссылки на все разделы. Его видят краулеры без JavaScript;
+// вопросы совпадают с разметкой FAQPage (tools/ru/geo-data.mjs)
+{
+  const st = stats();
+  const e2 = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const faqHtml = faq(st).map((x) => '<h3>' + e2(x.q) + '</h3><p>' + e2(x.a) + '</p>').join('');
+  const secHtml = st.secs.map((x) => '<li><a href="s/' + x.n + '/">' + x.n + '. ' + e2(x.title) + '</a> (пунктов: ' + x.entries.length + ')</li>').join('');
+  const block = '<section class="about-static" aria-label="О книге">\n      <h2>О книге</h2>\n      <p>«Руководство по жизни с высокой отдачей» — неофициальный русский перевод китайской книги «高性价比人生指南»: ' + st.entries + ' пунктов в ' + st.sections + ' разделах о здоровье, деньгах, праве, работе, семье и безопасности. Подробнее: <a href="about/">о проекте и методе</a>, <a href="contents/">оглавление</a>, <a href="llms.txt">llms.txt</a>.</p>\n      <details><summary>Частые вопросы</summary>' + faqHtml + '</details>\n      <details><summary>Разделы книги (ссылки работают без JavaScript)</summary><ol>' + secHtml + '</ol></details>\n    </section>\n      ';
+  sub('<details class="gloss" id="gloss">', block + '<details class="gloss" id="gloss">');
+  sub('.rel a{color:var(--brand-1)}', '.rel a{color:var(--brand-1)}\n.about-static{margin:20px 0}.about-static h2{font-size:18px;margin:0 0 8px}.about-static h3{font-size:15px;margin:14px 0 4px}.about-static details{margin:8px 0}.about-static summary{cursor:pointer;font-weight:600}.about-static ol{columns:2;padding-left:20px}@media(max-width:700px){.about-static ol{columns:1}}');
+  sub('<meta name="viewport"', '<link rel="alternate" type="application/atom+xml" title="Руководство по жизни с высокой отдачей" href="feed.xml">\n<meta name="viewport"');
+}
+
 // путь к оглавлению для читателей без JavaScript и для поисковиков
 sub('<p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него:', '<p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него: <a href="contents/">оглавление со ссылками на все разделы и пункты</a>,');
 sub('при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>.</div>', 'при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>. <a href="contents/">Оглавление без JavaScript</a>.</div>');

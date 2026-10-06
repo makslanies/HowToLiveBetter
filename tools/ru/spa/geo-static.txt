@@ -1,0 +1,13 @@
+// GEO: видимый статический блок «О книге», частые вопросы и ссылки на все разделы. Его видят краулеры без JavaScript;
+// вопросы совпадают с разметкой FAQPage (tools/ru/geo-data.mjs)
+{
+  const st = stats();
+  const e2 = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const faqHtml = faq(st).map((x) => '<h3>' + e2(x.q) + '</h3><p>' + e2(x.a) + '</p>').join('');
+  const secHtml = st.secs.map((x) => '<li><a href="s/' + x.n + '/">' + x.n + '. ' + e2(x.title) + '</a> (пунктов: ' + x.entries.length + ')</li>').join('');
+  const block = '<section class="about-static" aria-label="О книге">\n      <h2>О книге</h2>\n      <p>«Руководство по жизни с высокой отдачей» — неофициальный русский перевод китайской книги «高性价比人生指南»: ' + st.entries + ' пунктов в ' + st.sections + ' разделах о здоровье, деньгах, праве, работе, семье и безопасности. Подробнее: <a href="about/">о проекте и методе</a>, <a href="contents/">оглавление</a>, <a href="llms.txt">llms.txt</a>.</p>\n      <details><summary>Частые вопросы</summary>' + faqHtml + '</details>\n      <details><summary>Разделы книги (ссылки работают без JavaScript)</summary><ol>' + secHtml + '</ol></details>\n    </section>\n      ';
+  sub('<details class="gloss" id="gloss">', block + '<details class="gloss" id="gloss">');
+  sub('.rel a{color:var(--brand-1)}', '.rel a{color:var(--brand-1)}\n.about-static{margin:20px 0}.about-static h2{font-size:18px;margin:0 0 8px}.about-static h3{font-size:15px;margin:14px 0 4px}.about-static details{margin:8px 0}.about-static summary{cursor:pointer;font-weight:600}.about-static ol{columns:2;padding-left:20px}@media(max-width:700px){.about-static ol{columns:1}}');
+  sub('<meta name="viewport"', '<link rel="alternate" type="application/atom+xml" title="Руководство по жизни с высокой отдачей" href="feed.xml">\n<meta name="viewport"');
+}
+

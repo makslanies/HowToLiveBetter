@@ -9,6 +9,7 @@ import { spawnSync, execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { validate } from './validate.mjs';
 import { generatePages } from './pages.mjs';
+import { generateGeo, robotsTxt, jsonLdHome } from './geo.mjs';
 
 const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : d; };
@@ -60,6 +61,20 @@ writeFileSync(`${OUT}/site/yandex_0d7702b9fd71adfe.html`, '<html>\n    <head>\n 
 writeFileSync(`${OUT}/site/robots.txt`, `User-agent: *\nAllow: /\n${SITE ? `Sitemap: ${SITE}sitemap.xml\n` : ''}`);
 
 if (existsSync('ru/related.json')) cpSync('ru/related.json', `${OUT}/site/related.json`);
+if (existsSync('ru/scope.json')) cpSync('ru/scope.json', `${OUT}/site/scope.json`);
+// GEO: llms.txt, ai/*.json, лента, «О проекте», корневые файлы домена и разметка главной (tools/ru/geo.mjs)
+const geo = generateGeo({ out: `${OUT}/site`, rootOut: `${OUT}/root`, site: SITE, repo: REPO });
+writeFileSync(`${OUT}/site/robots.txt`, robotsTxt(SITE));
+{
+  const today = new Date().toISOString().slice(0, 10);
+  const ld = '<script type="application/ld+json">' + JSON.stringify(jsonLdHome({ site: SITE, repo: REPO, st: geo.st, today })).replace(/</g, '\\u003c') + '</script>\n';
+  const f = `${OUT}/site/index.html`; const h = readFileSync(f, 'utf8');
+  if (!h.includes('</head>')) { console.error('ОШИБКА: в index.html нет </head>'); process.exit(1); }
+  writeFileSync(f, h.replace('</head>', () => ld + '</head>'));
+  indexHtml = readFileSync(f, 'utf8');            // офлайн-версия берёт уже готовую главную
+}
+console.error(`  GEO: llms.txt, llms-full.txt, ai/*.json, feed.xml, about/; корневые файлы домена в ${OUT}/root`);
+
 const pg = generatePages({ out: `${OUT}/site`, site: SITE });
 console.error(`  страниц ${pg.pages} (разделов ${pg.sections}, пунктов ${pg.entries}), ссылок на пункты в тексте ${pg.refLinks}, «Смотрите также» ${pg.relatedLinks}, битых внутренних ссылок ${pg.broken.length}`);
 if (pg.broken.length) { for (const b of pg.broken.slice(0, 15)) console.error('  ОШИБКА: битая ссылка', b); console.error(`\nсборка остановлена: битых внутренних ссылок ${pg.broken.length}`); process.exit(1); }
@@ -68,7 +83,7 @@ if (pg.broken.length) { for (const b of pg.broken.slice(0, 15)) console.error(' 
 step(5, `офлайн-файл → ${OUT}/HowToLiveBetter-ru.html`);
 const readme = readFileSync('ru/README.md', 'utf8');
 const files = [...new Set([...readme.matchAll(/\]\((book\/[^)#\s]+\.md)\)/g)].map((m) => m[1]))].sort();
-const corpus = { readme, parts: Object.fromEntries(files.map((f) => [f, readFileSync(`ru/${f}`, 'utf8')])), docs: {}, related: existsSync('ru/related.json') ? JSON.parse(readFileSync('ru/related.json', 'utf8')) : {} };
+const corpus = { readme, parts: Object.fromEntries(files.map((f) => [f, readFileSync(`ru/${f}`, 'utf8')])), docs: {}, scope: existsSync('ru/scope.json') ? JSON.parse(readFileSync('ru/scope.json', 'utf8')) : {}, related: existsSync('ru/related.json') ? JSON.parse(readFileSync('ru/related.json', 'utf8')) : {} };
 const corpusJson = JSON.stringify(corpus).replace(/<\/script/gi, '<\\/script');   // </script внутри данных закрыл бы тег
 let off = indexHtml;
 const must = (needle, what) => { if (!off.includes(needle)) { console.error(`ОШИБКА: в index.html нет ${what}, скрипт сборки надо поправить: ${needle.slice(0, 60)}`); process.exit(1); } };

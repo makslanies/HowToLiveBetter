@@ -1,0 +1,13 @@
+// GEO: llms.txt, ai/*.json, лента, «О проекте», корневые файлы домена и разметка главной (tools/ru/geo.mjs)
+const geo = generateGeo({ out: `${OUT}/site`, rootOut: `${OUT}/root`, site: SITE, repo: REPO });
+writeFileSync(`${OUT}/site/robots.txt`, robotsTxt(SITE));
+{
+  const today = new Date().toISOString().slice(0, 10);
+  const ld = '<script type="application/ld+json">' + JSON.stringify(jsonLdHome({ site: SITE, repo: REPO, st: geo.st, today })).replace(/</g, '\\u003c') + '</script>\n';
+  const f = `${OUT}/site/index.html`; const h = readFileSync(f, 'utf8');
+  if (!h.includes('</head>')) { console.error('ОШИБКА: в index.html нет </head>'); process.exit(1); }
+  writeFileSync(f, h.replace('</head>', () => ld + '</head>'));
+  indexHtml = readFileSync(f, 'utf8');            // офлайн-версия берёт уже готовую главную
+}
+console.error(`  GEO: llms.txt, llms-full.txt, ai/*.json, feed.xml, about/; корневые файлы домена в ${OUT}/root`);
+

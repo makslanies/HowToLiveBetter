@@ -91,6 +91,17 @@ export function validate() {
     stats.related = Object.values(rel).flat().length;
   }
 
+  // ярлыки Китай/универсально: ключи должны существовать, у китайских и смешанных должно быть пояснение
+  if (existsSync('ru/scope.json')) {
+    const sc = JSON.parse(readFileSync('ru/scope.json', 'utf8'));
+    const keys = new Set(Object.entries(counts).flatMap(([sec, n]) => Array.from({ length: n }, (_, i) => `${sec}-${i + 1}`)));
+    const missing = [...keys].filter((k) => !sc[k]).length, extra = Object.keys(sc).filter((k) => !keys.has(k)).length, noWhy = Object.values(sc).filter((x) => x.t !== 'u' && !x.why).length;
+    if (missing) W(`scope.json: у ${missing} пунктов нет ярлыка`);
+    if (extra) E(`scope.json: ${extra} ключей без пункта`);
+    if (noWhy) W(`scope.json: у ${noWhy} китайских и смешанных пунктов нет пояснения`);
+    stats.scope = Object.keys(sc).length;
+  }
+
   // счётчики в тексте
   const declared = [...new Set([...(readFileSync('ru/index.html', 'utf8') + readme).matchAll(/(\d{3})\s+пункт/g)].map((m) => Number(m[1])))];
   for (const d of declared.filter((x) => x >= 500)) if (d !== stats.entries) W(`в тексте заявлено «${d} пунктов», по факту ${stats.entries}`);

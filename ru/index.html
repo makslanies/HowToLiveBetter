@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="google-site-verification" content="wLzQi1ukjxvHhg1tqMvbR_SGp3KLrD01b5IqgRD3LW4" />
+<link rel="alternate" type="application/atom+xml" title="Руководство по жизни с высокой отдачей" href="feed.xml">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Руководство по жизни с высокой отдачей · меньше денег, времени и сил, больше здоровья, денег и свободы</title>
 <meta name="description" content="Руководство по жизни, расставленное по выгодности: 665 пунктов о здоровье и долголетии, первой помощи, деньгах, защите от мошенников и юридических красных линиях, безработице, риске своего дела, любви и детях, поездках и навыках. В каждом пункте затраты, выгода, надёжность доказательств и первоисточник. Неофициальный русский перевод, законы и органы в тексте китайские.">
@@ -68,6 +69,8 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
 /* 正文里的「第 X 条」交叉引用：点一下就地看那条说什么，不用自己翻过去 */
 .xref{color:var(--brand-1);cursor:pointer;border-bottom:1px dashed currentColor;text-decoration:none}
 .rel a{color:var(--brand-1)}
+.about-static{margin:20px 0}.about-static h2{font-size:18px;margin:0 0 8px}.about-static h3{font-size:15px;margin:14px 0 4px}.about-static details{margin:8px 0}.about-static summary{cursor:pointer;font-weight:600}.about-static ol{columns:2;padding-left:20px}@media(max-width:700px){.about-static ol{columns:1}}
+.scope{font-size:13px;color:var(--t2);margin:0 0 10px;padding:6px 10px;border-left:3px solid var(--yellow-1);background:var(--yellow-soft);border-radius:4px}
 .xref:hover{color:var(--brand-2);border-bottom-style:solid}
 #xref-pop{position:absolute;z-index:80;width:min(430px,calc(100vw - 28px));background:var(--bg-elv);border:1px solid var(--divider);border-radius:10px;box-shadow:var(--shadow);padding:11px 13px;font-size:13.5px;line-height:1.75}
 #xref-pop .xp-h{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px}
@@ -415,6 +418,12 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <p><b>Это неофициальный перевод китайской книги.</b> Законы, органы, телефоны и выплаты в тексте китайские (КНР). Там, где проверена российская версия, под пунктом есть строка «В России». Где её нет, российская проверка ещё не проведена.</p>
       <div class="stat" aria-live="polite">Показано <b id="cnt">–</b> из <span id="tot">–</span> пунктов</div>
       <div class="doc-links">Длинные статьи (на китайском, в оригинальном репозитории): <a href="https://github.com/eternity4719/HowToLiveBetter/tree/main/docs">папка docs</a></div>
+      <section class="about-static" aria-label="О книге">
+      <h2>О книге</h2>
+      <p>«Руководство по жизни с высокой отдачей» — неофициальный русский перевод китайской книги «高性价比人生指南»: 665 пунктов в 34 разделах о здоровье, деньгах, праве, работе, семье и безопасности. Подробнее: <a href="about/">о проекте и методе</a>, <a href="contents/">оглавление</a>, <a href="llms.txt">llms.txt</a>.</p>
+      <details><summary>Частые вопросы</summary><h3>Что это за книга?</h3><p>Неофициальный русский перевод китайской книги «高性价比人生指南»: 665 пунктов в 34 разделах о здоровье и долголетии, первой помощи, деньгах, защите от мошенников, праве, работе, семье и безопасности. Каждый пункт отвечает на два вопроса: что вы тратите (деньги, время, силу воли) и что получаете, и показывает, насколько надёжны доказательства.</p><h3>Чьи законы и данные описаны в книге?</h3><p>В основном китайские (КНР): законы, ведомства, выплаты и номера служб в пунктах китайские. Российские данные есть только там, где под пунктом стоит блок «В России» с источниками, а российские цены даны в строке «Цена в России». Где такого блока нет, российская версия не проверена, и переносить правила на другую страну нельзя.</p><h3>Что значат уровни доказательности A, B и C?</h3><p>A: есть числа из метаанализов, крупных наблюдений или рандомизированных испытаний (434 пунктов). B: исследования есть, но числа менее надёжны или опираются на одно исследование (176). C: опыт автора или общее мнение без прямых исследований (55). Пункты с пометкой «Спорно» (67) содержат и доводы другой стороны.</p><h3>Как проверялся перевод?</h3><p>Книга переведена с помощью моделей ИИ и прошла автоматические проверки: сверку чисел, ссылок и структуры, разбор замечаний отдельной моделью и проверку ясности. Вычитки специалистами (врачами, юристами) не было. При расхождениях верен китайский оригинал.</p><h3>Можно ли считать книгу советом врача или юриста?</h3><p>Нет. Книга даёт общие ориентиры и не заменяет врача, юриста или бухгалтера. Законы и размеры выплат меняются, поэтому в пунктах указаны даты и источники, которые нужно проверять по официальным документам.</p><h3>Как цитировать книгу?</h3><p>Указывайте раздел и пункт, адрес страницы и лицензию. Пример: «Руководство по жизни с высокой отдачей, раздел 1, пункт 30». Текст опубликован по лицензии CC BY 4.0: можно копировать и переделывать, указав источник, ссылку на оригинал https://github.com/eternity4719/HowToLiveBetter и изменения.</p></details>
+      <details><summary>Разделы книги (ссылки работают без JavaScript)</summary><ol><li><a href="s/1/">1. Не умирайте раньше времени</a> (пунктов: 42)</li><li><a href="s/2/">2. Не умирайте медленно</a> (пунктов: 42)</li><li><a href="s/3/">3. Не тратьте силы впустую</a> (пунктов: 24)</li><li><a href="s/4/">4. Не тратьте время впустую</a> (пунктов: 18)</li><li><a href="s/5/">5. Не тратьте деньги зря</a> (пунктов: 45)</li><li><a href="s/6/">6. Антисписок</a> (пунктов: 29)</li><li><a href="s/7/">7. Как жить, когда нет денег</a> (пунктов: 22)</li><li><a href="s/8/">8. Не подставляйте себя: правовая и имущественная безопасность</a> (пунктов: 46)</li><li><a href="s/9/">9. Правовые границы, которые обычному человеку легко нарушить</a> (пунктов: 26)</li><li><a href="s/10/">10. Выгодно ли встречаться и вступать в брак</a> (пунктов: 20)</li><li><a href="s/11/">11. Красные линии, которые легко переступают программисты и технические специалисты</a> (пунктов: 19)</li><li><a href="s/12/">12. Предпринимательство и бизнес: не потеряйте семейное имущество</a> (пунктов: 24)</li><li><a href="s/13/">13. Экстренные ситуации: что делать сначала</a> (пунктов: 44)</li><li><a href="s/14/">14. Безопасность аккаунтов и информации</a> (пунктов: 10)</li><li><a href="s/15/">15. Аренда и покупка жилья</a> (пунктов: 9)</li><li><a href="s/16/">16. Как жить после выявления хронической болезни</a> (пунктов: 9)</li><li><a href="s/17/">17. В семье есть пожилые люди</a> (пунктов: 9)</li><li><a href="s/18/">18. Выгодно ли растить детей</a> (пунктов: 6)</li><li><a href="s/19/">19. Работа, увольнение и производственные травмы</a> (пунктов: 18)</li><li><a href="s/20/">20. Как ухаживать за новорождённым</a> (пунктов: 13)</li><li><a href="s/21/">21. Выезд за границу, путешествия и безопасность за рубежом</a> (пунктов: 11)</li><li><a href="s/22/">22. Как расслабиться: развлекательные заведения и снятие стресса</a> (пунктов: 10)</li><li><a href="s/23/">23. Какие навыки выгодно осваивать</a> (пунктов: 23)</li><li><a href="s/24/">24. Обращение к врачу: как тратить меньше денег и избегать лишних шагов</a> (пунктов: 12)</li><li><a href="s/25/">25. Что нужно сделать после смерти человека</a> (пунктов: 10)</li><li><a href="s/26/">26. Создать сайт или платформу: разрешения, регистрационный учёт и серверы</a> (пунктов: 11)</li><li><a href="s/27/">27. Беременность и роды: от обнаружения беременности до выписки и оформления документов</a> (пунктов: 16)</li><li><a href="s/28/">28. Не портите здоровье ради внешности</a> (пунктов: 9)</li><li><a href="s/29/">29. После тяжёлого потрясения</a> (пунктов: 13)</li><li><a href="s/30/">30. Дети, которые уже пошли в школу</a> (пунктов: 18)</li><li><a href="s/31/">31. Какие пути есть после восемнадцати лет</a> (пунктов: 16)</li><li><a href="s/32/">32. Учёба за границей: статус, работа, страховка и признание диплома после возвращения в Китай</a> (пунктов: 10)</li><li><a href="s/33/">33. Как жить после наступления инвалидности</a> (пунктов: 20)</li><li><a href="s/34/">34. Не навредите себе лекарствами из домашней аптечки</a> (пунктов: 11)</li></ol></details>
+    </section>
       <details class="gloss" id="gloss"><summary>Непонятные сокращения и термины</summary><p>Слова с пунктирным подчёркиванием можно нажать или навести на них курсор, появится пояснение. Весь список ниже.</p><dl></dl></details>
     </div>
     <div id="list">
@@ -489,7 +498,7 @@ function parseReadme(md){
     if ((m = /^#{1,2} (\d+)\. (.+)$/.exec(line))) { flush(); sec = {n:m[1], title:m[2].trim(), intro:[], entries:[]}; sections.push(sec); continue; }
     if (/^#{1,2} /.test(line)) { flush(); sec = null; continue; }
     if (!sec) continue;
-    if ((m = /^### (\d+)\. (.+)$/.exec(line))) { flush(); entry = {sec:sec.n, n:m[1], title:m[2].trim(), ru:'', cost:'', human:'', gain:'', grade:'', src:'', note:'', money:'', time:'', will:'', level:'', lens:''}; continue; }
+    if ((m = /^### (\d+)\. (.+)$/.exec(line))) { flush(); entry = {sec:sec.n, n:m[1], title:m[2].trim(), price:'', ru:'', cost:'', human:'', gain:'', grade:'', src:'', note:'', money:'', time:'', will:'', level:'', lens:''}; continue; }
     if ((m = /^\x3c!--\s*成本标签:\s*(.*?)\s*-->/.exec(line)) && entry){
       for (const kv of m[1].split(/\s+/)){ const [k,v] = kv.split('='); if(k==='钱') entry.money=v; if(k==='时间') entry.time=v; if(k==='毅力') entry.will=v; if(k==='收益') entry.level=v; if(k==='口径') entry.lens=v; }
       continue;
@@ -504,6 +513,7 @@ function parseReadme(md){
       else if ((m = /^- Источники \(Россия\):\s*(.*)$/.exec(line))) entry.src += '; Россия: ' + m[1];
       else if ((m = /^- Примечание к «В России»:\s*(.*)$/.exec(line))) entry.ru = (entry.ru ? entry.ru + ' ' : '') + m[1];
       else if ((m = /^- Примечания:\s*(.*)$/.exec(line))) entry.note = m[1];
+      else if ((m = /^- Цена в России[^:]*:\s*(.*)$/.exec(line))) entry.price = m[1];
       continue;
     }
     if (line) sec.intro.push(line);   // 第一条之前的每一段导读都收，不止第一段
@@ -693,7 +703,8 @@ const XREF_MAIN = `раздел(?:а|е|у|ом)?\\s+(\\d+),\\s*пункт(?:а|
 const XREF_RE = new RegExp(`${XREF_MAIN}|пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})(?=\\s*\\()`, 'gi');
 const XREF_BARE_RE = new RegExp(`${XREF_MAIN}|пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})`, 'gi');
 let BARE = false;   // во введениях разделов «пункт N» без раздела значит пункт этого раздела
-let RELATED = {};   // «Смотрите также»: ключ пункта → ключи похожих (related.json)
+let RELATED = {};
+let SCOPE = {};   // ru/scope.json: ключ пункта → {t: c|m|u, why}   // «Смотрите также»: ключ пункта → ключи похожих (related.json)
 // 「8 到 10」摊成 8、9、10；上限 40 是防着把法条条款号那种大范围摊成几百个键
 const xrefKeys = (sec, spec) => {
   const ns = [];
@@ -967,10 +978,12 @@ function build(sections){
         <div class="card-h"><span class="idx">${e.n}</span><h3 class="t"></h3><a class="anchor" href="#${id}" aria-label="Ссылка на пункт">#</a><a class="anchor" href="p/${e.sec}-${e.n}/" aria-label="Отдельная страница пункта" title="Отдельная страница">↗</a></div>
         <div class="badges"></div>
         <p class="human"></p>
+        <p class="scope" hidden></p>
         <div class="rows">
           <div class="k">Затраты</div><div class="v cost"></div>
+          <div class="k price-k" hidden>Цена в России (ориентир)</div><div class="v price" hidden></div>
           <div class="k">Выгода</div><div class="v gain"></div>
-          <div class="k ru-k" hidden>В России</div><div class="v ru" hidden></div>
+          <div class="k ru-k" hidden>В России (российские данные)</div><div class="v ru" hidden></div>
           <div class="k">Примечания</div><div class="v note"></div>
           <div class="k rel-k" hidden>Смотрите также</div><div class="v rel" hidden></div>
         </div>
@@ -984,10 +997,12 @@ function build(sections){
       add(e.grade, `Доказательность ${e.grade}`);
       if (e.lens) add('plain', LENS_LABEL[e.lens] || e.lens);
       for (const d of ['money','time','will']) if (e[d]) add('plain', LABEL[d][e[d]] || e[d]);
+      { const sc = SCOPE[e.sec + '-' + e.n]; if (sc) add(sc.t === 'u' ? 'plain' : 'warn', sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны'); }
+      if (e.ru) add('plain', 'Есть российские данные');
       if (e.dispute) add('danger', 'Спорно');
       if (e.todo) add('warn', 'Есть непроверенное');
       block.appendChild(c);
-      const card = {e, el:c, key:null, vis:false, f:{rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'), t:c.querySelector('.t'), cost:c.querySelector('.cost'), human:c.querySelector('.human'), gain:c.querySelector('.gain'), note:c.querySelector('.note'), src:c.querySelector('.src .body'), srcN:c.querySelector('.src summary .cnt'), details:c.querySelector('.src')}};
+      const card = {e, el:c, key:null, vis:false, f:{price:c.querySelector('.price'), priceK:c.querySelector('.price-k'), scope:c.querySelector('.scope'), rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'), t:c.querySelector('.t'), cost:c.querySelector('.cost'), human:c.querySelector('.human'), gain:c.querySelector('.gain'), note:c.querySelector('.note'), src:c.querySelector('.src .body'), srcN:c.querySelector('.src summary .cnt'), details:c.querySelector('.src')}};
       renderCard(card, [], '');
       CARDS.push(card); CARD_OF.set(c, card); CARD_IO.observe(c);
     }
@@ -1037,9 +1052,12 @@ function renderCard(card, terms, key){
   CUR_SEC = e.sec;                 // 「本节第 X 条」要按这张卡片所属的节来解析
   renderText(f.t, e.title, terms);
   renderText(f.cost, e.cost, terms);
+  f.price.hidden = f.priceK.hidden = !e.price;
+  if (e.price) renderText(f.price, e.price, terms);
   f.human.hidden = !e.human;
   if (e.human) renderText(f.human, e.human, terms);
   renderText(f.gain, e.gain, terms);
+  { const sc = SCOPE[e.sec + '-' + e.n]; const on = !!sc && sc.t !== 'u'; f.scope.hidden = !on; if (on) f.scope.textContent = 'Как в Китае. ' + (sc.t === 'c' ? 'Пункт построен на китайских нормах (КНР): законы, органы, выплаты или номера в нём китайские. ' : 'В пункте есть и общее для всех стран, и китайское (законы, органы, выплаты, номера). ') + (sc.why || '') + (e.ru ? ' Российские данные есть в строке «В России» ниже.' : ' Российская версия пока не проверена: переносить правила на другую страну нельзя.'); }
   f.ru.hidden = f.ruK.hidden = !e.ru;
   if (e.ru) renderText(f.ru, e.ru, terms);
   const rk = RELATED[e.sec + '-' + e.n] || [];
@@ -1431,6 +1449,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !TIP.hid
     const t1 = performance.now();
     const sections = parseReadme(parts.join('\n\n'));
     if (!sections.length) throw new Error('empty');
+    SCOPE = EMBED ? (EMBED.scope || {}) : await readText('scope.json').then((t) => JSON.parse(t), () => ({}));
     RELATED = EMBED ? (EMBED.related || {}) : await readText('related.json').then((t) => JSON.parse(t), () => ({}));
     GLOSS = parseGlossary(md);
     PERF.log('解析正文', t1, files.length + ' 个文件');
