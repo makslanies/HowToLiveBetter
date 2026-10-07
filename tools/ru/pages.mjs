@@ -102,7 +102,7 @@ ${canonical ? `<link rel="canonical" href="${esc(canonical)}">\n<meta property="
 ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` : ''}
 </head>
 <body>
-<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}about/">О проекте</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a></header>
+<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}about/">О проекте</a><a href="${root}author/">Автор</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a></header>
 <main>
 ${body}
 </main>
@@ -209,7 +209,7 @@ ${intro}
 <p class="scope">${esc(COUNTRY_GUIDE)}</p>
 <ol class="list" style="padding-left:0;list-style:none">${items}</ol>`;
     put('contents', page({ root, title: `Оглавление · ${TITLE}`, desc: `Оглавление: ${secs.length} разделов и ${all.length} пунктов руководства по жизни с высокой отдачей.`, canonical: url('contents/'), body }));
-    urls.push('contents/', 'about/', 'privacy/');
+    urls.push('contents/', 'about/', 'author/', 'privacy/');
   }
 
   // sitemap

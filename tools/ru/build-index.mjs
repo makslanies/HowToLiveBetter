@@ -213,6 +213,8 @@ sub("  renderText(f.cost, e.cost, terms);\n", "  renderText(f.cost, e.cost, term
   const block = '<section class="about-static" aria-label="О книге">\n      <h2>О книге</h2>\n      <p>«Руководство по жизни с высокой отдачей» — неофициальный русский перевод китайской книги «高性价比人生指南»: ' + st.entries + ' пунктов в ' + st.sections + ' разделах о здоровье, деньгах, праве, работе, семье и безопасности. Подробнее: <a href="about/">о проекте и методе</a>, <a href="contents/">оглавление</a>, <a href="llms.txt">llms.txt</a>.</p>\n      <details><summary>Частые вопросы</summary>' + faqHtml + '</details>\n      <details><summary>Разделы книги (ссылки работают без JavaScript)</summary><ol>' + secHtml + '</ol></details>\n    </section>\n      ';
   sub('<details class="gloss" id="gloss">', block + '<details class="gloss" id="gloss">');
   sub('.rel a{color:var(--brand-1)}', '.rel a{color:var(--brand-1)}\n.about-static{margin:20px 0}.about-static h2{font-size:18px;margin:0 0 8px}.about-static h3{font-size:15px;margin:14px 0 4px}.about-static details{margin:8px 0}.about-static summary{cursor:pointer;font-weight:600}.about-static ol{columns:2;padding-left:20px}@media(max-width:700px){.about-static ol{columns:1}}');
+  sub('<div class="nav-r">', '<div class="nav-r">\n      <a class="nav-text" href="author/">Автор</a>');
+  sub('.icon-btn:hover{', '.nav-text{font-size:14px;color:var(--t2);padding:0 10px;line-height:36px;border-radius:8px;white-space:nowrap}.nav-text:hover{background:var(--bg-soft);color:var(--t1);text-decoration:none}\n.icon-btn:hover{');
   sub('<meta name="viewport"', '<link rel="alternate" type="application/atom+xml" title="Руководство по жизни с высокой отдачей" href="feed.xml">\n<meta name="viewport"');
 }
 

@@ -81,6 +81,26 @@ ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
   const ld = { '@context': 'https://schema.org', '@type': 'AboutPage', name: 'О проекте', url: `${site}about/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@id': `${site}#project` } };
   w(out, 'about/index.html', page({ root: '../', title: `О проекте · ${TITLE}`, desc: cut(lead, 155), canonical: `${site}about/`, body, ld }));
 
+  // ---- author/index.html ----
+  const MAIL = 'max0r@yandex.ru', SUBJECT = 'HowToLiveBetter';
+  const authorBody = `<h1>Автор</h1>
+<p><strong>Максим Ланиес</strong> — автор русской версии «${TITLE}».</p>
+<h2>Идея</h2>
+<p>Я взял китайскую книгу «高性价比人生指南» (<a href="${UPSTREAM}" rel="noopener">репозиторий оригинала</a>) и перевёл её на русский. Книга считает, что даёт каждое действие и сколько оно стоит: жизнь, время, деньги, свобода. Мне показалось, что такой подход нужен и русскоязычному читателю.</p>
+<h2>Что я добавил</h2>
+<p>Перевод оригинала — это основа. Сверху я сделал следующее.</p>
+<ul>
+<li>Разделил китайские и российские данные. Всё, что относится к Китаю, помечено как «Китай», российские сведения вынесены в отдельные поля «Россия».</li>
+<li>Добавил российские цены рядом с китайскими.</li>
+<li>Проверяю российские нормы по официальным источникам: законы, приказы, клинические рекомендации, памятки ведомств. Каждая цитата сверяется с текстом страницы, числа — с цитатами.</li>
+<li>Сделал сайт с поиском, фильтрами, оглавлением и ссылками между связанными пунктами.</li>
+</ul>
+<p>Перевод сделан моделями ИИ с автоматической сверкой. Вычитки врачами и юристами не было, подробности — на странице <a href="../about/">«О проекте»</a>. Российский слой заполнен пока не для всех пунктов и дополняется.</p>
+<h2>Связаться</h2>
+<p>По всем вопросам и предложениям пишите на почту <a href="mailto:${MAIL}?subject=${SUBJECT}">${MAIL}</a>. Тема письма: «${SUBJECT}».</p>`;
+  const authorLd = { '@context': 'https://schema.org', '@type': 'ProfilePage', name: 'Автор', url: `${site}author/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@type': 'Person', name: 'Максим Ланиес', email: MAIL, url: OWNER.url } };
+  w(out, 'author/index.html', page({ root: '../', title: `Автор · ${TITLE}`, desc: 'Максим Ланиес — автор русской версии: идея перевода, что добавлено к оригиналу, как связаться.', canonical: `${site}author/`, body: authorBody, ld: authorLd }));
+
   // ---- privacy/index.html ----
   const tpl = readFileSync('tools/ru/spa/privacy-body.txt', 'utf8');
   const fillIn = (t) => t.replace(/\$\{(\w+)\}/g, (_, k) => ({ TITLE, OWNER_URL: OWNER.url, OWNER_NAME: OWNER.name, REPO: repo, TODAY: today, TODAY_RU: today.split('-').reverse().join('.') })[k] ?? '');

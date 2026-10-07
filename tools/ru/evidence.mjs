@@ -54,7 +54,7 @@ const keywordsOf = (t) => [...new Set((t.toLowerCase().match(/[а-яё]{5,}/g) |
 
 const PLANS = existsSync('ru-work/evidence/plans.json') ? JSON.parse(readFileSync('ru-work/evidence/plans.json', 'utf8')) : {};
 const book = Object.fromEntries(parseBook().flatMap((s) => s.entries.map((e) => [keyOf(e), e])));
-const todo = Object.keys(PLANS).filter((k) => (!ONLY.length || ONLY.includes(k)) && book[k] && !book[k].ru && (REDO || ONLY.length || !(state[k] && (state[k].pages.length || state[k].tries >= 2))));
+const todo = Object.keys(PLANS).filter((k) => PLANS[k].q && PLANS[k].q.length && (!ONLY.length || ONLY.includes(k)) && book[k] && !book[k].ru && (REDO || ONLY.length || !(state[k] && (state[k].pages.length || state[k].tries >= 2))));
 console.error(`в плане ${Object.keys(PLANS).length}, к обработке ${todo.length}; за запуск не больше ${MAX}`);
 if (DRY) { for (const k of todo.slice(0, 15)) console.error(`  ${k} ${PLANS[k].q[0]}`); process.exit(0); }
 
