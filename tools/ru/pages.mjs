@@ -14,7 +14,7 @@ const unmd = (s) => s.replace(/\\([*_])/g, '$1');
 
 const CSS = `:root{--bg:#fff;--t1:#222;--t2:#555;--line:#e2e2e3;--soft:#f6f6f7;--brand:#3451b2;--ok:#18794e;--warn:#915930;--bad:#b8272c}
 @media(prefers-color-scheme:dark){:root{--bg:#1b1b1f;--t1:#e6e6e0;--t2:#a8a8a8;--line:#2e2e32;--soft:#202127;--brand:#a8b1ff;--ok:#3dd68c;--warn:#e0b070;--bad:#ff8a8a}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t1);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t1);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif}
 a{color:var(--brand)}header.top,footer{max-width:780px;margin:0 auto;padding:14px 20px;font-size:14px;color:var(--t2)}
 header.top{border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center}.print-icon{margin-left:auto;text-decoration:none;display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--t2);cursor:pointer}header.top a.print-icon{margin-right:0}.pdf-icon+.print-icon{margin-left:6px}.print-icon:hover{color:var(--brand);border-color:var(--brand)}.print-icon svg{width:20px;height:20px;fill:currentColor}header.top a{margin-right:14px;text-decoration:none}
 main{max-width:780px;margin:0 auto;padding:8px 20px 40px}h1{font-size:26px;line-height:1.3;margin:.6em 0 .4em}h2{font-size:17px;margin:1.4em 0 .3em}
