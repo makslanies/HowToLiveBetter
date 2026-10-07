@@ -3,6 +3,7 @@
 // Вызывается из build.mjs; можно запустить отдельно: node tools/ru/pages.mjs --out dist-ru/site --site https://USER.github.io/REPO/
 import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { parseBook, keyOf, LENS, LABEL } from './parse.mjs';
 import { COUNTRY_GUIDE, countryView, countrySummary, countryStatus, sourceGroups } from './country-fields.mjs';
 
@@ -23,6 +24,7 @@ main{max-width:780px;margin:0 auto;padding:8px 20px 40px}h1{font-size:26px;line-
 .src ol{padding-left:22px;font-size:14px;color:var(--t2);word-break:break-word}.related ul,.list{padding-left:20px}.list li{margin:.5em 0}.list .sub{display:block;font-size:14px;color:var(--t2)}
 .pager{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
 .suggest{font-size:14px;color:var(--t2);margin-top:18px}.print-btn{font:inherit;color:var(--brand);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}@media print{header.top,.pager,.related,.suggest,.note,footer,.crumbs{display:none!important}body{background:#fff;color:#000}a{color:inherit;text-decoration:none}}.note{font-size:14px;color:var(--t2);margin-top:24px}.scope{font-size:14px;color:var(--t2);margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:var(--soft);border-radius:4px}footer{border-top:1px solid var(--line);margin-top:20px}`;
+const CSS_V = createHash('sha1').update(CSS).digest('hex').slice(0, 8);
 
 // ---------- текст ----------
 const NUMS = '(?:с\\s+)?\\d+(?:\\s*(?:,|и)\\s*\\d+)*(?:\\s*(?:–|—|-|по)\\s*\\d+)?';
@@ -98,13 +100,13 @@ ${canonical ? `<link rel="canonical" href="${esc(canonical)}">\n<meta property="
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
-<link rel="stylesheet" href="${root}assets/page.css">
+<link rel="stylesheet" href="${root}assets/page.css?v=${CSS_V}">
 <link rel="alternate" type="application/atom+xml" title="${TITLE}" href="${root}feed.xml">
 <meta property="article:modified_time" content="${new Date().toISOString().slice(0, 10)}">
 ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` : ''}
 </head>
 <body>
-<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}about/">О проекте</a><a href="${root}author/">Автор</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a><button type="button" class="print-icon" onclick="window.print()" aria-label="Распечатать страницу" title="Распечатать страницу"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v4H7zM5 8h14a3 3 0 0 1 3 3v6h-4v4H6v-4H2v-6a3 3 0 0 1 3-3zm3 7v4h8v-4zm10-3.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></button></header>
+<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}about/">О проекте</a><a href="${root}author/">Автор</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a><button type="button" class="print-icon" onclick="window.print()" aria-label="Распечатать страницу" title="Распечатать страницу"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M7 3h10v4H7zM5 8h14a3 3 0 0 1 3 3v6h-4v4H6v-4H2v-6a3 3 0 0 1 3-3zm3 7v4h8v-4zm10-3.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></button></header>
 <main>
 ${body}
 </main>
