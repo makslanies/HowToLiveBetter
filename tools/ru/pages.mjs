@@ -16,14 +16,16 @@ const CSS = `:root{--bg:#fff;--t1:#222;--t2:#555;--line:#e2e2e3;--soft:#f6f6f7;-
 @media(prefers-color-scheme:dark){:root{--bg:#1b1b1f;--t1:#e6e6e0;--t2:#a8a8a8;--line:#2e2e32;--soft:#202127;--brand:#a8b1ff;--ok:#3dd68c;--warn:#e0b070;--bad:#ff8a8a}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t1);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:var(--brand)}header.top,footer{max-width:780px;margin:0 auto;padding:14px 20px;font-size:14px;color:var(--t2)}
-header.top{border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center}.print-icon{margin-left:auto;display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--t2);cursor:pointer}.print-icon:hover{color:var(--brand);border-color:var(--brand)}.print-icon svg{width:20px;height:20px;fill:currentColor}header.top a{margin-right:14px;text-decoration:none}
+header.top{border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center}.print-icon{margin-left:auto;text-decoration:none;display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--t2);cursor:pointer}header.top a.print-icon{margin-right:0}.pdf-icon+.print-icon{margin-left:6px}.print-icon:hover{color:var(--brand);border-color:var(--brand)}.print-icon svg{width:20px;height:20px;fill:currentColor}header.top a{margin-right:14px;text-decoration:none}
 main{max-width:780px;margin:0 auto;padding:8px 20px 40px}h1{font-size:26px;line-height:1.3;margin:.6em 0 .4em}h2{font-size:17px;margin:1.4em 0 .3em}
 .crumbs{font-size:14px;color:var(--t2);margin-top:14px}.badges{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;padding:0;list-style:none}
 .badge{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--soft);border:1px solid var(--line);color:var(--t2)}
 .badge.hi{color:var(--ok)}.badge.warn{color:var(--bad)}.human{background:var(--soft);border-left:4px solid var(--brand);padding:10px 14px;border-radius:6px}
 .src ol{padding-left:22px;font-size:14px;color:var(--t2);word-break:break-word}.related ul,.list{padding-left:20px}.list li{margin:.5em 0}.list .sub{display:block;font-size:14px;color:var(--t2)}
 .pager{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
-.suggest{font-size:14px;color:var(--t2);margin-top:18px}.print-btn{font:inherit;color:var(--brand);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}@media print{header.top,.pager,.related,.suggest,.note,footer,.crumbs{display:none!important}body{background:#fff;color:#000}a{color:inherit;text-decoration:none}}.note{font-size:14px;color:var(--t2);margin-top:24px}.scope{font-size:14px;color:var(--t2);margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:var(--soft);border-radius:4px}footer{border-top:1px solid var(--line);margin-top:20px}`;
+.suggest{font-size:14px;color:var(--t2);margin-top:18px}.print-btn{font:inherit;color:var(--brand);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}@media print{header.top,.pager,.related,.suggest,main>.note,footer,.crumbs,#cookie-banner{display:none!important}body{background:#fff;color:#000}a{color:inherit;text-decoration:none}}.note{font-size:14px;color:var(--t2);margin-top:24px}.scope{font-size:14px;color:var(--t2);margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:var(--soft);border-radius:4px}footer{border-top:1px solid var(--line);margin-top:20px}`;
+const pdfOn = () => process.env.HLTB_PDF === '1';        // флаг читается при вызове: build.mjs выставляет его после загрузки модулей
+const PDF_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="1.5" y="6" width="21" height="12" rx="2.5" fill="currentColor"/><text x="12" y="15.2" font-size="8.4" font-weight="800" text-anchor="middle" fill="var(--bg)" font-family="system-ui,sans-serif">PDF</text></svg>';
 const CSS_V = createHash('sha1').update(CSS).digest('hex').slice(0, 8);
 
 // ---------- текст ----------
@@ -87,7 +89,8 @@ const firstSentence = (s, max = 160) => { const t = unmd(s).replace(/\*\*/g, '')
 // ---------- страницы ----------
 export const suggestHref = (e, link) => `mailto:max0r@yandex.ru?subject=HowToLiveBetter&body=${encodeURIComponent(`Пункт: раздел ${e.sec}, пункт ${e.n}. ${e.title}\n${link || ''}\n\nЧто исправить и на какой источник опереться:\n`)}`;
 
-export function page({ root, title, desc, canonical, body, ld }) {
+export function page({ root, title, desc, canonical, body, ld, pdf }) {
+  const pdfLink = pdfOn() ? `<a class="print-icon pdf-icon" href="${pdf ? pdf.href : root + 'pdf/book.pdf'}" download title="${pdf ? pdf.title : 'Скачать всю книгу в PDF'}" aria-label="Скачать PDF">${PDF_ICON}</a>` : '';
   return `<!doctype html>
 <html lang="ru">
 <head>
@@ -106,7 +109,7 @@ ${canonical ? `<link rel="canonical" href="${esc(canonical)}">\n<meta property="
 ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` : ''}
 </head>
 <body>
-<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}about/">О проекте</a><a href="${root}author/">Автор</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a><button type="button" class="print-icon" onclick="window.print()" aria-label="Распечатать страницу" title="Распечатать страницу"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M7 3h10v4H7zM5 8h14a3 3 0 0 1 3 3v6h-4v4H6v-4H2v-6a3 3 0 0 1 3-3zm3 7v4h8v-4zm10-3.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></button></header>
+<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}about/">О проекте</a><a href="${root}author/">Автор</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a>${pdfLink}<button type="button" class="print-icon" onclick="window.print()" aria-label="Распечатать страницу" title="Распечатать страницу"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M7 3h10v4H7zM5 8h14a3 3 0 0 1 3 3v6h-4v4H6v-4H2v-6a3 3 0 0 1 3-3zm3 7v4h8v-4zm10-3.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></button></header>
 <main>
 ${body}
 </main>
@@ -129,6 +132,7 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
   const url = (p) => (site ? `${site.replace(/\/?$/, '/')}${p}` : '');
   const urls = [''];
   let nLinks = 0, nRel = 0;
+  const ARTS = {}, SECH = {}, ORDER = {};
   const put = (p, html) => { const f = join(out, p, 'index.html'); mkdirSync(dirname(f), { recursive: true }); writeFileSync(f, html); };
 
   mkdirSync(join(out, 'assets'), { recursive: true });
@@ -180,7 +184,9 @@ ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul
     const cites = [...new Set([...(e.src.matchAll(/https?:\/\/[^\s<>()；;]+/g))].map((m) => m[0].replace(/[.,;]+$/, '')))].slice(0, 8);
     const today = new Date().toISOString().slice(0, 10);
     const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: e.title.slice(0, 110), description: desc, inLanguage: 'ru', url: canonical || undefined, mainEntityOfPage: canonical || undefined, datePublished: '2026-10-06', dateModified: today, author: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, publisher: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, translator: { '@type': 'Person', name: 'makslanies', url: 'https://github.com/makslanies' }, isBasedOn: { '@type': 'Book', name: '高性价比人生指南', inLanguage: 'zh-CN', url: UPSTREAM }, isPartOf: { '@type': 'Book', name: TITLE }, articleSection: sec.title, license: 'https://creativecommons.org/licenses/by/4.0/', citation: cites.length ? cites : undefined, about: e.ru ? 'Содержит российские данные' : undefined };
-    put(`p/${keyOf(e)}`, page({ root, title: `${e.title} · раздел ${e.sec} · ${TITLE}`, desc, canonical, body, ld }));
+    put(`p/${keyOf(e)}`, page({ root, title: `${e.title} · раздел ${e.sec} · ${TITLE}`, desc, canonical, body, ld, pdf: { href: `${root}pdf/p/${keyOf(e)}.pdf`, title: 'Скачать пункт в PDF' } }));
+    ARTS[keyOf(e)] = (body.match(/<article>[\s\S]*?<\/article>/) || [''])[0];
+    (ORDER[e.sec] ||= []).push(keyOf(e));
     urls.push(`p/${keyOf(e)}/`);
   });
 
@@ -198,7 +204,8 @@ ${intro}
 <h2>Пункты раздела (${s.entries.length})</h2>
 <ol class="list" style="padding-left:0;list-style:none">${list}</ol>
 <p class="note"><a href="${root}?sec=${s.n}">Открыть раздел в поиске с фильтрами</a></p>`;
-    put(`s/${s.n}`, page({ root, title: `${s.n}. ${s.title} · ${TITLE}`, desc: firstSentence(s.intro[0] || s.title), canonical: url(`s/${s.n}/`), body, ld: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: s.title, inLanguage: 'ru', url: url(`s/${s.n}/`) || undefined, isPartOf: { '@type': 'Book', name: TITLE } } }));
+    SECH[s.n] = { title: s.title, intro };
+    put(`s/${s.n}`, page({ root, pdf: { href: `${root}pdf/s/${s.n}.pdf`, title: 'Скачать раздел в PDF' }, title: `${s.n}. ${s.title} · ${TITLE}`, desc: firstSentence(s.intro[0] || s.title), canonical: url(`s/${s.n}/`), body, ld: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: s.title, inLanguage: 'ru', url: url(`s/${s.n}/`) || undefined, isPartOf: { '@type': 'Book', name: TITLE } } }));
     urls.push(`s/${s.n}/`);
   }
 
@@ -223,13 +230,15 @@ ${intro}
     writeFileSync(join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${url(u)}</loc><lastmod>${day}</lastmod></url>`).join('\n')}\n</urlset>\n`);
   }
 
+  if (pdfOn()) { const tmp = join(dirname(out), 'pdf-tmp'); mkdirSync(tmp, { recursive: true }); writeFileSync(join(tmp, 'articles.json'), JSON.stringify({ arts: ARTS, secs: SECH, order: ORDER })); }
+
   // проверка: все внутренние ссылки ведут на существующие страницы
   const broken = [];
   const walk = (d) => { for (const n of readdirSync(d)) { const p = join(d, n); statSync(p).isDirectory() ? walk(p) : /\.html$/.test(n) && check(p); } };
   const check = (file) => {
     const html = readFileSync(file, 'utf8');
     for (const m of html.matchAll(/(?:href|src)="([^"#?]*)(?:[?#][^"]*)?"/g)) {
-      const h = m[1]; if (!h || /^(https?:|mailto:|data:)/.test(h)) continue;
+      const h = m[1]; if (!h || /^(https?:|mailto:|data:)/.test(h) || /(^|\/)pdf\//.test(h)) continue;
       const target = resolve(dirname(file), h);
       const ok = existsSync(target) && (statSync(target).isFile() || existsSync(join(target, 'index.html')));
       if (!ok) broken.push(`${file.replace(out + '/', '')}: ${h}`);

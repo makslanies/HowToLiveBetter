@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { validate } from './validate.mjs';
 import { generatePages } from './pages.mjs';
 import { generateGeo, robotsTxt, jsonLdHome } from './geo.mjs';
+import { findChrome, buildPdf } from './pdf.mjs';
 
 const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : d; };
@@ -17,6 +18,9 @@ const OUT = opt('out', 'dist-ru');
 const REPO = opt('repo-url', 'https://github.com/makslanies/HowToLiveBetter').replace(/\/$/, '');
 const SITE = opt('site-url', 'https://makslanies.github.io/HowToLiveBetter/');
 const CHECK = args.includes('--check');
+// PDF для скачивания (книга, разделы, пункты) собирает Chrome; без него или с --no-pdf ссылок на PDF на сайте нет
+const WANT_PDF = !CHECK && !args.includes('--no-pdf') && !!findChrome();
+if (WANT_PDF) process.env.HLTB_PDF = '1'; else delete process.env.HLTB_PDF;
 const step = (n, t) => console.error(`\n[${n}] ${t}`);
 const run = (script, a = []) => { const r = spawnSync('node', [script, ...a], { stdio: ['ignore', 'inherit', 'inherit'] }); if (r.status !== 0) { console.error(`сборка остановлена: ${script} завершился с кодом ${r.status}`); process.exit(r.status || 1); } };
 const kb = (n) => `${(n / 1024) | 0} КБ`;
@@ -88,6 +92,13 @@ console.error(`  GEO: llms.txt, llms-full.txt, ai/*.json, feed.xml, about/, priv
 const pg = generatePages({ out: `${OUT}/site`, site: SITE });
 console.error(`  страниц ${pg.pages} (разделов ${pg.sections}, пунктов ${pg.entries}), ссылок на пункты в тексте ${pg.refLinks}, «Смотрите также» ${pg.relatedLinks}, битых внутренних ссылок ${pg.broken.length}`);
 if (pg.broken.length) { for (const b of pg.broken.slice(0, 15)) console.error('  ОШИБКА: битая ссылка', b); console.error(`\nсборка остановлена: битых внутренних ссылок ${pg.broken.length}`); process.exit(1); }
+
+// ---- 4б PDF ----
+if (WANT_PDF) {
+  step('4б', 'PDF: книга, разделы, пункты');
+  const pr = await buildPdf({ out: OUT, siteUrl: SITE });
+  if (pr.failed) { console.error(`сборка остановлена: PDF не удалось создать: ${pr.failed}`); process.exit(1); }
+} else console.error('\n[4б] PDF пропущены (нет Chrome, --no-pdf или --check)');
 
 // ---- 5 офлайн ----
 step(5, `офлайн-файл → ${OUT}/HowToLiveBetter-ru.html`);
