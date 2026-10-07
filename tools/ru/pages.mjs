@@ -90,7 +90,7 @@ const firstSentence = (s, max = 160) => { const t = unmd(s).replace(/\*\*/g, '')
 export const suggestHref = (e, link) => `mailto:max0r@yandex.ru?subject=HowToLiveBetter&body=${encodeURIComponent(`Пункт: раздел ${e.sec}, пункт ${e.n}. ${e.title}\n${link || ''}\n\nЧто исправить и на какой источник опереться:\n`)}`;
 
 export function page({ root, title, desc, canonical, body, ld, pdf }) {
-  const pdfLink = pdfOn() ? `<a class="print-icon pdf-icon" href="${pdf ? pdf.href : root + 'pdf/book.pdf'}" download title="${pdf ? pdf.title : 'Скачать всю книгу в PDF'}" aria-label="Скачать PDF">${PDF_ICON}</a>` : '';
+  const pdfLink = pdfOn() ? `<a class="print-icon pdf-icon" rel="nofollow" href="${pdf ? pdf.href : root + 'pdf/book.pdf'}" download title="${pdf ? pdf.title : 'Скачать всю книгу в PDF'}" aria-label="Скачать PDF">${PDF_ICON}</a>` : '';
   return `<!doctype html>
 <html lang="ru">
 <head>
