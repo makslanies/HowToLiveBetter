@@ -26,7 +26,7 @@ const out = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : {};
 for (const key of keys) {
   const pk = `ru-work/evidence/${key}.md`;
   if (!existsSync(pk)) { console.error(`${key}: нет пакета`); continue; }
-  const packet = readFileSync(pk, 'utf8');
+  const packet = readFileSync(pk, 'utf8').replace(/\u0000/g, '');           // нулевые байты из PDF ломают аргументы командной строки
   const pageText = new Map([...packet.matchAll(/## Страница (\d) \([^)]*\)\nАдрес: \S+\n[^\n]*\n\n([\s\S]*?)(?=\n## Страница|$)/g)].map((x) => [Number(x[1]), x[2]]));
   const sent = new Map();
   let user = packet.split('## Запросы')[0].replace(/^# Пакет доказательств[^\n]*\n/, '').slice(0, 3000) + '\n';
@@ -51,6 +51,7 @@ for (const key of keys) {
   const titles = new Map([...packet.matchAll(/## Страница (\d) \([^)]*\)\nАдрес: \S+\nЗаголовок: ([^\n]*)/g)].map((x) => [Number(x[1]), x[2].trim()]));
   out[key].sources = (out[key].sources || []).map((x) => ({ page: Number(String(x.id || '').split('.')[0]), quote: sent.get(String(x.id)) })).filter((x) => x.quote);
   for (const s of out[key].sources || []) s.title = titles.get(Number(s.page)) || 'Официальный источник';
+  writeFileSync(OUT, JSON.stringify(out, null, 1) + '\n');          // сохраняем после каждого пункта: остановка не теряет сделанное
   console.error(`${key}: черновик получен (${MODEL})`);
 }
 writeFileSync(OUT, JSON.stringify(out, null, 1) + '\n');
