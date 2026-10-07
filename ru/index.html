@@ -109,6 +109,13 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
 .nav-r{display:flex;align-items:center;gap:8px}
 .icon-btn{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;color:var(--t2);transition:background .25s,color .25s}
 .nav-text{font-size:14px;color:var(--t2);padding:0 10px;line-height:36px;border-radius:8px;white-space:nowrap}.nav-text:hover{background:var(--bg-soft);color:var(--t1);text-decoration:none}
+.nav-text.jump{max-width:150px;height:32px;line-height:normal;padding:0 6px;border:1px solid var(--divider);background:transparent;color:var(--t2);font:inherit;font-size:13px}
+button.nav-text{border:0;background:none;cursor:pointer;font-family:inherit}
+#plain-toggle[aria-pressed="true"]{background:var(--bg-soft);color:var(--t1);font-weight:600}
+body.plain-only .rows,body.plain-only .src,body.plain-only .suggest,body.plain-only .scope{display:none}
+.relaxed{margin:12px 0;padding:8px 12px;border-left:3px solid var(--brand-1);background:var(--bg-soft);font-size:14px;color:var(--t2)}
+@media(max-width:700px){.nav-text.jump{display:none}}
+@media print{.nav,.sidebar,.backdrop,.foot,.pop,.suggest,.anchor,.relaxed,.empty,.status{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;box-shadow:none;border:1px solid #bbb;margin:0 0 10px}.sec-block{break-before:auto}a{color:inherit;text-decoration:none}mark{background:none;color:inherit}}
 .icon-btn:hover{background:var(--bg-soft);color:var(--t1)}
 .icon-btn svg{width:20px;height:20px;fill:currentColor}
 .switch{position:relative;width:40px;height:22px;border-radius:11px;border:1px solid var(--divider);background:var(--bg-mute);transition:border-color .25s,background .25s;flex:none;margin-left:8px}
@@ -335,7 +342,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <kbd>/</kbd>
     </label>
     <div class="nav-r">
-      <a class="nav-text" href="author/">Автор</a>
+      <select id="jump" class="nav-text jump" aria-label="Перейти к разделу"><option value="">Разделы…</option></select><button type="button" class="nav-text" id="plain-toggle" aria-pressed="false" title="В карточках оставить только блок «Простыми словами»">Кратко</button><a class="nav-text" href="author/">Автор</a>
       <a class="icon-btn" href="README.md" title="Открыть README.md" aria-label="README"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6zm8 1.5V8h4.5zM8 12h8v1.5H8zm0 3.5h8V17H8z"/></svg></a>
       <a class="icon-btn" href="https://github.com/makslanies/HowToLiveBetter" target="_blank" rel="noopener" title="Русская версия на GitHub" aria-label="Репозиторий русской версии"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.6 18.3 6 18.3 6c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a>
       <button class="switch" id="theme" aria-label="Тёмная тема" title="Тёмная тема"><span class="knob"><svg class="sun" viewBox="0 0 24 24"><path d="M12 4a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 13a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1zm8-6a1 1 0 1 1 0 2h-1a1 1 0 1 1 0-2zM5 11a1 1 0 1 1 0 2H4a1 1 0 1 1 0-2zm12.07-5.07a1 1 0 0 1 0 1.41l-.7.71a1 1 0 1 1-1.42-1.41l.71-.71a1 1 0 0 1 1.41 0zM8.05 16.95a1 1 0 0 1 0 1.41l-.7.71a1 1 0 1 1-1.42-1.41l.71-.71a1 1 0 0 1 1.41 0zm9.02 0l.7.71a1 1 0 1 1-1.41 1.41l-.71-.7a1 1 0 0 1 1.42-1.42zM6.34 5.93l.71.71a1 1 0 0 1-1.41 1.41l-.71-.7a1 1 0 0 1 1.41-1.42zM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg><svg class="moon" viewBox="0 0 24 24"><path d="M12.1 22c-5.5 0-10-4.5-10-10 0-4.8 3.4-8.9 8-9.8.5-.1.9.4.7.9A8 8 0 0 0 20.9 13c.5-.2 1 .2.9.7-.9 4.7-5 8.3-9.7 8.3z"/></svg></span></button>
@@ -433,6 +440,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
     </div>
     <div id="list">
       <div class="status" id="status"><span id="status-t">Загрузка текста …</span><div class="bar"><i id="status-b"></i></div></div>
+      <p class="relaxed" id="relaxed" hidden>Точных совпадений нет. Показаны пункты, где есть хотя бы одно из слов запроса.</p>
       <div class="empty" id="empty" hidden>
         Подходящих пунктов нет. Уберите одно условие или введите слово покороче.
         <div><button id="reset2">Сбросить фильтры</button></div>
@@ -532,7 +540,7 @@ function parseReadme(md){
     e.cs = (COST_W.money[e.money] ?? 0) + (COST_W.time[e.time] ?? 0) + (COST_W.will[e.will] ?? 0);
     e.ratio = e.level === '大' ? (e.cs === 0 ? '极高' : (e.cs <= 2 ? '高' : '一般'))
             : e.level === '中' ? (e.cs === 0 ? '高' : '一般') : '一般';
-    e.hay = [e.title, e.human, e.cost, e.gain, e.note, e.ru, e.src, e.grade].join('\n').replace(/\*\*/g, '').replace(/\\([*_])/g, '$1').toLowerCase();
+    e.hay = [e.title, e.human, e.cost, e.gain, e.note, e.ru, e.src, e.grade, e.price, e.srcRussia].filter(Boolean).join('\n').replace(/\*\*/g, '').replace(/\\([*_])/g, '$1').toLowerCase().replace(/ё/g, 'е') + ' §' + e.sec + '-' + e.n + ' ';
   }
   return sections;
 }
@@ -681,14 +689,15 @@ function renderSrc(el, text, terms){
 }
 function highlightInto(el, s, terms){
   if (!terms.length){ el.appendChild(document.createTextNode(s)); return; }
-  const lower = s.toLowerCase(); let i = 0;
+  const lower = s.toLowerCase().replace(/ё/g, 'е'); let i = 0;
   while (i < s.length){
     let best = -1, bl = 0;
     for (const t of terms){ const k = lower.indexOf(t, i); if (k !== -1 && (best === -1 || k < best)) { best = k; bl = t.length; } }
     if (best === -1){ el.appendChild(document.createTextNode(s.slice(i))); break; }
     if (best > i) el.appendChild(document.createTextNode(s.slice(i, best)));
-    const mk = document.createElement('mark'); mk.textContent = s.slice(best, best+bl); el.appendChild(mk);
-    i = best + bl;
+    let end = best + bl; while (end < s.length && /[\p{L}\p{N}]/u.test(s[end])) end++;
+    const mk = document.createElement('mark'); mk.textContent = s.slice(best, end); el.appendChild(mk);
+    i = end;
   }
 }
 
@@ -1158,14 +1167,74 @@ function renderCard(card, terms, key){
   renderCountryField(f.note, 'note', e, view, terms);
   const nSrc = renderCountrySources(f.src, e, sc, terms);
   f.srcN.textContent = nSrc > 1 ? ` · ${nSrc}` : '';
-  const inBody = (e.title+e.human+e.cost+e.gain+e.note+e.ru).toLowerCase();
-  f.details.open = terms.length > 0 && terms.some(t => e.src.toLowerCase().includes(t)) && !terms.some(t => inBody.includes(t));
+  const inBody = (e.title+e.human+e.cost+e.gain+e.note+e.ru).toLowerCase().replace(/ё/g, 'е');
+  f.details.open = terms.length > 0 && terms.some(t => e.src.toLowerCase().replace(/ё/g, 'е').includes(t)) && !terms.some(t => inBody.includes(t));
   card.key = key;
 }
+/* ---------- поиск: нормализация, основы слов, синонимы, фразы, минус-слова, номер пункта ---------- */
+let RELAX = false, JUMP_FILLED = false;
+const normQ = (s) => String(s).toLowerCase().replace(/ё/g, 'е');
+// Грубая основа: у русских слов отбрасываем окончание («прививку», «прививки» → «привив»); остальное без изменений
+function stemOf(w) {
+  if (!/^[а-я]+$/.test(w)) return w;
+  if (w.length >= 7) return w.slice(0, -2);
+  if (w.length >= 5) return w.slice(0, -1);
+  return w;
+}
+// Разговорное слово и официальный термин книги: поиск по одному находит и другое
+const SYN_RAW = [
+  ['курить', 'курение', 'табак', 'сигарета', 'никотин'], ['зарплата', 'заработная', 'оплата труда'],
+  ['развод', 'расторжение'], ['машина', 'автомобиль', 'авто'], ['ребенок', 'дети', 'младенец'],
+  ['деньги', 'денег', 'средства'], ['полиция', 'полицейский', 'мвд'], ['врач', 'доктор', 'медицинская помощь', 'поликлиника'],
+  ['налог', 'ндфл', 'вычет'], ['пенсия', 'пенсионный', 'сфр'], ['уволить', 'увольнение', 'сокращение'],
+  ['кредит', 'заем', 'займ', 'ссуда'], ['мошенник', 'мошенничество', 'аферист', 'обман'], ['пожар', 'огонь', 'возгорание'],
+  ['лекарство', 'препарат', 'таблетки'], ['жилье', 'квартира', 'недвижимость'], ['алкоголь', 'спиртное', 'выпивка'],
+];
+const SYN = SYN_RAW.map((g) => g.map((w) => normQ(w)).map((w) => (w.includes(' ') ? w : stemOf(w))));
+function altsFor(t) { for (const g of SYN) if (g.includes(t)) return [...new Set(g)]; return [t]; }
+// "точная фраза" в кавычках, -минус для исключения слова, 5-38 или 5.38 — номер пункта
+function parseQuery(raw) {
+  const phr = [], neg = [], pos = [];
+  let q = normQ(raw).replace(/["«»]([^"«»]+)["«»]/g, (m, p) => { if (p.trim().length > 1) phr.push(p.trim()); return ' '; });
+  for (const w of q.split(/\s+/).filter(Boolean)) {
+    if (w[0] === '-' && w.length > 2) { neg.push(stemOf(w.slice(1))); continue; }
+    const id = /^(\d{1,2})[-.](\d{1,2})$/.exec(w);
+    if (id) { pos.push(['§' + id[1] + '-' + id[2] + ' ']); continue; }
+    if (w.length < 2) continue;
+    pos.push(altsFor(stemOf(w)));
+  }
+  const hl = [...new Set([...pos.flat().filter((x) => x[0] !== '§'), ...phr])];
+  return { pos, neg, phr, hl };
+}
+function matchQuery(hay, Q, relax) {
+  if (Q.neg.some((n) => hay.includes(n))) return false;
+  if (!Q.phr.every((p) => hay.includes(p))) return false;
+  if (!Q.pos.length) return true;
+  const hit = (alts) => alts.some((a) => hay.includes(a));
+  return relax ? Q.pos.some(hit) : Q.pos.every(hit);
+}
+function fillJump() {
+  const jmp = document.getElementById('jump');
+  if (!jmp || JUMP_FILLED || !SECS.size) return;
+  JUMP_FILLED = true;
+  for (const [n, s] of SECS) { const o = document.createElement('option'); o.value = n; o.textContent = n + '. ' + s.title.slice(0, 40); jmp.append(o); }
+  jmp.addEventListener('change', () => { if (jmp.value) gotoItem('s' + jmp.value); jmp.value = ''; });
+}
+function wirePlain() {
+  const pt = document.getElementById('plain-toggle');
+  if (!pt) return;
+  const set = (on) => { document.body.classList.toggle('plain-only', on); pt.setAttribute('aria-pressed', String(on)); try { localStorage.setItem('hltb-plain', on ? '1' : ''); } catch (err) { /* без хранилища просто не запоминаем */ } };
+  let saved = false; try { saved = !!localStorage.getItem('hltb-plain'); } catch (err) { /* нет хранилища */ }
+  set(saved);
+  pt.addEventListener('click', () => set(!document.body.classList.contains('plain-only')));
+}
+
 function apply(){
+  fillJump();
   const t0 = performance.now();
-  const terms = state.q.toLowerCase().split(/\s+/).filter(Boolean);
-  const key = terms.join(' ');
+  const QRY = parseQuery(state.q), terms = QRY.hl;
+  const relax = RELAX; RELAX = false;
+  const key = terms.join(' ') + (relax ? '|any' : '');
   CUR_TERMS = terms; CUR_KEY = key;
   let shown = 0, rerender = 0; const perSec = {}, tocSec = {};
   for (const card of CARDS){
@@ -1179,7 +1248,7 @@ function apply(){
     if (ok && state.will.size && !state.will.has(e.will)) ok = false;
     if (ok && state.dispute && !e.dispute) ok = false;
     if (ok && state.todo && !e.todo) ok = false;
-    if (ok && terms.length && !terms.every(t => e.hay.includes(t))) ok = false;
+    if (ok && !matchQuery(e.hay, QRY, relax)) ok = false;
     // 目录行不跟章节筛选走：选着第 3 节时点第 5 节的折叠箭头，展开的是第 5 节
     // 符合其他筛选的条目，而不是一块空白。点进去时 gotoItem 会先清掉筛选再跳。
     const a = TOC.get(el.id); if (a && a.hidden === ok) a.hidden = !ok;
@@ -1191,6 +1260,8 @@ function apply(){
       if (card.vis && card.key !== key) { rerender++; renderCard(card, terms, key); }
     }
   }
+  if (!shown && !relax && QRY.pos.length > 1) { RELAX = true; apply(); return; }
+  document.getElementById('relaxed').hidden = !(relax && shown);
   for (const b of BLOCKS){ const n = perSec[b.n]||0; if (b.el.hidden !== (n === 0)) b.el.hidden = n === 0; b.k.textContent = n; }
   for (const [n, sub] of TOC_SEC){ const none = !tocSec[n]; if (sub.lastElementChild.hidden === none) sub.lastElementChild.hidden = !none; }
   document.getElementById('cnt').textContent = shown;
@@ -1211,6 +1282,7 @@ function reportSearch(){
   track('search', { search_term: q, results: Number(document.getElementById('cnt').textContent) || 0 });
 }
 function wire(){
+  wirePlain();
   const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');
   const setMenu = (on) => { sb.classList.toggle('open', on); bd.classList.toggle('on', on); mb.setAttribute('aria-expanded', String(on)); };
   // 筛选变了就顺手让 spy 重算一次 hash：writeUrl 是无条件把旧 hash 拼回去的，

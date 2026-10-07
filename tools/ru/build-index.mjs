@@ -258,6 +258,23 @@ sub('      const card = {e, el:c,', "      const sgl = c.querySelector('.sg'); i
 sub('function renderCard(card, terms, key){', "function suggestHref(e){\n  const link = location.origin + location.pathname + '#e-' + e.sec + '-' + e.n;\n  return 'mailto:max0r@yandex.ru?subject=HowToLiveBetter&body=' + encodeURIComponent('Пункт: раздел ' + e.sec + ', пункт ' + e.n + '. ' + e.title + '\\n' + link + '\\n\\nЧто исправить и на какой источник опереться:\\n');\n}\nfunction renderCard(card, terms, key){");
 sub('.src summary .cnt{', '.suggest{margin:10px 0 0;font-size:13px;color:var(--t3)}.suggest a{font-weight:500}\n.src summary .cnt{');
 
+// ---- поиск и навигация: основы слов, синонимы, фразы, минус-слова, номер пункта, список разделов, режим «Кратко», печать ----
+const searchCore = readFileSync('tools/ru/spa/search-core.js', 'utf8');
+sub("e.src, e.grade].join('\\n')", "e.src, e.grade, e.price, e.srcRussia].filter(Boolean).join('\\n')");
+sub(".replace(/\\\\([*_])/g, '$1').toLowerCase();", ".replace(/\\\\([*_])/g, '$1').toLowerCase().replace(/ё/g, 'е') + ' §' + e.sec + '-' + e.n + ' ';");
+sub('function apply(){', searchCore + '\nfunction apply(){\n  fillJump();');
+sub("const terms = state.q.toLowerCase().split(/\\s+/).filter(Boolean);\n  const key = terms.join(' ');", "const QRY = parseQuery(state.q), terms = QRY.hl;\n  const relax = RELAX; RELAX = false;\n  const key = terms.join(' ') + (relax ? '|any' : '');");
+sub("if (ok && terms.length && !terms.every(t => e.hay.includes(t))) ok = false;", "if (ok && !matchQuery(e.hay, QRY, relax)) ok = false;");
+sub("  for (const b of BLOCKS){ const n = perSec[b.n]||0;", "  if (!shown && !relax && QRY.pos.length > 1) { RELAX = true; apply(); return; }\n  document.getElementById('relaxed').hidden = !(relax && shown);\n  for (const b of BLOCKS){ const n = perSec[b.n]||0;");
+sub('<div class="empty" id="empty" hidden>', '<p class="relaxed" id="relaxed" hidden>Точных совпадений нет. Показаны пункты, где есть хотя бы одно из слов запроса.</p>\n      <div class="empty" id="empty" hidden>');
+sub("const lower = s.toLowerCase(); let i = 0;", "const lower = s.toLowerCase().replace(/ё/g, 'е'); let i = 0;");
+sub("const mk = document.createElement('mark'); mk.textContent = s.slice(best, best+bl); el.appendChild(mk);\n    i = best + bl;", "let end = best + bl; while (end < s.length && /[\\p{L}\\p{N}]/u.test(s[end])) end++;\n    const mk = document.createElement('mark'); mk.textContent = s.slice(best, end); el.appendChild(mk);\n    i = end;");
+sub("terms.some(t => e.src.toLowerCase().includes(t))", "terms.some(t => e.src.toLowerCase().replace(/ё/g, 'е').includes(t))");
+sub("const inBody = (e.title+e.human+e.cost+e.gain+e.note+e.ru).toLowerCase();", "const inBody = (e.title+e.human+e.cost+e.gain+e.note+e.ru).toLowerCase().replace(/ё/g, 'е');");
+sub('function wire(){', 'function wire(){\n  wirePlain();');
+sub('<a class="nav-text" href="author/">Автор</a>', '<select id="jump" class="nav-text jump" aria-label="Перейти к разделу"><option value="">Разделы…</option></select><button type="button" class="nav-text" id="plain-toggle" aria-pressed="false" title="В карточках оставить только блок «Простыми словами»">Кратко</button><a class="nav-text" href="author/">Автор</a>');
+sub('.icon-btn:hover{', '.nav-text.jump{max-width:150px;height:32px;line-height:normal;padding:0 6px;border:1px solid var(--divider);background:transparent;color:var(--t2);font:inherit;font-size:13px}\nbutton.nav-text{border:0;background:none;cursor:pointer;font-family:inherit}\n#plain-toggle[aria-pressed="true"]{background:var(--bg-soft);color:var(--t1);font-weight:600}\nbody.plain-only .rows,body.plain-only .src,body.plain-only .suggest,body.plain-only .scope{display:none}\n.relaxed{margin:12px 0;padding:8px 12px;border-left:3px solid var(--brand-1);background:var(--bg-soft);font-size:14px;color:var(--t2)}\n@media(max-width:700px){.nav-text.jump{display:none}}\n@media print{.nav,.sidebar,.backdrop,.foot,.pop,.suggest,.anchor,.relaxed,.empty,.status{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;box-shadow:none;border:1px solid #bbb;margin:0 0 10px}.sec-block{break-before:auto}a{color:inherit;text-decoration:none}mark{background:none;color:inherit}}\n.icon-btn:hover{');
+
 s = s.replace(/^[\t ]+$/gm, '');
 writeFileSync('ru/index.html', s);
 const left = s.split('\n').map((l, i) => [i + 1, l]).filter(([, l]) => /[一-鿿]/.test(l) && !/^\s*(\/\/|\/\*|\*)/.test(l) && !/\/\/.*[一-鿿]/.test(l.replace(/'[^']*'/g, '')) );
