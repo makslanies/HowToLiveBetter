@@ -10,7 +10,7 @@ import { fetchPdfText, excerpt } from './lib.mjs';
 const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : d; };
 const MAX = Number(opt('max', '30')), ONLY = (opt('only', '') || '').split(',').filter(Boolean), DRY = args.includes('--dry-run'), REDO = args.includes('--redo');
-const DAILY = Number(opt('daily-limit', '480'));
+const DAILY = Number(opt('daily-limit', '2000'));
 for (const l of readFileSync('.env', 'utf8').split('\n')) { const m = l.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/); if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].replace(/^["']|["']$/g, ''); }
 const O = new URL(process.env.SREZAI_BASE_URL).origin;
 
@@ -64,28 +64,31 @@ for (const key of todo.slice(0, MAX)) {
   const kws = keywordsOf(plan.q.join(' ') + ' ' + e.title);
   try {
     const found = new Map();
+    const official = () => [...found.values()].filter((x) => x.kind === 'официальный').length;
+    // 1) точечные запросы по каждому официальному сайту плана: фильтр по одному домену даёт страницы, которые общий поиск не поднимает
+    for (const d of (plan.d || []).slice(0, 3)) {
+      const res = await srez('search', { query: plan.q[0], num: 3, language: 'ru', includeDomains: [d], excerpts: true }).catch(() => ({}));
+      for (const r of (res.results || []).slice(0, 2)) if (!found.has(r.url) && isIn(r.url, OFFICIAL)) found.set(r.url, { ...r, kind: 'официальный' });
+    }
+    // 2) общий поиск: докладывает официальные и справочные страницы, пока не наберётся три
     for (const q of plan.q.slice(0, 2)) {
+      if (official() >= 3) break;
       const res = await srez('search', { query: q, num: 10, language: 'ru' });
       for (const r of res.results || []) {
         if (found.has(r.url)) continue;
         if (isIn(r.url, OFFICIAL)) found.set(r.url, { ...r, kind: 'официальный' });
         else if (isIn(r.url, LEGAL_DB)) found.set(r.url, { ...r, kind: 'справочная база закона' });
       }
-      if ([...found.values()].filter((x) => x.kind === 'официальный').length >= 3) break;
     }
-    if ([...found.values()].filter((x) => x.kind === 'официальный').length < 2) {          // точечные запросы по одному официальному сайту
-      for (const d of (plan.d || []).slice(0, 2)) {
-        const res = await srez('search', { query: plan.q[0], num: 4, language: 'ru', includeDomains: [d] }).catch(() => ({}));
-        for (const r of (res.results || []).slice(0, 2)) if (!found.has(r.url)) found.set(r.url, { ...r, kind: 'официальный' });
-      }
-    }
-    const pick = [...found.values()].sort((a, b) => (a.kind === 'официальный' ? 0 : 1) - (b.kind === 'официальный' ? 0 : 1)).slice(0, 5);
+    const pick = [...found.values()].sort((a, b) => (a.kind === 'официальный' ? 0 : 1) - (b.kind === 'официальный' ? 0 : 1) || (b.relevance || 0) - (a.relevance || 0)).slice(0, 5);
     const pages = [];
     for (const r of pick) {
-      let text = '';
-      try { text = await fetchPdfText(r.url); } catch { /* пробуем срезAI */ }
+      let text = typeof r.rawContent === 'string' ? r.rawContent : '';        // срезAI уже отдаёт текст страницы вместе с поиском
+      if (text.length < 500) { try { text = await fetchPdfText(r.url); } catch { /* пробуем срезAI */ } }
       if (text.length < 500) { try { const p = await srez('read', { url: r.url, maxChars: 14000 }, 60000); text = p.markdown || p.content || ''; } catch { /* пропуск */ } }
-      const ex = excerpt(text, kws, 3200).trim();
+      let ex = excerpt(text, kws, 3200).trim();
+      // у коротких запросов мало ключевых основ, и отбор по абзацам пуст: тогда берём то, что срезAI выбрал сам (excerpt), и начало страницы
+      if (ex.length < 250 && r.kind === 'официальный' && text.length >= 500) ex = ((typeof r.excerpt === 'string' ? r.excerpt + '\n\n' : '') + text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n')).slice(0, 3200).trim();
       if (ex.length < 250) continue;                                                       // страница не про это
       pages.push({ url: r.url, title: r.title || '', kind: r.kind, text: ex });
     }
