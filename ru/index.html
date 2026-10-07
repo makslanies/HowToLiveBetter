@@ -116,6 +116,19 @@ body.plain-only .rows,body.plain-only .src,body.plain-only .suggest,body.plain-o
 .relaxed{margin:12px 0;padding:8px 12px;border-left:3px solid var(--brand-1);background:var(--bg-soft);font-size:14px;color:var(--t2)}
 @media(max-width:700px){.nav-text.jump{display:none}}
 @media print{.nav,.sidebar,.backdrop,.foot,.pop,.suggest,.anchor,.relaxed,.empty,.status{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;box-shadow:none;border:1px solid #bbb;margin:0 0 10px}.sec-block{break-before:auto}a{color:inherit;text-decoration:none}mark{background:none;color:inherit}}
+.nav-in{position:relative}
+.sug{position:absolute;z-index:60;background:var(--bg);border:1px solid var(--divider);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);max-height:70vh;overflow:auto;font-size:14px}
+.sug[hidden]{display:none}
+.sug-words{padding:8px 12px;border-bottom:1px solid var(--divider);color:var(--t3);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sug-word{border:1px solid var(--divider);background:var(--bg-soft);color:var(--t1);border-radius:999px;padding:2px 10px;font:inherit;font-size:13px;cursor:pointer}
+.sug-word:hover{border-color:var(--brand-1);color:var(--brand-1)}
+.sug-head,.sug-more,.sug-none{padding:8px 12px;color:var(--t3);font-size:13px}
+.sug-item{display:block;padding:8px 12px;border-top:1px solid var(--divider);color:var(--t1);text-decoration:none}
+.sug-item b{display:block;font-weight:600;line-height:1.35}
+.sug-item span{display:block;color:var(--t2);font-size:13px;line-height:1.45;margin-top:2px}
+.sug-item:hover,.sug-item.on{background:var(--bg-soft);text-decoration:none}
+.sug mark{background:rgba(255,200,0,.35);color:inherit;border-radius:2px}
+@media print{.sug{display:none!important}}
 .icon-btn:hover{background:var(--bg-soft);color:var(--t1)}
 .icon-btn svg{width:20px;height:20px;fill:currentColor}
 .switch{position:relative;width:40px;height:22px;border-radius:11px;border:1px solid var(--divider);background:var(--bg-mute);transition:border-color .25s,background .25s;flex:none;margin-left:8px}
@@ -342,7 +355,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <kbd>/</kbd>
     </label>
     <div class="nav-r">
-      <select id="jump" class="nav-text jump" aria-label="Перейти к разделу"><option value="">Разделы…</option></select><button type="button" class="nav-text" id="plain-toggle" aria-pressed="false" title="В карточках оставить только блок «Простыми словами»">Кратко</button><a class="nav-text" href="author/">Автор</a>
+      <select id="jump" class="nav-text jump" aria-label="Перейти к разделу"><option value="">Разделы…</option></select><button type="button" class="nav-text" id="print-btn" title="Распечатать то, что сейчас показано на странице">Печать</button><button type="button" class="nav-text" id="plain-toggle" aria-pressed="false" title="В карточках оставить только блок «Простыми словами»">Кратко</button><a class="nav-text" href="author/">Автор</a>
       <a class="icon-btn" href="README.md" title="Открыть README.md" aria-label="README"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6zm8 1.5V8h4.5zM8 12h8v1.5H8zm0 3.5h8V17H8z"/></svg></a>
       <a class="icon-btn" href="https://github.com/makslanies/HowToLiveBetter" target="_blank" rel="noopener" title="Русская версия на GitHub" aria-label="Репозиторий русской версии"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.6 18.3 6 18.3 6c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a>
       <button class="switch" id="theme" aria-label="Тёмная тема" title="Тёмная тема"><span class="knob"><svg class="sun" viewBox="0 0 24 24"><path d="M12 4a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 13a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1zm8-6a1 1 0 1 1 0 2h-1a1 1 0 1 1 0-2zM5 11a1 1 0 1 1 0 2H4a1 1 0 1 1 0-2zm12.07-5.07a1 1 0 0 1 0 1.41l-.7.71a1 1 0 1 1-1.42-1.41l.71-.71a1 1 0 0 1 1.41 0zM8.05 16.95a1 1 0 0 1 0 1.41l-.7.71a1 1 0 1 1-1.42-1.41l.71-.71a1 1 0 0 1 1.41 0zm9.02 0l.7.71a1 1 0 1 1-1.41 1.41l-.71-.7a1 1 0 0 1 1.42-1.42zM6.34 5.93l.71.71a1 1 0 0 1-1.41 1.41l-.71-.7a1 1 0 0 1 1.41-1.42zM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg><svg class="moon" viewBox="0 0 24 24"><path d="M12.1 22c-5.5 0-10-4.5-10-10 0-4.8 3.4-8.9 8-9.8.5-.1.9.4.7.9A8 8 0 0 0 20.9 13c.5-.2 1 .2.9.7-.9 4.7-5 8.3-9.7 8.3z"/></svg></span></button>
@@ -350,6 +363,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
   </div>
 </header>
 
+<div class="sug" id="sug" role="listbox" aria-label="Подсказки поиска" hidden></div>
 <div class="backdrop" id="backdrop"></div>
 <div class="pop" id="pop" role="tooltip" hidden><b></b><span></span></div>
 <aside class="sidebar" id="sidebar">
@@ -1229,6 +1243,130 @@ function wirePlain() {
   pt.addEventListener('click', () => set(!document.body.classList.contains('plain-only')));
 }
 
+/* ---------- подсказки под строкой поиска: похожие слова и список пунктов, где слово встречается ---------- */
+let VOCAB = null, SUG_ACTIVE = -1, SUG_TM = 0;
+function buildVocab() {
+  const m = new Map();
+  for (const card of CARDS) for (const w of (card.e.hay.match(/[а-я]{3,}/g) || [])) m.set(w, (m.get(w) || 0) + 1);
+  VOCAB = [...m].sort((a, b) => b[1] - a[1]);
+}
+function editDist(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i]; let lo = i;
+    for (let j = 1; j <= b.length; j++) {
+      const v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      cur.push(v); if (v < lo) lo = v;
+    }
+    if (lo > max) return max + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+// Слова из текста книги, похожие на последнее набранное: с тем же началом, а если таких мало, то с опечаткой в одну-две буквы
+function similarWords(term) {
+  const t = normQ(term);
+  if (t.length < 3 || !/^[а-я]+$/.test(t)) return [];
+  if (!VOCAB) buildVocab();
+  const stem = stemOf(t), out = [];
+  for (const [w] of VOCAB) { if (w !== t && w.startsWith(stem)) { out.push(w); if (out.length >= 6) break; } }
+  if (out.length < 3 && t.length >= 4) {
+    const max = t.length > 6 ? 2 : 1;
+    for (const [w] of VOCAB) { if (w !== t && !out.includes(w) && editDist(t, w, max) <= max) { out.push(w); if (out.length >= 6) break; } }
+  }
+  return out;
+}
+function snipText(e) {
+  return e._snip ||= [e.human, e.gain, e.cost, e.note, e.ru, e.price].filter(Boolean).join(' · ').replace(/\*\*/g, '').replace(/\\([*_])/g, '$1').replace(/\s+/g, ' ');
+}
+function suggestEntries(Q, relax) {
+  const rows = [];
+  for (const card of CARDS) {
+    const e = card.e;
+    if (!matchQuery(e.hay, Q, relax)) continue;
+    const title = normQ(e.title), human = normQ(e.human || '');
+    let score = 0;
+    for (const t of Q.hl) score += (title.includes(t) ? 3 : 0) + (human.includes(t) ? 2 : 0) + 1;
+    rows.push({ e, score });
+  }
+  rows.sort((a, b) => b.score - a.score);
+  return rows;
+}
+function snippetNodes(e, hl) {
+  const text = snipText(e), low = normQ(text);
+  let at = -1, len = 0;
+  for (const t of hl) { const k = low.indexOf(t); if (k !== -1 && (at === -1 || k < at)) { at = k; len = t.length; } }
+  const frag = document.createDocumentFragment();
+  if (at === -1) { frag.append((e.human || text).slice(0, 110)); return frag; }
+  let end = at + len; while (end < text.length && /[\p{L}\p{N}]/u.test(text[end])) end++;
+  const from = Math.max(0, at - 45), to = Math.min(text.length, end + 70);
+  frag.append((from > 0 ? '…' : '') + text.slice(from, at));
+  const mk = document.createElement('mark'); mk.textContent = text.slice(at, end); frag.append(mk);
+  frag.append(text.slice(end, to) + (to < text.length ? '…' : ''));
+  return frag;
+}
+function wireSuggest() {
+  const input = document.getElementById('q'), box = document.getElementById('sug');
+  if (!input || !box) return;
+  const close = () => { box.hidden = true; SUG_ACTIVE = -1; };
+  const items = () => [...box.querySelectorAll('.sug-item')];
+  const mark = () => items().forEach((it, i) => it.classList.toggle('on', i === SUG_ACTIVE));
+  const render = () => {
+    const raw = input.value.trim();
+    if (raw.length < 2) { close(); return; }
+    const Q = parseQuery(raw);
+    let rows = suggestEntries(Q, false), relaxed = false;
+    if (!rows.length && Q.pos.length > 1) { rows = suggestEntries(Q, true); relaxed = true; }
+    const words = raw.split(/\s+/), last = words[words.length - 1].replace(/^-/, '');
+    const sim = similarWords(last);
+    box.textContent = '';
+    if (sim.length) {
+      const wrap = document.createElement('div'); wrap.className = 'sug-words';
+      const lab = document.createElement('span'); lab.textContent = 'Похожие слова: '; wrap.append(lab);
+      for (const w of sim) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'sug-word'; b.textContent = w;
+        b.addEventListener('mousedown', (ev) => { ev.preventDefault(); words[words.length - 1] = (words[words.length - 1].startsWith('-') ? '-' : '') + w; input.value = words.join(' '); input.dispatchEvent(new Event('input')); render(); input.focus(); });
+        wrap.append(b);
+      }
+      box.append(wrap);
+    }
+    if (!rows.length) {
+      const none = document.createElement('div'); none.className = 'sug-none'; none.textContent = 'В тексте книги такого нет. Попробуйте похожее слово или короче.'; box.append(none);
+    } else {
+      const head = document.createElement('div'); head.className = 'sug-head';
+      head.textContent = (relaxed ? 'Есть хотя бы одно из слов: ' : 'Встречается в пунктах: ') + rows.length;
+      box.append(head);
+      for (const { e } of rows.slice(0, 8)) {
+        const a = document.createElement('a'); a.className = 'sug-item'; a.href = '#e-' + e.sec + '-' + e.n; a.dataset.go = e.sec + '-' + e.n;
+        const t = document.createElement('b'); t.textContent = e.sec + '.' + e.n + ' ' + e.title;
+        const s = document.createElement('span'); s.append(snippetNodes(e, Q.hl));
+        a.append(t, s);
+        a.addEventListener('mousedown', (ev) => { ev.preventDefault(); close(); gotoItem(e.sec + '-' + e.n); });
+        box.append(a);
+      }
+      if (rows.length > 8) {
+        const more = document.createElement('div'); more.className = 'sug-more'; more.textContent = 'Ещё ' + (rows.length - 8) + '. Нажмите Enter, чтобы показать все в ленте.'; box.append(more);
+      }
+    }
+    const r = input.getBoundingClientRect(), p = box.offsetParent ? box.offsetParent.getBoundingClientRect() : { left: 0, top: 0 };
+    box.style.left = Math.max(0, r.left - p.left) + 'px'; box.style.top = (r.bottom - p.top + 6) + 'px'; box.style.width = Math.min(560, Math.max(r.width, 320)) + 'px';
+    box.hidden = false; SUG_ACTIVE = -1;
+  };
+  input.addEventListener('input', () => { clearTimeout(SUG_TM); SUG_TM = setTimeout(render, 90); });
+  input.addEventListener('focus', () => { if (input.value.trim().length >= 2) render(); });
+  input.addEventListener('blur', () => setTimeout(close, 120));
+  input.addEventListener('keydown', (ev) => {
+    const list = items();
+    if (ev.key === 'Escape') { close(); return; }
+    if (box.hidden || !list.length) return;
+    if (ev.key === 'ArrowDown') { ev.preventDefault(); SUG_ACTIVE = (SUG_ACTIVE + 1) % list.length; mark(); list[SUG_ACTIVE].scrollIntoView({ block: 'nearest' }); }
+    else if (ev.key === 'ArrowUp') { ev.preventDefault(); SUG_ACTIVE = (SUG_ACTIVE - 1 + list.length) % list.length; mark(); list[SUG_ACTIVE].scrollIntoView({ block: 'nearest' }); }
+    else if (ev.key === 'Enter' && SUG_ACTIVE >= 0) { ev.preventDefault(); const key = list[SUG_ACTIVE].dataset.go; close(); gotoItem(key); }
+  });
+  document.addEventListener('scroll', close, { passive: true });
+}
+
 function apply(){
   fillJump();
   const t0 = performance.now();
@@ -1283,6 +1421,8 @@ function reportSearch(){
 }
 function wire(){
   wirePlain();
+  wireSuggest();
+  const pb = document.getElementById("print-btn"); if (pb) pb.addEventListener("click", () => window.print());
   const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');
   const setMenu = (on) => { sb.classList.toggle('open', on); bd.classList.toggle('on', on); mb.setAttribute('aria-expanded', String(on)); };
   // 筛选变了就顺手让 spy 重算一次 hash：writeUrl 是无条件把旧 hash 拼回去的，
