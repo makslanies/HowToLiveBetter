@@ -8,8 +8,8 @@ import { execFileSync } from 'node:child_process';
 const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : d; };
 const keys = (args[0] || '').split(',').filter(Boolean);
-const AGY = opt('provider', 'kilo') === 'agy';       // --provider agy: Antigravity CLI (вход по вашей учётной записи Google)
-const MODEL = opt('model', AGY ? 'gemini-3.8-flash-high' : 'nvidia/nemotron-3-ultra-550b-a55b:free');
+const PROVIDER = opt('provider', 'kilo'), AGY = PROVIDER === 'agy', CODEX = PROVIDER === 'codex';       // --provider agy: Antigravity CLI (вход по вашей учётной записи Google)
+const MODEL = opt('model', AGY ? 'gemini-3.8-flash-high' : CODEX ? 'codex' : 'nvidia/nemotron-3-ultra-550b-a55b:free');
 const OUT = opt('out', 'ru-work/evidence/drafts-free.json');
 if (!keys.length) { console.error('node tools/ru/freedraft.mjs 13-15,13-16 [--model id] [--out file]'); process.exit(2); }
 const URL_ = 'https://api.kilo.ai/api/gateway/chat/completions';
@@ -37,6 +37,7 @@ for (const key of keys) {
   let text = '';
   for (let attempt = 1; attempt <= 3 && !text; attempt++) {
     try {
+      if (CODEX) { const o = `/tmp/codex-${key}.txt`; execFileSync('codex', ['exec', '--skip-git-repo-check', '-s', 'read-only', '-C', '/tmp', '-o', o, SYSTEM + '\n\nКоманды и файлы не используй, ответь только JSON.\n\n' + user], { encoding: 'utf8', timeout: 300000, maxBuffer: 1 << 24, stdio: ['ignore', 'ignore', 'ignore'] }); text = readFileSync(o, 'utf8'); continue; }
       if (AGY) { text = execFileSync('agy', ['-p', SYSTEM + '\n\nИнструменты не используй, ответь только JSON.\n\n' + user, '--model', MODEL, '--print-timeout', '150s'], { cwd: '/tmp', encoding: 'utf8', timeout: 200000, maxBuffer: 1 << 24 }); continue; }
       const r = await fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, temperature: 0.2, max_tokens: 8000, messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: user }] }), signal: AbortSignal.timeout(180000) });
       const j = await r.json();
