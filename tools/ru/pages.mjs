@@ -22,7 +22,7 @@ main{max-width:780px;margin:0 auto;padding:8px 20px 40px}h1{font-size:26px;line-
 .badge.hi{color:var(--ok)}.badge.warn{color:var(--bad)}.human{background:var(--soft);border-left:4px solid var(--brand);padding:10px 14px;border-radius:6px}
 .src ol{padding-left:22px;font-size:14px;color:var(--t2);word-break:break-word}.related ul,.list{padding-left:20px}.list li{margin:.5em 0}.list .sub{display:block;font-size:14px;color:var(--t2)}
 .pager{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
-.note{font-size:14px;color:var(--t2);margin-top:24px}.scope{font-size:14px;color:var(--t2);margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:var(--soft);border-radius:4px}footer{border-top:1px solid var(--line);margin-top:20px}`;
+.suggest{font-size:14px;color:var(--t2);margin-top:18px}.note{font-size:14px;color:var(--t2);margin-top:24px}.scope{font-size:14px;color:var(--t2);margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:var(--soft);border-radius:4px}footer{border-top:1px solid var(--line);margin-top:20px}`;
 
 // ---------- текст ----------
 const NUMS = '(?:с\\s+)?\\d+(?:\\s*(?:,|и)\\s*\\d+)*(?:\\s*(?:–|—|-|по)\\s*\\d+)?';
@@ -83,6 +83,8 @@ function splitSrc(text) {
 const firstSentence = (s, max = 160) => { const t = unmd(s).replace(/\*\*/g, '').replace(/\s+/g, ' ').trim(); const m = /^(.{40,}?[.!?…])(\s|$)/.exec(t); const r = m ? m[1] : t; return r.length > max ? r.slice(0, max - 1).replace(/\s+\S*$/, '') + '…' : r; };
 
 // ---------- страницы ----------
+export const suggestHref = (e, link) => `mailto:max0r@yandex.ru?subject=HowToLiveBetter&body=${encodeURIComponent(`Пункт: раздел ${e.sec}, пункт ${e.n}. ${e.title}\n${link || ''}\n\nЧто исправить и на какой источник опереться:\n`)}`;
+
 export function page({ root, title, desc, canonical, body, ld }) {
   return `<!doctype html>
 <html lang="ru">
@@ -168,6 +170,7 @@ ${field('Затраты', 'cost')}
 ${field('Выгода', 'gain')}
 ${field('Примечания', 'note')}
 <section class="src"><h2>Источники</h2>\n${srcItems}</section>
+<p class="suggest"><a href="${suggestHref(e, canonical)}">Предложить правку</a> — ошибка, устаревший закон или лучший источник.</p>
 </article>
 ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul>${rel.map((r) => `<li><a href="${root}p/${keyOf(r)}/">Раздел ${r.sec}, пункт ${r.n}: ${esc(r.title)}</a><span class="sub">${esc(countryStatus(r, scope[keyOf(r)]))}</span></li>`).join('')}</ul></aside>` : ''}
 <nav class="pager" aria-label="Соседние пункты"><span>${prev ? `← <a href="${root}p/${keyOf(prev)}/">${prev.sec}.${prev.n} ${esc(prev.title.slice(0, 50))}…</a>` : ''}</span><span>${next ? `<a href="${root}p/${keyOf(next)}/">${next.sec}.${next.n} ${esc(next.title.slice(0, 50))}…</a> →` : ''}</span></nav>

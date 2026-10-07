@@ -220,6 +220,7 @@ html.dark .switch .sun{display:none} html.dark .switch .moon{display:block}
 .src summary::before{content:"";width:6px;height:6px;border-right:1.5px solid var(--t3);border-bottom:1.5px solid var(--t3);transform:rotate(-45deg);transition:transform .2s;margin-right:2px}
 .src[open] summary::before{transform:rotate(45deg)}
 .src .body{padding-top:8px;font-size:13px;line-height:1.75;color:var(--t2);overflow-wrap:anywhere}
+.suggest{margin:10px 0 0;font-size:13px;color:var(--t3)}.suggest a{font-weight:500}
 .src summary .cnt{color:var(--t3);font-weight:400}
 /* 一条来源一行，序号挂在左边，长 URL 单独一行不挤正文 */
 .src .body ol{margin:0;padding:0;list-style:none;counter-reset:s}
@@ -994,7 +995,8 @@ function build(sections){
           <div class="k">Примечания</div><div class="v note"></div>
           <div class="k rel-k" hidden>Смотрите также</div><div class="v rel" hidden></div>
         </div>
-        <details class="src"><summary>Источники<span class="cnt"></span></summary><div class="body"></div></details>`;
+        <details class="src"><summary>Источники<span class="cnt"></span></summary><div class="body"></div></details>
+        <p class="suggest"><a class="sg" rel="noopener">Предложить правку</a><span> — ошибка, устаревший закон или лучший источник</span></p>`;
       const badges = c.querySelector('.badges');
       const add = (cls, text) => { const t=document.createElement('span'); t.className='badge '+cls; t.textContent=text; badges.appendChild(t); };
       if (e.ratio) { const t = document.createElement('span'); t.className = 'badge r' + ({'极高':'3','高':'2','一般':'1'}[e.ratio]);
@@ -1009,6 +1011,7 @@ function build(sections){
       if (e.dispute) add('danger', 'Спорно');
       if (e.todo) add('warn', 'Есть непроверенное');
       block.appendChild(c);
+      const sgl = c.querySelector('.sg'); if (sgl) sgl.href = suggestHref(e);
       const card = {e, el:c, key:null, vis:false, f:{price:c.querySelector('.price'), priceK:c.querySelector('.price-k'), scope:c.querySelector('.scope'), rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), t:c.querySelector('.t'), cost:c.querySelector('.cost'), human:c.querySelector('.human'), gain:c.querySelector('.gain'), note:c.querySelector('.note'), src:c.querySelector('.src .body'), srcN:c.querySelector('.src summary .cnt'), details:c.querySelector('.src')}};
       renderCard(card, [], '');
       CARDS.push(card); CARD_OF.set(c, card); CARD_IO.observe(c);
@@ -1124,6 +1127,10 @@ function renderCountrySources(el, e, sc, terms) {
     el.append(heading, body);
   }
   return count;
+}
+function suggestHref(e){
+  const link = location.origin + location.pathname + '#e-' + e.sec + '-' + e.n;
+  return 'mailto:max0r@yandex.ru?subject=HowToLiveBetter&body=' + encodeURIComponent('Пункт: раздел ' + e.sec + ', пункт ' + e.n + '. ' + e.title + '\n' + link + '\n\nЧто исправить и на какой источник опереться:\n');
 }
 function renderCard(card, terms, key){
   const {e, f} = card;

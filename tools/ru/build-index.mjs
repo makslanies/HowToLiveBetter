@@ -253,6 +253,11 @@ sub('<div class="gt">Выгодность <small>', '<div class="gt">Выгод�
 sub('<div class="gt">Доказательность <small>', '<div class="gt">Доказательность исходной версии <small>');
 sub('<p>Тексты и теги берутся', '<p>Фильтры затрат и оценки относятся к исходной версии. Российские условия смотрите в полях с подписью «Россия».</p>\n    <p>Тексты и теги берутся');
 
+sub('<div class="body"></div></details>`;', '<div class="body"></div></details>\n        <p class="suggest"><a class="sg" rel="noopener">Предложить правку</a><span> — ошибка, устаревший закон или лучший источник</span></p>`;');
+sub('      const card = {e, el:c,', "      const sgl = c.querySelector('.sg'); if (sgl) sgl.href = suggestHref(e);\n      const card = {e, el:c,");
+sub('function renderCard(card, terms, key){', "function suggestHref(e){\n  const link = location.origin + location.pathname + '#e-' + e.sec + '-' + e.n;\n  return 'mailto:max0r@yandex.ru?subject=HowToLiveBetter&body=' + encodeURIComponent('Пункт: раздел ' + e.sec + ', пункт ' + e.n + '. ' + e.title + '\\n' + link + '\\n\\nЧто исправить и на какой источник опереться:\\n');\n}\nfunction renderCard(card, terms, key){");
+sub('.src summary .cnt{', '.suggest{margin:10px 0 0;font-size:13px;color:var(--t3)}.suggest a{font-weight:500}\n.src summary .cnt{');
+
 s = s.replace(/^[\t ]+$/gm, '');
 writeFileSync('ru/index.html', s);
 const left = s.split('\n').map((l, i) => [i + 1, l]).filter(([, l]) => /[一-鿿]/.test(l) && !/^\s*(\/\/|\/\*|\*)/.test(l) && !/\/\/.*[一-鿿]/.test(l.replace(/'[^']*'/g, '')) );
