@@ -66,6 +66,7 @@ writeFileSync(`${OUT}/site/robots.txt`, `User-agent: *\nAllow: /\n${SITE ? `Site
 
 if (existsSync('ru/related.json')) cpSync('ru/related.json', `${OUT}/site/related.json`);
 if (existsSync('ru/scope.json')) cpSync('ru/scope.json', `${OUT}/site/scope.json`);
+if (existsSync('ru/materials.json')) cpSync('ru/materials.json', `${OUT}/site/materials.json`);
 // GEO: llms.txt, ai/*.json, лента, «О проекте», корневые файлы домена и разметка главной (tools/ru/geo.mjs)
 const geo = generateGeo({ out: `${OUT}/site`, rootOut: `${OUT}/root`, site: SITE, repo: REPO });
 writeFileSync(`${OUT}/site/robots.txt`, robotsTxt(SITE));
@@ -104,7 +105,7 @@ if (WANT_PDF) {
 step(5, `офлайн-файл → ${OUT}/HowToLiveBetter-ru.html`);
 const readme = readFileSync('ru/README.md', 'utf8');
 const files = [...new Set([...readme.matchAll(/\]\((book\/[^)#\s]+\.md)\)/g)].map((m) => m[1]))].sort();
-const corpus = { readme, parts: Object.fromEntries(files.map((f) => [f, readFileSync(`ru/${f}`, 'utf8')])), docs: {}, scope: existsSync('ru/scope.json') ? JSON.parse(readFileSync('ru/scope.json', 'utf8')) : {}, related: existsSync('ru/related.json') ? JSON.parse(readFileSync('ru/related.json', 'utf8')) : {} };
+const corpus = { readme, parts: Object.fromEntries(files.map((f) => [f, readFileSync(`ru/${f}`, 'utf8')])), docs: {}, scope: existsSync('ru/scope.json') ? JSON.parse(readFileSync('ru/scope.json', 'utf8')) : {}, related: existsSync('ru/related.json') ? JSON.parse(readFileSync('ru/related.json', 'utf8')) : {}, materials: existsSync('ru/materials.json') ? JSON.parse(readFileSync('ru/materials.json', 'utf8')) : {} };
 const corpusJson = JSON.stringify(corpus).replace(/<\/script/gi, '<\\/script');   // </script внутри данных закрыл бы тег
 let off = indexHtml;
 const must = (needle, what) => { if (!off.includes(needle)) { console.error(`ОШИБКА: в index.html нет ${what}, скрипт сборки надо поправить: ${needle.slice(0, 60)}`); process.exit(1); } };

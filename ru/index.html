@@ -241,6 +241,7 @@ html.dark .switch .sun{display:none} html.dark .switch .moon{display:block}
 .src[open] summary::before{transform:rotate(45deg)}
 .src .body{padding-top:8px;font-size:13px;line-height:1.75;color:var(--t2);overflow-wrap:anywhere}
 .suggest{margin:10px 0 0;font-size:13px;color:var(--t3)}.suggest a{font-weight:500}
+.mat[hidden]{display:none}.mat ul{margin:6px 0 0;padding-left:18px}
 .src summary .cnt{color:var(--t3);font-weight:400}
 /* 一条来源一行，序号挂在左边，长 URL 单独一行不挤正文 */
 .src .body ol{margin:0;padding:0;list-style:none;counter-reset:s}
@@ -736,7 +737,8 @@ const XREF_RE = new RegExp(`${XREF_MAIN}|пункт(?:а|е|у|ы|ов)?\\s+(${N
 const XREF_BARE_RE = new RegExp(`${XREF_MAIN}|пункт(?:а|е|у|ы|ов)?\\s+(${NUMS})`, 'gi');
 let BARE = false;   // во введениях разделов «пункт N» без раздела значит пункт этого раздела
 let RELATED = {};
-let SCOPE = {};   // ru/scope.json: ключ пункта → {t: c|m|u, why}   // «Смотрите также»: ключ пункта → ключи похожих (related.json)
+let SCOPE = {};
+let MATS = {};   // ru/materials.json: ключ пункта → [{u, t, h, k}]   // ru/scope.json: ключ пункта → {t: c|m|u, why}   // «Смотрите также»: ключ пункта → ключи похожих (related.json)
 // 「8 到 10」摊成 8、9、10；上限 40 是防着把法条条款号那种大范围摊成几百个键
 const xrefKeys = (sec, spec) => {
   const ns = [];
@@ -1021,6 +1023,7 @@ function build(sections){
           <div class="k rel-k" hidden>Смотрите также</div><div class="v rel" hidden></div>
         </div>
         <details class="src"><summary>Источники<span class="cnt"></span></summary><div class="body"></div></details>
+        <details class="src mat" hidden><summary>Российские материалы по теме<span class="cnt"></span></summary><div class="body"></div></details>
         <p class="suggest"><a class="sg" rel="noopener">Предложить правку</a><span> — ошибка, устаревший закон или лучший источник</span></p>`;
       const badges = c.querySelector('.badges');
       const add = (cls, text) => { const t=document.createElement('span'); t.className='badge '+cls; t.textContent=text; badges.appendChild(t); };
@@ -1164,6 +1167,17 @@ function suggestHref(e){
   const link = location.origin + location.pathname + '#e-' + e.sec + '-' + e.n;
   return 'mailto:max0r@yandex.ru?subject=HowToLiveBetter&body=' + encodeURIComponent('Пункт: раздел ' + e.sec + ', пункт ' + e.n + '. ' + e.title + '\n' + link + '\n\nЧто исправить и на какой источник опереться:\n');
 }
+function renderMaterials(el, e){
+  const md = el.querySelector('.mat'); if (!md) return;
+  const list = !e.ru && MATS[e.sec + '-' + e.n];
+  md.hidden = !list; if (!list) return;
+  md.querySelector('.cnt').textContent = ' (' + list.length + ')';
+  const body = md.querySelector('.body'); if (body.firstChild) return;
+  const p = document.createElement('p'); p.textContent = 'Официальные страницы, которые нашёл автоматический поиск по теме пункта. Мы не проверяли их вручную и не утверждаем, что они подтверждают текст пункта.'; body.append(p);
+  const ul = document.createElement('ul');
+  for (const m of list){ const li = document.createElement('li'); const a = document.createElement('a'); a.href = m.u; a.rel = 'noopener'; a.target = '_blank'; a.textContent = m.t; li.append(a, ' — ' + m.h + (m.k === 'r' ? ' (справочная база закона)' : '')); ul.append(li); }
+  body.append(ul);
+}
 function renderCard(card, terms, key){
   const {e, f} = card;
   CUR_SEC = e.sec;                 // 「本节第 X 条」要按这张卡片所属的节来解析
@@ -1189,6 +1203,7 @@ function renderCard(card, terms, key){
   }
   renderCountryField(f.note, 'note', e, view, terms);
   const nSrc = renderCountrySources(f.src, e, sc, terms);
+  renderMaterials(card.el, e);
   f.srcN.textContent = nSrc > 1 ? ` · ${nSrc}` : '';
   const inBody = (e.title+e.human+e.cost+e.gain+e.note+e.ru).toLowerCase().replace(/ё/g, 'е');
   f.details.open = terms.length > 0 && terms.some(t => e.src.toLowerCase().replace(/ё/g, 'е').includes(t)) && !terms.some(t => inBody.includes(t));
@@ -1755,6 +1770,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !TIP.hid
     const t1 = performance.now();
     const sections = parseReadme(parts.join('\n\n'));
     if (!sections.length) throw new Error('empty');
+    MATS = EMBED ? (EMBED.materials || {}) : await readText('materials.json').then((t) => JSON.parse(t), () => ({}));
     SCOPE = EMBED ? (EMBED.scope || {}) : await readText('scope.json').then((t) => JSON.parse(t), () => ({}));
     RELATED = EMBED ? (EMBED.related || {}) : await readText('related.json').then((t) => JSON.parse(t), () => ({}));
     GLOSS = parseGlossary(md);

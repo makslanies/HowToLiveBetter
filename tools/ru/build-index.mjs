@@ -290,6 +290,14 @@ sub('function wire(){\n  wirePlain();', 'function wire(){\n  wirePlain();\n  if 
 // ---- метка «аналога в России нет / не найден» рядом с «Нормы Китая» ----
 sub("'Не зависит от страны'); }", "'Не зависит от страны'); if (sc && !e.ru && sc.t !== 'u' && sc.a) add('warn', sc.a === 'none' ? 'Аналога в России нет' : 'Аналог в России не найден'); }");
 
+// ---- «Российские материалы по теме»: официальные страницы, найденные поиском (ru/materials.json) ----
+sub("let SCOPE = {};", "let SCOPE = {};\nlet MATS = {};   // ru/materials.json: ключ пункта → [{u, t, h, k}]");
+sub("    SCOPE = EMBED ?", "    MATS = EMBED ? (EMBED.materials || {}) : await readText('materials.json').then((t) => JSON.parse(t), () => ({}));\n    SCOPE = EMBED ?");
+sub('<p class="suggest">', '<details class="src mat" hidden><summary>Российские материалы по теме<span class="cnt"></span></summary><div class="body"></div></details>\n        <p class="suggest">');
+sub("  const nSrc = renderCountrySources(f.src, e, sc, terms);", "  const nSrc = renderCountrySources(f.src, e, sc, terms);\n  renderMaterials(card.el, e);");
+sub('function renderCard(card, terms, key){', "function renderMaterials(el, e){\n  const md = el.querySelector('.mat'); if (!md) return;\n  const list = !e.ru && MATS[e.sec + '-' + e.n];\n  md.hidden = !list; if (!list) return;\n  md.querySelector('.cnt').textContent = ' (' + list.length + ')';\n  const body = md.querySelector('.body'); if (body.firstChild) return;\n  const p = document.createElement('p'); p.textContent = 'Официальные страницы, которые нашёл автоматический поиск по теме пункта. Мы не проверяли их вручную и не утверждаем, что они подтверждают текст пункта.'; body.append(p);\n  const ul = document.createElement('ul');\n  for (const m of list){ const li = document.createElement('li'); const a = document.createElement('a'); a.href = m.u; a.rel = 'noopener'; a.target = '_blank'; a.textContent = m.t; li.append(a, ' — ' + m.h + (m.k === 'r' ? ' (справочная база закона)' : '')); ul.append(li); }\n  body.append(ul);\n}\nfunction renderCard(card, terms, key){");
+sub('.src summary .cnt{', '.mat[hidden]{display:none}.mat ul{margin:6px 0 0;padding-left:18px}\n.src summary .cnt{');
+
 s = s.replace(/^[\t ]+$/gm, '');
 writeFileSync('ru/index.html', s);
 const left = s.split('\n').map((l, i) => [i + 1, l]).filter(([, l]) => /[一-鿿]/.test(l) && !/^\s*(\/\/|\/\*|\*)/.test(l) && !/\/\/.*[一-鿿]/.test(l.replace(/'[^']*'/g, '')) );

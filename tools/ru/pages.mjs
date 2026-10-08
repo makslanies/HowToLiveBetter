@@ -127,6 +127,7 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
   const secs = parseBook();
   const all = secs.flatMap((s) => s.entries);
   const scope = existsSync('ru/scope.json') ? JSON.parse(readFileSync('ru/scope.json', 'utf8')) : {};
+  const materials = existsSync('ru/materials.json') ? JSON.parse(readFileSync('ru/materials.json', 'utf8')) : {};
   const related = existsSync(relatedPath) ? JSON.parse(readFileSync(relatedPath, 'utf8')) : {};
   const byKey = Object.fromEntries(all.map((e) => [keyOf(e), e]));
   const url = (p) => (site ? `${site.replace(/\/?$/, '/')}${p}` : '');
@@ -176,6 +177,7 @@ ${field('Затраты', 'cost')}
 ${field('Выгода', 'gain')}
 ${field('Примечания', 'note')}
 <section class="src"><h2>Источники</h2>\n${srcItems}</section>
+${(!e.ru && materials[keyOf(e)]) ? `<section class="mat"><h2>Российские материалы по теме</h2>\n<p class="note">Официальные страницы, которые нашёл автоматический поиск по теме пункта. Мы не проверяли их вручную и не утверждаем, что они подтверждают текст пункта.</p>\n<ul>${materials[keyOf(e)].map((m) => `<li><a href="${esc(m.u)}" rel="noopener">${esc(m.t)}</a> — ${esc(m.h)}${m.k === 'r' ? ' (справочная база закона)' : ''}</li>`).join('')}</ul></section>` : ''}
 <p class="suggest"><a href="${suggestHref(e, canonical)}">Предложить правку</a> — ошибка, устаревший закон или лучший источник.</p>
 </article>
 ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul>${rel.map((r) => `<li><a href="${root}p/${keyOf(r)}/">Раздел ${r.sec}, пункт ${r.n}: ${esc(r.title)}</a><span class="sub">${esc(countryStatus(r, scope[keyOf(r)]))}</span></li>`).join('')}</ul></aside>` : ''}
