@@ -50,6 +50,13 @@
     if (a) { ev.preventDefault(); showBanner(); }
   });
 
+  // цели Метрики по действиям читателей (создаются в кабинете или через API с теми же идентификаторами); сработают только после согласия на статистику
+  var GOALS = [['#print-btn,.print-icon,.print-btn', 'print'], ['.sg,.suggest a', 'suggest_edit'], ['a[href*="library/"]', 'library_open'], ['[data-dim="rus"] .chip', 'filter_russia'], ['a[href^="mailto:"]', 'mail_author'], ['.sug-item', 'search_suggest_open']];
+  document.addEventListener('click', function (ev) {
+    if (get() !== 'yes' || typeof window.ym !== 'function' || !ev.target.closest) return;
+    for (var i = 0; i < GOALS.length; i++) { if (ev.target.closest(GOALS[i][0])) { window.ym(113465970, 'reachGoal', GOALS[i][1]); break; } }
+  });
+
   function start() { var v = get(); if (v === 'yes') loadMetrika(); else if (v !== 'no') showBanner(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

@@ -10,3 +10,8 @@ ru-work/test/
 dist-ru/
 ru-work/
 ru-work/book.before-clarity*/
+
+# ключи доступа (сервисный аккаунт Google и т.п.) в репозиторий не попадают
+commanding-way-*.json
+*service-account*.json
+*-credentials.json
