@@ -3,13 +3,26 @@
 // Китайский оригинал README лежит в README.zh.md. Не переносятся: Star history, донат и реклама из оригинала.
 //   node tools/ru/readme-root.mjs [--site https://USER.github.io/REPO/] [--repo https://github.com/USER/REPO]
 import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { validate } from './validate.mjs';
+import { parseBook, keyOf } from './parse.mjs';
 
 const a = process.argv.slice(2); const opt = (n, d) => { const i = a.indexOf(`--${n}`); return i >= 0 ? a[i + 1] : d; };
 const SITE = opt('site', 'https://makslanies.github.io/HowToLiveBetter/').replace(/\/?$/, '/');
 const REPO = opt('repo', 'https://github.com/makslanies/HowToLiveBetter').replace(/\/$/, '');
 const UP = 'https://github.com/eternity4719/HowToLiveBetter';
 const st = validate().stats;
+// покрытие российскими данными считается из книги, метки аналога берутся из ru/scope.json (tools/ru/analog.mjs)
+const scope = JSON.parse(readFileSync('ru/scope.json', 'utf8'));
+const lib = existsSync('ru/library.json') ? JSON.parse(readFileSync('ru/library.json', 'utf8')) : [];
+const cov = { all: 0, ru: 0, uni: 0, none: 0, searched: 0, unchecked: 0, price: 0 };
+for (const e of parseBook().flatMap((x) => x.entries)) {
+  const sc = scope[keyOf(e)] || {}; cov.all++;
+  if (e.price) cov.price++;
+  if (e.ru) cov.ru++; else if (sc.t === 'u') cov.uni++; else if (sc.a === 'none') cov.none++; else if (sc.a === 'searched') cov.searched++; else cov.unchecked++;
+}
+const needRu = cov.all - cov.uni;
+const pct = Math.round(100 * cov.ru / needRu);
 const badge = (label, msg, color) => `https://img.shields.io/badge/${encodeURIComponent(label.replace(/-/g, '--'))}-${encodeURIComponent(msg.replace(/-/g, '--'))}-${color}?style=flat-square`;
 const doc = (name, ru) => `[${ru} (${name})](${UP}/blob/main/docs/${encodeURIComponent(name)}.md)`;
 
@@ -46,7 +59,7 @@ ${st.entries} пунктов, в каждом сказано, что вы тра
 <table>
 <tr><td align="right"><b>Читать</b></td><td align="left">
 
-[Сайт с поиском](${SITE}) · [Оглавление](#оглавление) · [Оглавление без JavaScript](${SITE}contents/) · [Глоссарий](#как-читать-цифры-глоссарий)
+[Сайт с поиском](${SITE}) · [Оглавление](#оглавление) · [Оглавление без JavaScript](${SITE}contents/) · [Российская библиотека](${SITE}library/) · [Об авторе](${SITE}author/) · [Глоссарий](#как-читать-цифры-глоссарий)
 
 </td></tr>
 <tr><td align="right"><b>Длинные статьи</b></td><td align="left">
@@ -79,6 +92,27 @@ ${st.entries} пунктов, в каждом сказано, что вы тра
 </div>
 
 ---
+
+## Российские данные
+
+Исходная книга китайская, поэтому законы, выплаты и цены в ней китайские. К ней добавлен российский слой: отдельные поля «Россия» в описании, затратах, выгоде и примечаниях, со своими источниками. Китайские и российские сведения не смешиваются.
+
+- **Покрытие.** Российский слой есть у ${cov.ru} из ${cov.all} пунктов. Ещё ${cov.uni} пунктов от страны не зависят. Из ${needRu} пунктов, где нужна российская проверка, покрыто ${pct}%.
+- **Остальные пункты помечены честно.** «Российского аналога нет» (${cov.none}): пункт описывает порядок, который есть только в Китае. «Искали в официальных российских источниках, не нашли» (${cov.searched}). «Пока не проверено» (${cov.unchecked}).
+- **Российские цены** рядом с китайскими есть у ${cov.price} пунктов.
+- **Российская библиотека:** [${lib.length} официальных страниц](${SITE}library/) (Минздрав, Роструд, СФР, МВД, Банк России, Роспотребнадзор и другие) по темам книги, отдельно от китайских пунктов. Страницы с пометкой «проверено» использованы как источники российских справок, остальные нашёл автоматический поиск.
+- **Как проверяется.** Поиск идёт только по официальным сайтам. Текст справки пишет ИИ по найденным страницам, а скрипт сверяет каждую цитату с текстом страницы и каждое число с цитатами. Выдуманное отсеивается. Вычитки врачами и юристами нет.
+
+### Что умеет сайт
+
+- Поиск по формам слов, с «ё» и синонимами; фразы в кавычках, исключение слов знаком «-», переход по номеру пункта (например, 5-38).
+- Подсказки под строкой поиска: похожие слова и список пунктов, где слово встречается.
+- Фильтры по затратам, выгоде, уровню доказательности и разделу. Режим «Кратко» оставляет в карточках только блок «Простыми словами».
+- Печать страницы или выбранных пунктов, отдельная страница у каждого пункта, ссылка «Предложить правку» под источниками.
+
+## Автор
+
+Максим Ланиес. Идея: взять китайскую книгу «高性价比人生指南», перевести на русский и дополнить российскими данными. Вопросы и предложения: [max0r@yandex.ru](mailto:max0r@yandex.ru?subject=HowToLiveBetter), тема письма «HowToLiveBetter». Подробнее: [страница автора](${SITE}author/).
 
 ## Какие вопросы разбирает книга
 
