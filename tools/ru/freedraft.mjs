@@ -24,6 +24,7 @@ const SYSTEM = `Ты редактор русской версии книги о 
 
 const out = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : {};
 for (const key of keys) {
+  if (out[key] && !args.includes('--redo')) continue;                  // уже написанное не переделываем: запуск можно продолжать после остановки
   const pk = `ru-work/evidence/${key}.md`;
   if (!existsSync(pk)) { console.error(`${key}: нет пакета`); continue; }
   const packet = readFileSync(pk, 'utf8').replace(/\u0000/g, '');           // нулевые байты из PDF ломают аргументы командной строки
