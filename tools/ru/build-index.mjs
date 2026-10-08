@@ -2,7 +2,7 @@
 // Ключи логики (大/中/小, 极高/高/一般, 钱/时间/毅力 в теге стоимости) остаются китайскими, они лежат в данных;
 // переводятся подписи, названия полей, сноски «раздел N, пункт M». Аналитику, рекламу и донаты вырезает.
 //   node tools/ru/build-index.mjs
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { stats, faq } from './geo-data.mjs';
 import { COUNTRY_GUIDE } from './country-fields.mjs';
 
@@ -297,6 +297,15 @@ sub('<p class="suggest">', '<details class="src mat" hidden><summary>Росси�
 sub("  const nSrc = renderCountrySources(f.src, e, sc, terms);", "  const nSrc = renderCountrySources(f.src, e, sc, terms);\n  renderMaterials(card.el, e);");
 sub('function renderCard(card, terms, key){', "function renderMaterials(el, e){\n  const md = el.querySelector('.mat'); if (!md) return;\n  const list = !e.ru && MATS[e.sec + '-' + e.n];\n  md.hidden = !list; if (!list) return;\n  md.querySelector('.cnt').textContent = ' (' + list.length + ')';\n  const body = md.querySelector('.body'); if (body.firstChild) return;\n  const p = document.createElement('p'); p.textContent = 'Официальные страницы, которые нашёл автоматический поиск по теме пункта. Мы не проверяли их вручную и не утверждаем, что они подтверждают текст пункта.'; body.append(p);\n  const ul = document.createElement('ul');\n  for (const m of list){ const li = document.createElement('li'); const a = document.createElement('a'); a.href = m.u; a.rel = 'noopener'; a.target = '_blank'; a.textContent = m.t; li.append(a, ' — ' + m.h + (m.k === 'r' ? ' (справочная база закона)' : '')); ul.append(li); }\n  body.append(ul);\n}\nfunction renderCard(card, terms, key){");
 sub('.src summary .cnt{', '.mat[hidden]{display:none}.mat ul{margin:6px 0 0;padding-left:18px}\n.src summary .cnt{');
+
+// ---- фильтр «Россия» в боковой панели и ссылка на библиотеку ----
+const libN = existsSync('ru/library.json') ? JSON.parse(readFileSync('ru/library.json', 'utf8')).length : 0;
+sub("const DIMS = ['sec','ratio','lens','grade','money','time','will'];", "const DIMS = ['sec','ratio','lens','grade','money','time','will','rus'];");
+sub("will:new Set(), dispute:false", "will:new Set(), rus:new Set(), dispute:false");
+sub("if (ok && state.dispute && !e.dispute) ok = false;", "if (ok && state.rus.size && !ruCats(e).some(c => state.rus.has(c))) ok = false;\n    if (ok && state.dispute && !e.dispute) ok = false;");
+sub('function renderCard(card, terms, key){', "// какие российские данные есть у пункта: ru — российский слой, price — цена, mat — ссылки на материалы, none/searched/unchecked — метка аналога, uni — от страны не зависит\nfunction ruCats(e){\n  const sc = SCOPE[e.sec + '-' + e.n] || {}, c = [];\n  if (e.ru) c.push('ru');\n  if (e.price) c.push('price');\n  if (!e.ru && MATS[e.sec + '-' + e.n]) c.push('mat');\n  if (!e.ru && sc.t === 'u') c.push('uni');\n  else if (!e.ru) c.push(sc.a === 'none' ? 'none' : sc.a === 'searched' ? 'searched' : 'unchecked');\n  return c;\n}\nfunction renderCard(card, terms, key){");
+sub('<aside class="sidebar" id="sidebar">', '<aside class="sidebar" id="sidebar">\n  <div class="group">\n    <div class="gt">Россия <small>что есть из российских данных</small></div>\n    <div class="chips" data-dim="rus">\n      <button class="chip" data-v="ru" aria-pressed="false">Есть российские данные</button>\n      <button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>\n      <button class="chip" data-v="mat" aria-pressed="false">Есть российские материалы</button>\n      <button class="chip" data-v="none" aria-pressed="false">Аналога в России нет</button>\n      <button class="chip" data-v="searched" aria-pressed="false">Аналог не найден</button>\n      <button class="chip" data-v="unchecked" aria-pressed="false">Не проверено</button>\n      <button class="chip" data-v="uni" aria-pressed="false">От страны не зависит</button>\n    </div>\n    <p class="lib-link"><a href="library/">Российская библиотека: ' + libN + ' официальных страниц →</a></p>\n  </div>');
+sub('.icon-btn:hover{', '.lib-link{margin:8px 0 0;font-size:13px}.lib-link a{font-weight:600}\n.icon-btn:hover{');
 
 s = s.replace(/^[\t ]+$/gm, '');
 writeFileSync('ru/index.html', s);

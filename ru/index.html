@@ -129,6 +129,7 @@ body.plain-only .rows,body.plain-only .src,body.plain-only .suggest,body.plain-o
 .sug-item:hover,.sug-item.on{background:var(--bg-soft);text-decoration:none}
 .sug mark{background:rgba(255,200,0,.35);color:inherit;border-radius:2px}
 @media print{.sug{display:none!important}}
+.lib-link{margin:8px 0 0;font-size:13px}.lib-link a{font-weight:600}
 .icon-btn:hover{background:var(--bg-soft);color:var(--t1)}
 .icon-btn svg{width:20px;height:20px;fill:currentColor}
 .switch{position:relative;width:40px;height:22px;border-radius:11px;border:1px solid var(--divider);background:var(--bg-mute);transition:border-color .25s,background .25s;flex:none;margin-left:8px}
@@ -370,6 +371,19 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
 <div class="backdrop" id="backdrop"></div>
 <div class="pop" id="pop" role="tooltip" hidden><b></b><span></span></div>
 <aside class="sidebar" id="sidebar">
+  <div class="group">
+    <div class="gt">Россия <small>что есть из российских данных</small></div>
+    <div class="chips" data-dim="rus">
+      <button class="chip" data-v="ru" aria-pressed="false">Есть российские данные</button>
+      <button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>
+      <button class="chip" data-v="mat" aria-pressed="false">Есть российские материалы</button>
+      <button class="chip" data-v="none" aria-pressed="false">Аналога в России нет</button>
+      <button class="chip" data-v="searched" aria-pressed="false">Аналог не найден</button>
+      <button class="chip" data-v="unchecked" aria-pressed="false">Не проверено</button>
+      <button class="chip" data-v="uni" aria-pressed="false">От страны не зависит</button>
+    </div>
+    <p class="lib-link"><a href="library/">Российская библиотека: 330 официальных страниц →</a></p>
+  </div>
   <div class="group">
     <div class="gt">Разделы</div>
     <div class="sec-links" id="f-sec" data-dim="sec"></div>
@@ -1060,8 +1074,8 @@ function buildGlossary(){
 }
 
 /* ---------- 筛选状态 ---------- */
-const DIMS = ['sec','ratio','lens','grade','money','time','will'];
-const state = { q:'', sec:new Set(), ratio:new Set(), lens:new Set(), grade:new Set(), money:new Set(), time:new Set(), will:new Set(), dispute:false, todo:false };
+const DIMS = ['sec','ratio','lens','grade','money','time','will','rus'];
+const state = { q:'', sec:new Set(), ratio:new Set(), lens:new Set(), grade:new Set(), money:new Set(), time:new Set(), will:new Set(), rus:new Set(), dispute:false, todo:false };
 function readUrl(){
   const p = new URLSearchParams(location.search);
   state.q = p.get('q') || '';
@@ -1177,6 +1191,16 @@ function renderMaterials(el, e){
   const ul = document.createElement('ul');
   for (const m of list){ const li = document.createElement('li'); const a = document.createElement('a'); a.href = m.u; a.rel = 'noopener'; a.target = '_blank'; a.textContent = m.t; li.append(a, ' — ' + m.h + (m.k === 'r' ? ' (справочная база закона)' : '')); ul.append(li); }
   body.append(ul);
+}
+// какие российские данные есть у пункта: ru — российский слой, price — цена, mat — ссылки на материалы, none/searched/unchecked — метка аналога, uni — от страны не зависит
+function ruCats(e){
+  const sc = SCOPE[e.sec + '-' + e.n] || {}, c = [];
+  if (e.ru) c.push('ru');
+  if (e.price) c.push('price');
+  if (!e.ru && MATS[e.sec + '-' + e.n]) c.push('mat');
+  if (!e.ru && sc.t === 'u') c.push('uni');
+  else if (!e.ru) c.push(sc.a === 'none' ? 'none' : sc.a === 'searched' ? 'searched' : 'unchecked');
+  return c;
 }
 function renderCard(card, terms, key){
   const {e, f} = card;
@@ -1408,6 +1432,7 @@ function apply(){
     if (ok && state.money.size && !state.money.has(e.money)) ok = false;
     if (ok && state.time.size && !state.time.has(e.time)) ok = false;
     if (ok && state.will.size && !state.will.has(e.will)) ok = false;
+    if (ok && state.rus.size && !ruCats(e).some(c => state.rus.has(c))) ok = false;
     if (ok && state.dispute && !e.dispute) ok = false;
     if (ok && state.todo && !e.todo) ok = false;
     if (ok && !matchQuery(e.hay, QRY, relax)) ok = false;
