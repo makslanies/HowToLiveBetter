@@ -121,7 +121,7 @@ ${body}
 }
 
 // Пометка «что в пункте китайское, что российское» (ru/scope.json, классификация tools/ru/classify.mjs)
-const scopeBadge = (sc) => (!sc ? '' : `<li class="badge ${sc.t === 'u' ? 'hi' : 'warn'}">${sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны'}</li>`);
+const scopeBadge = (sc, hasRu) => (!sc ? '' : `<li class="badge ${sc.t === 'u' ? 'hi' : 'warn'}">${sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны'}</li>` + (!hasRu && sc.t !== 'u' && sc.a ? `<li class="badge warn">${sc.a === 'none' ? 'Аналога в России нет' : 'Аналог в России не найден'}</li>` : ''));
 
 export function generatePages({ out, site = '', relatedPath = 'ru/related.json' }) {
   const secs = parseBook();
@@ -162,7 +162,7 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
     };
     const srcItems = sourceGroups(e, sc).map((g) => `<h3>${esc(g.title)}</h3><ol>${splitSrc(g.text).map((x) => `<li>${f(x)}</li>`).join('')}</ol>`).join('');
     const prev = flat[idx - 1], next = flat[idx + 1];
-    const badges = [e.ratio ? badge(`Выгодность исходной версии: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade} · исходная версия`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), scopeBadge(scope[keyOf(e)]), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Российские данные: частично') : ''].join('');
+    const badges = [e.ratio ? badge(`Выгодность исходной версии: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade} · исходная версия`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), scopeBadge(scope[keyOf(e)], e.ru), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Российские данные: частично') : ''].join('');
     const desc = firstSentence(countrySummary(e, sc) || e.title);
     const canonical = url(`p/${keyOf(e)}/`);
     const body = `<nav class="crumbs" aria-label="Навигация"><a href="${root}contents/">Оглавление</a> › <a href="${root}s/${e.sec}/">${e.sec}. ${esc(sec.title)}</a> › пункт ${e.n}</nav>

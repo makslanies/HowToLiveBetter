@@ -287,6 +287,9 @@ sub('.icon-btn:hover{', '.nav-in{position:relative}\n.sug{position:absolute;z-in
 if (process.env.HLTB_PDF === '1') sub('<button type="button" class="icon-btn" id="print-btn"', '<a class="icon-btn" id="pdf-btn" rel="nofollow" href="pdf/book.pdf" download title="Скачать всю книгу в PDF" aria-label="Скачать PDF"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="1.5" y="6" width="21" height="12" rx="2.5" fill="currentColor"/><text x="12" y="15.2" font-size="8.4" font-weight="800" text-anchor="middle" fill="var(--bg)" font-family="system-ui,sans-serif">PDF</text></svg></a>\n      <button type="button" class="icon-btn" id="print-btn"');
 sub('function wire(){\n  wirePlain();', 'function wire(){\n  wirePlain();\n  if (window.__CORPUS__) document.querySelectorAll("#pdf-btn, a[href=\\"author/\\"]").forEach((x) => x.remove());   // в автономном файле этих страниц нет');
 
+// ---- метка «аналога в России нет / не найден» рядом с «Нормы Китая» ----
+sub("'Не зависит от страны'); }", "'Не зависит от страны'); if (sc && !e.ru && sc.t !== 'u' && sc.a) add('warn', sc.a === 'none' ? 'Аналога в России нет' : 'Аналог в России не найден'); }");
+
 s = s.replace(/^[\t ]+$/gm, '');
 writeFileSync('ru/index.html', s);
 const left = s.split('\n').map((l, i) => [i + 1, l]).filter(([, l]) => /[一-鿿]/.test(l) && !/^\s*(\/\/|\/\*|\*)/.test(l) && !/\/\/.*[一-鿿]/.test(l.replace(/'[^']*'/g, '')) );
