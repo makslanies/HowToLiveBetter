@@ -23,7 +23,7 @@ main{max-width:780px;margin:0 auto;padding:8px 20px 40px}h1{font-size:26px;line-
 .badge.hi{color:var(--ok)}.badge.warn{color:var(--bad)}.human{background:var(--soft);border-left:4px solid var(--brand);padding:10px 14px;border-radius:6px}
 .src ol{padding-left:22px;font-size:14px;color:var(--t2);word-break:break-word}.related ul,.list{padding-left:20px}.list li{margin:.5em 0}.list .sub{display:block;font-size:14px;color:var(--t2)}
 .pager{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
-.suggest{font-size:14px;color:var(--t2);margin-top:18px}.print-btn{font:inherit;color:var(--brand);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}@media print{header.top,.pager,.related,.suggest,main>.note,footer,.crumbs,#cookie-banner{display:none!important}body{background:#fff;color:#000}a{color:inherit;text-decoration:none}}.note{font-size:14px;color:var(--t2);margin-top:24px}.scope{font-size:14px;color:var(--t2);margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:var(--soft);border-radius:4px}footer{border-top:1px solid var(--line);margin-top:20px}`;
+.suggest{font-size:14px;color:var(--t2);margin-top:18px}.lib{padding-left:18px}.lib li{margin:0 0 12px}.lib .sub{color:var(--t2);font-size:14px}.lib .ok{font-size:12px;color:var(--ok);border:1px solid var(--ok);border-radius:999px;padding:0 7px}.lib-nav{line-height:2;margin:10px 0}.print-btn{font:inherit;color:var(--brand);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}@media print{header.top,.pager,.related,.suggest,main>.note,footer,.crumbs,#cookie-banner{display:none!important}body{background:#fff;color:#000}a{color:inherit;text-decoration:none}}.note{font-size:14px;color:var(--t2);margin-top:24px}.scope{font-size:14px;color:var(--t2);margin:10px 0;padding:8px 12px;border-left:3px solid var(--warn);background:var(--soft);border-radius:4px}footer{border-top:1px solid var(--line);margin-top:20px}`;
 const pdfOn = () => process.env.HLTB_PDF === '1';        // флаг читается при вызове: build.mjs выставляет его после загрузки модулей
 const PDF_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="1.5" y="6" width="21" height="12" rx="2.5" fill="currentColor"/><text x="12" y="15.2" font-size="8.4" font-weight="800" text-anchor="middle" fill="var(--bg)" font-family="system-ui,sans-serif">PDF</text></svg>';
 const CSS_V = createHash('sha1').update(CSS).digest('hex').slice(0, 8);
@@ -109,7 +109,7 @@ ${canonical ? `<link rel="canonical" href="${esc(canonical)}">\n<meta property="
 ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` : ''}
 </head>
 <body>
-<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}about/">О проекте</a><a href="${root}author/">Автор</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a>${pdfLink}<button type="button" class="print-icon" onclick="window.print()" aria-label="Распечатать страницу" title="Распечатать страницу"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M7 3h10v4H7zM5 8h14a3 3 0 0 1 3 3v6h-4v4H6v-4H2v-6a3 3 0 0 1 3-3zm3 7v4h8v-4zm10-3.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></button></header>
+<header class="top"><a href="${root}">Поиск и фильтры</a><a href="${root}contents/">Оглавление</a><a href="${root}library/">Библиотека</a><a href="${root}about/">О проекте</a><a href="${root}author/">Автор</a><a href="${UPSTREAM}" rel="noopener">Китайский оригинал</a>${pdfLink}<button type="button" class="print-icon" onclick="window.print()" aria-label="Распечатать страницу" title="Распечатать страницу"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M7 3h10v4H7zM5 8h14a3 3 0 0 1 3 3v6h-4v4H6v-4H2v-6a3 3 0 0 1 3-3zm3 7v4h8v-4zm10-3.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></button></header>
 <main>
 ${body}
 </main>
@@ -223,6 +223,19 @@ ${intro}
 <p class="scope">${esc(COUNTRY_GUIDE)}</p>
 <ol class="list" style="padding-left:0;list-style:none">${items}</ol>`;
     put('contents', page({ root, title: `Оглавление · ${TITLE}`, desc: `Оглавление: ${secs.length} разделов и ${all.length} пунктов руководства по жизни с высокой отдачей.`, canonical: url('contents/'), body }));
+    const libItems = existsSync('ru/library.json') ? JSON.parse(readFileSync('ru/library.json', 'utf8')) : [];
+    if (libItems.length) {
+      const bySec = new Map();
+      for (const x of libItems) (bySec.get(x.s) || bySec.set(x.s, []).get(x.s)).push(x);
+      const nV = libItems.filter((x) => x.v).length;
+      const groups = secs.filter((s) => bySec.has(Number(s.n)) || bySec.has(s.n)).map((s) => {
+        const arr = bySec.get(Number(s.n)) || bySec.get(s.n) || [];
+        return '<h2 id="s' + s.n + '">' + s.n + '. ' + esc(s.title) + ' <small>(' + arr.length + ')</small></h2>\n<ul class="lib">' + arr.map((x) => '<li><a href="' + esc(x.u) + '" rel="noopener">' + esc(x.t) + '</a> <small>' + esc(x.h) + (x.k === 'r' ? ', справочная база закона' : '') + '</small>' + (x.v ? ' <span class="ok">проверено</span>' : '') + '' + (x.x ? '<br><span class="sub">' + esc(x.x) + '</span>' : '') + '<br><small>К пунктам: ' + x.e.map((k) => '<a href="' + root + 'p/' + k + '/">' + k + '</a>').join(', ') + '</small></li>').join('') + '</ul>';
+      }).join('\n');
+      const libBody = '<h1>Российская библиотека: официальные материалы</h1>\n<p>Страницы российских официальных сайтов (Минздрав, Роструд, СФР, МВД, Банк России, Роспотребнадзор, МЧС, Минтруд и другие), которые нашёл автоматический поиск по темам книги. Они не привязаны к китайским пунктам: открывайте их сами. Всего ' + libItems.length + ' страниц, ' + nV + ' из них отмечены «проверено».</p>\n<p class="scope">«Проверено» значит, что цитаты из этой страницы сверены с её текстом и использованы в российской справке к пункту. Остальные страницы нашёл поиск: их читали автоматически, вручную не проверяли и не утверждают, что они подтверждают конкретный пункт. Законы меняются, перед важным решением проверьте актуальную редакцию на сайте-источнике.</p>\n<nav class="lib-nav">' + secs.filter((s) => bySec.has(Number(s.n)) || bySec.has(s.n)).map((s) => '<a href="#s' + s.n + '">' + s.n + '</a>').join(' · ') + '</nav>\n' + groups;
+      put('library', page({ root, title: 'Российская библиотека: официальные материалы · ' + TITLE, desc: 'Страницы российских официальных сайтов по темам книги: здоровье, деньги, работа, право, семья. ' + libItems.length + ' страниц, отдельно отмечены проверенные.', canonical: url('library/'), body: libBody }));
+      urls.push('library/');
+    }
     urls.push('contents/', 'about/', 'author/', 'privacy/');
   }
 
