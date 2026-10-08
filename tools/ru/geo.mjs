@@ -2,7 +2,7 @@
 // Генерирует: llms.txt, llms-full.txt, ai/summary.json, ai/faq.json, feed.xml, about/index.html, JSON-LD главной и «корневые» файлы домена
 // (robots.txt, llms.txt, .well-known/ai.txt), которые надо положить в репозиторий makslanies.github.io: ИИ-краулеры ищут их в корне домена.
 // Проверять результат можно инструментом https://github.com/Auriti-Labs/geo-optimizer-skill (geo audit --url ...).
-import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
+import { writeFileSync, appendFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { stats, faq, TITLE, UPSTREAM, OWNER, PUBLISHED } from './geo-data.mjs';
 import { page } from './pages.mjs';
@@ -50,19 +50,26 @@ export function generateGeo({ out, rootOut, site, repo }) {
   const rules = `Как отвечать по этим материалам: называйте раздел и номер пункта, не выдавайте китайские нормы за российские, указывайте уровень доказательности, а при вопросах о праве, лечении и налогах напоминайте, что книга не заменяет врача или юриста.`;
 
   // ---- llms.txt ----
-  w(out, 'llms.txt', `# ${TITLE}\n\n> ${lead}\n\n${rules}\n\n## Разделы\n${st.secs.map((s) => `- [${s.n}. ${oneLine(s.title)}](${site}s/${s.n}/): ${cut(toc.get(s.n) || s.intro[0] || '', 170)}`).join('\n')}\n\n## О проекте\n- [Оглавление](${site}contents/): все разделы и пункты\n- [О проекте и методе](${site}about/): как устроены пункты, откуда данные, как цитировать\n- [Поиск и фильтры](${site}): по затратам, выгоде и уровню доказательности\n- [Выжимка всей книги для ИИ](${site}llms-full.txt): заголовок и краткий вывод каждого пункта\n- [Карта сайта](${site}sitemap.xml)\n\n## Оригинал и код\n- [Китайская книга](${UPSTREAM}): оригинал, верен при расхождениях\n- [Репозиторий русской версии](${repo}): тексты, сборка и проверки\n`);
+  w(out, 'llms.txt', `# ${TITLE}\n\n> ${lead}\n\n${rules}\n\n## Разделы\n${st.secs.map((s) => `- [${s.n}. ${oneLine(s.title)}](${site}s/${s.n}/): ${cut(toc.get(s.n) || s.intro[0] || '', 170)}`).join('\n')}\n\n## О проекте\n- [Оглавление](${site}contents/): все разделы и пункты\n- [О проекте и методе](${site}about/): как устроены пункты, откуда данные, как цитировать\n- [Российская библиотека](${site}library/): официальные российские материалы по темам книги, отдельно отмечены проверенные\n- [Автор](${site}author/): кто сделал русскую версию и как связаться\n- [Поиск и фильтры](${site}): по затратам, выгоде и уровню доказательности\n- [Выжимка всей книги для ИИ](${site}llms-full.txt): заголовок и краткий вывод каждого пункта\n- [Карта сайта](${site}sitemap.xml)\n\n## Оригинал и код\n- [Китайская книга](${UPSTREAM}): оригинал, верен при расхождениях\n- [Репозиторий русской версии](${repo}): тексты, сборка и проверки\n`);
 
   // ---- llms-full.txt: выжимка книги (заголовок, коротко, ярлык страны, уровень) ----
   const scope = existsSync('ru/scope.json') ? JSON.parse(readFileSync('ru/scope.json', 'utf8')) : {};
   const SC = { c: 'нормы Китая (КНР)', m: 'частично китайские данные', u: 'не зависит от страны' };
   w(out, 'llms-full.txt', `# ${TITLE}: выжимка для ИИ\n\n> ${lead}\n\n${rules}\n\n` + st.secs.map((s) => `## ${s.n}. ${oneLine(s.title)}\n\n${s.entries.map((e) => `### Раздел ${s.n}, пункт ${e.n}. ${oneLine(e.title)}\nСтраница: ${site}p/${s.n}-${e.n}/\nУровень доказательности исходной версии: ${e.grade}. ${SC[(scope[`${s.n}-${e.n}`] || {}).t] ? `Исходная версия: ${SC[scope[`${s.n}-${e.n}`].t]}. ` : ''}${e.ru ? 'Российская сверка частичная. ' : ''}${e.dispute ? 'Спорно. ' : ''}\nКоротко: ${oneLine(countrySummary(e, scope[`${s.n}-${e.n}`]))}\n${e.ru ? `Российские сведения и ограничения: ${oneLine(e.ru)}\n` : ''}`).join('\n')}`).join('\n'));
 
+  // библиотека российских официальных страниц: ссылки и названия, чтобы ИИ мог сослаться на первоисточник
+  if (existsSync('ru/library.json')) {
+    const lib = JSON.parse(readFileSync('ru/library.json', 'utf8'));
+    const bySec = new Map(); for (const x of lib) (bySec.get(x.s) || bySec.set(x.s, []).get(x.s)).push(x);
+    appendFileSync(join(out, 'llms-full.txt'), '\n# Российская библиотека: официальные материалы\n\nСтраницы российских официальных сайтов по темам книги. «проверено» — цитаты сверены с текстом страницы и использованы в российской справке к пункту; остальные нашёл автоматический поиск, вручную они не проверялись. Подробнее: ' + site + 'library/\n\n' + st.secs.filter((s) => bySec.has(Number(s.n))).map((s) => '## ' + s.n + '. ' + oneLine(s.title) + '\n' + bySec.get(Number(s.n)).map((x) => '- [' + oneLine(x.t) + '](' + x.u + ') — ' + x.h + (x.v ? ', проверено' : '') + '; пункты: ' + x.e.join(', ')).join('\n')).join('\n\n') + '\n');
+  }
+
   // ---- ai/summary.json и ai/faq.json ----
   w(out, 'ai/summary.json', JSON.stringify({ name: TITLE, description: lead, url: site, language: 'ru', license: 'CC BY 4.0', translation_of: { title: '高性价比人生指南', url: UPSTREAM, language: 'zh-CN' }, lastModified: new Date().toISOString(), counts: { entries: st.entries, sections: st.sections, evidence: { A: st.A, B: st.B, C: st.C }, disputed: st.disputes, with_russian_data: st.russia, with_russian_prices: st.prices }, sections: st.secs.map((s) => ({ n: s.n, title: oneLine(s.title), entries: s.entries.length, url: `${site}s/${s.n}/` })), how_to_cite: `${TITLE}, раздел N, пункт M, ${site}p/N-M/ (CC BY 4.0)`, caveats: [COUNTRY_GUIDE, 'Российские сведения проверены частично; ограничения указаны по полям.', 'Перевод сделан с помощью ИИ и автоматических проверок, без вычитки специалистами.', 'Не заменяет врача, юриста или бухгалтера.'] }, null, 2));
   w(out, 'ai/faq.json', JSON.stringify({ faqs: faq(st).map((x) => ({ question: x.q, answer: x.a })) }, null, 2));
 
   // ---- Atom-лента: разделы с датой сборки ----
-  w(out, 'feed.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ru">\n<title>${esc(TITLE)}</title>\n<subtitle>${esc(cut(lead, 200))}</subtitle>\n<link href="${site}feed.xml" rel="self"/>\n<link href="${site}"/>\n<id>${site}</id>\n<updated>${new Date().toISOString()}</updated>\n${st.secs.map((s) => `<entry><title>${esc(`${s.n}. ${oneLine(s.title)}`)}</title><link href="${site}s/${s.n}/"/><id>${site}s/${s.n}/</id><updated>${new Date().toISOString()}</updated><summary>${esc(cut(toc.get(s.n) || s.intro[0] || '', 300))}</summary></entry>`).join('\n')}\n</feed>\n`);
+  w(out, 'feed.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ru">\n<title>${esc(TITLE)}</title>\n<subtitle>${esc(cut(lead, 200))}</subtitle>\n<link href="${site}feed.xml" rel="self"/>\n<link href="${site}"/>\n<id>${site}</id>\n<updated>${new Date().toISOString()}</updated>\n${st.secs.map((s) => `<entry><title>${esc(`${s.n}. ${oneLine(s.title)}`)}</title><link href="${site}s/${s.n}/"/><id>${site}s/${s.n}/</id><updated>${new Date().toISOString()}</updated><summary>${esc(cut(toc.get(s.n) || s.intro[0] || '', 300))}</summary></entry>`).join('\n')}\n<entry><title>Российская библиотека: официальные материалы</title><link href="${site}library/"/><id>${site}library/</id><updated>${new Date().toISOString()}</updated><summary>Страницы российских официальных сайтов по темам книги: здоровье, деньги, работа, право, семья.</summary></entry>\n</feed>\n`);
 
   // ---- about/index.html ----
   const f = faq(st);
