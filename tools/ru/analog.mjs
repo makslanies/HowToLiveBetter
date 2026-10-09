@@ -18,6 +18,7 @@ for (const e of parseBook().flatMap((s) => s.entries)) {
   const k = keyOf(e), sc = scope[k];
   if (!sc) continue;
   delete sc.a; delete sc.ad;
+  if (sc.t === 'r') continue;                       // самостоятельные российские карточки (раздел 35) метки аналога не получают
   if (e.ru) { cnt.withRu++; continue; }
   if (sc.t === 'u') { cnt.universal++; continue; }
   if (plans[k] && plans[k].skip && !NOT_NONE.has(k)) { sc.a = 'none'; cnt.none++; noneList.push(`${k} ${e.title.slice(0, 90)} | ${sc.why || ''}`); continue; }

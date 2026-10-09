@@ -18,7 +18,10 @@ export function analogNotice(sc) {
   return 'Здесь приведена исходная версия с китайскими условиями. Российские правила пока не проверены; китайские законы, выплаты и телефоны нельзя переносить на Россию.';
 }
 
+export const isRu = (sc) => !!sc && sc.t === 'r';   // самостоятельный российский материал, а не китайский пункт
+
 export function countryView(e, sc) {
+  if (isRu(sc)) return { original: 'Российский материал', labeled: false, russian: null, notice: 'Российский материал по официальным источникам. Законы и порядки меняются: проверьте действующую редакцию на сайте-источнике.' };
   const scoped = !sc || sc.t !== 'u';
   const hasRu = !!e.ru;
   const original = scoped ? 'Китай — исходная версия' : 'Исходная версия';
@@ -43,13 +46,14 @@ export function countrySummary(e, sc) {
 }
 
 export function countryStatus(e, sc) {
+  if (isRu(sc)) return 'Российский материал';
   return e.ru ? 'Китай / Россия: частичные российские данные' : (sc && sc.t !== 'u' && sc.a === 'none') ? 'Китай; российского аналога нет' : (sc && sc.t !== 'u' && sc.a === 'searched') ? 'Китай; в российских источниках аналог не найден' : (!sc || sc.t !== 'u') ? 'Китай; Россия пока не проверена' : 'Общие данные';
 }
 
 export function sourceGroups(e, sc) {
   const v = countryView(e, sc);
   return [
-    { title: v.labeled ? v.original + ' — источники' : 'Источники исходной версии', text: e.srcOriginal || e.src },
+    { title: v.labeled ? v.original + ' — источники' : (isRu(sc) ? 'Источники' : 'Источники исходной версии'), text: e.srcOriginal || e.src },
     { title: 'Россия — источники', text: (e.srcRussia || '').replace(/;\s+/g, ' ; ') },
     { title: 'Россия — источники цен', text: (e.srcPrices || '').replace(/;\s+/g, ' ; ') },
   ].filter((g) => g.text);

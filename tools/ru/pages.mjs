@@ -5,7 +5,7 @@ import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSy
 import { join, dirname, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { parseBook, keyOf, LENS, LABEL } from './parse.mjs';
-import { COUNTRY_GUIDE, countryView, countrySummary, countryStatus, sourceGroups } from './country-fields.mjs';
+import { COUNTRY_GUIDE, countryView, countrySummary, countryStatus, sourceGroups, isRu } from './country-fields.mjs';
 
 const TITLE = 'Руководство по жизни с высокой отдачей';
 const UPSTREAM = 'https://github.com/eternity4719/HowToLiveBetter';
@@ -121,7 +121,7 @@ ${body}
 }
 
 // Пометка «что в пункте китайское, что российское» (ru/scope.json, классификация tools/ru/classify.mjs)
-const scopeBadge = (sc, hasRu) => (!sc ? '' : `<li class="badge ${sc.t === 'u' ? 'hi' : 'warn'}">${sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны'}</li>` + (!hasRu && sc.t !== 'u' && sc.a ? `<li class="badge warn">${sc.a === 'none' ? 'Аналога в России нет' : 'Аналог в России не найден'}</li>` : ''));
+const scopeBadge = (sc, hasRu) => (!sc ? '' : `<li class="badge ${sc.t === 'u' || sc.t === 'r' ? 'hi' : 'warn'}">${sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : sc.t === 'r' ? 'Российский материал' : 'Не зависит от страны'}</li>` + (!hasRu && sc.t !== 'u' && sc.t !== 'r' && sc.a ? `<li class="badge warn">${sc.a === 'none' ? 'Аналога в России нет' : 'Аналог в России не найден'}</li>` : ''));
 
 export function generatePages({ out, site = '', relatedPath = 'ru/related.json' }) {
   const secs = parseBook();
@@ -161,9 +161,9 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
       const russian = view.russian ? `<p${human ? ' class="human"' : ''}><strong>Россия.</strong> ${f(view.russian[key])}</p>` : '';
       return `<section class="country-field" data-field="${key}"><h2>${name}</h2>${original}${russian}${key === 'cost' && e.price ? `<h3>Цена в России (ориентир)</h3><p>${f(e.price)}</p>` : ''}</section>`;
     };
-    const srcItems = sourceGroups(e, sc).map((g) => `<h3>${esc(g.title)}</h3><ol>${splitSrc(g.text).map((x) => `<li>${f(x)}</li>`).join('')}</ol>`).join('');
+    const srcItems = sourceGroups(e, sc).map((g) => `${g.title === 'Источники' ? '' : `<h3>${esc(g.title)}</h3>`}<ol>${splitSrc(g.text).map((x) => `<li>${f(x)}</li>`).join('')}</ol>`).join('');
     const prev = flat[idx - 1], next = flat[idx + 1];
-    const badges = [e.ratio ? badge(`Выгодность исходной версии: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade} · исходная версия`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), scopeBadge(scope[keyOf(e)], e.ru), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Российские данные: частично') : ''].join('');
+    const badges = [e.ratio ? badge(`Выгодность${isRu(sc) ? '' : ' исходной версии'}: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade}${isRu(sc) ? '' : ' · исходная версия'}`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), scopeBadge(scope[keyOf(e)], e.ru), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Российские данные: частично') : ''].join('');
     const desc = firstSentence(countrySummary(e, sc) || e.title);
     const canonical = url(`p/${keyOf(e)}/`);
     const body = `<nav class="crumbs" aria-label="Навигация"><a href="${root}contents/">Оглавление</a> › <a href="${root}s/${e.sec}/">${e.sec}. ${esc(sec.title)}</a> › пункт ${e.n}</nav>
@@ -171,7 +171,7 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
 <h1>${e.n}. ${esc(e.title)}</h1>
 <ul class="badges">${badges}</ul>
 ${view.notice ? `<p class="scope">${esc(view.notice)}</p>` : ''}
-<p class="note">Оценки выше относятся к исходной версии; отдельная оценка российского варианта не проводилась.</p>
+${isRu(sc) ? '' : '<p class="note">Оценки выше относятся к исходной версии; отдельная оценка российского варианта не проводилась.</p>'}
 ${field('Простыми словами', 'human', true)}
 ${field('Затраты', 'cost')}
 ${field('Выгода', 'gain')}
@@ -201,7 +201,7 @@ ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul
     const list = s.entries.map((e) => `<li><a href="${root}p/${keyOf(e)}/">${e.n}. ${esc(e.title)}</a><span class="sub">${esc(countryStatus(e, scope[keyOf(e)]))}</span><span class="sub">${esc(firstSentence(e.human || e.gain, 150))}</span>${e.ru ? `<span class="sub">Россия: ${esc(firstSentence(countryView(e, scope[keyOf(e)]).russian.human, 150))}</span>` : ''}</li>`).join('\n');
     const body = `<nav class="crumbs" aria-label="Навигация"><a href="${root}contents/">Оглавление</a> › раздел ${s.n}</nav>
 <h1>${s.n}. ${esc(s.title)}</h1>
-<p class="scope">${esc(COUNTRY_GUIDE)} Российские данные есть у ${s.entries.filter((e) => e.ru).length} из ${s.entries.length} пунктов этого раздела. Введение ниже относится к исходной версии.</p>
+${s.entries.length && s.entries.every((e) => isRu(scope[keyOf(e)])) ? '<p class="scope">Все карточки этого раздела — самостоятельные российские материалы по официальным источникам. Китайской версии у них нет.</p>' : `<p class="scope">${esc(COUNTRY_GUIDE)} Российские данные есть у ${s.entries.filter((e) => e.ru).length} из ${s.entries.length} пунктов этого раздела. Введение ниже относится к исходной версии.</p>`}
 ${intro}
 <h2>Пункты раздела (${s.entries.length})</h2>
 <ol class="list" style="padding-left:0;list-style:none">${list}</ol>

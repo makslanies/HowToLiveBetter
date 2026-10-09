@@ -16,7 +16,7 @@ const re = (r, b) => { if (!r.test(s)) fail(`нет совпадения: ${r}`)
 // ---------- head ----------
 sub('<html lang="zh-CN">', '<html lang="ru">');
 const TITLE = 'Руководство по жизни с высокой отдачей';
-const DESC = 'Руководство по жизни, расставленное по выгодности: 665 пунктов о здоровье и долголетии, первой помощи, деньгах, защите от мошенников и юридических красных линиях, безработице, риске своего дела, любви и детях, поездках и навыках. В каждом пункте затраты, выгода, надёжность доказательств и первоисточник. Неофициальный русский перевод, законы и органы в тексте китайские.';
+const DESC = 'Руководство по жизни, расставленное по выгодности: ' + stats().entries + ' пунктов о здоровье и долголетии, первой помощи, деньгах, защите от мошенников и юридических красных линиях, безработице, риске своего дела, любви и детях, поездках и навыках. В каждом пункте затраты, выгода, надёжность доказательств и первоисточник. Неофициальный русский перевод, законы и органы в тексте китайские.';
 re(/<title>.*?<\/title>/, `<title>${TITLE} · меньше денег, времени и сил, больше здоровья, денег и свободы</title>`);
 re(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${DESC}">`);
 re(/<meta name="keywords" content="[^"]*">/, '<meta name="keywords" content="долголетие,здоровье,доказательная медицина,экономия,защита от мошенников,первая помощь,юридические красные линии,безработица,выгодность">');
@@ -306,6 +306,15 @@ sub("if (ok && state.dispute && !e.dispute) ok = false;", "if (ok && state.rus.s
 sub('function renderCard(card, terms, key){', "// какие российские данные есть у пункта: ru — российский слой, price — цена, mat — ссылки на материалы, none/searched/unchecked — метка аналога, uni — от страны не зависит\nfunction ruCats(e){\n  const sc = SCOPE[e.sec + '-' + e.n] || {}, c = [];\n  if (e.ru) c.push('ru');\n  if (e.price) c.push('price');\n  if (!e.ru && MATS[e.sec + '-' + e.n]) c.push('mat');\n  if (!e.ru && sc.t === 'u') c.push('uni');\n  else if (!e.ru) c.push(sc.a === 'none' ? 'none' : sc.a === 'searched' ? 'searched' : 'unchecked');\n  return c;\n}\nfunction renderCard(card, terms, key){");
 sub('<aside class="sidebar" id="sidebar">', '<aside class="sidebar" id="sidebar">\n  <div class="group">\n    <div class="gt">Россия <small>что есть из российских данных</small></div>\n    <div class="chips" data-dim="rus">\n      <button class="chip" data-v="ru" aria-pressed="false">Есть российские данные</button>\n      <button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>\n      <button class="chip" data-v="mat" aria-pressed="false">Есть российские материалы</button>\n      <button class="chip" data-v="none" aria-pressed="false">Аналога в России нет</button>\n      <button class="chip" data-v="searched" aria-pressed="false">Аналог не найден</button>\n      <button class="chip" data-v="unchecked" aria-pressed="false">Не проверено</button>\n      <button class="chip" data-v="uni" aria-pressed="false">От страны не зависит</button>\n    </div>\n    <p class="lib-link"><a href="library/">Российская библиотека: ' + libN + ' официальных страниц →</a></p>\n  </div>');
 sub('.icon-btn:hover{', '.lib-link{margin:8px 0 0;font-size:13px}.lib-link a{font-weight:600}\n.icon-btn:hover{');
+
+// ---- тип «Российский материал» (t:'r'): без пометок об исходной версии ----
+sub("t.textContent = 'Выгодность исходной версии: ' +", "t.textContent = 'Выгодность' + ((SCOPE[e.sec + '-' + e.n] || {}).t === 'r' ? '' : ' исходной версии') + ': ' +");
+sub("sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны');", "sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : sc.t === 'r' ? 'Российский материал' : 'Не зависит от страны');");
+sub("if (sc && !e.ru && sc.t !== 'u' && sc.a) add(", "if (sc && !e.ru && sc.t !== 'u' && sc.t !== 'r' && sc.a) add(");
+sub("  if (e.ru) c.push('ru');\n  if (e.price) c.push('price');", "  if (sc.t === 'r') { c.push('ru'); c.push('only'); return c; }\n  if (e.ru) c.push('ru');\n  if (e.price) c.push('price');");
+sub('<button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>', '<button class="chip" data-v="only" aria-pressed="false">Российские материалы</button>\n      <button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>');
+
+sub("add(sc.t === 'u' ? 'plain' : 'warn',", "add(sc.t === 'u' || sc.t === 'r' ? 'plain' : 'warn',");
 
 s = s.replace(/^[\t ]+$/gm, '');
 writeFileSync('ru/index.html', s);

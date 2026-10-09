@@ -15,7 +15,7 @@ function renderCountrySources(el, e, sc, terms) {
   for (const g of sourceGroups(e, sc)) {
     const heading = document.createElement('p'); heading.className = 'source-country'; heading.textContent = g.title;
     const body = document.createElement('div'); count += renderSrc(body, g.text, terms);
-    el.append(heading, body);
+    if (g.title === 'Источники') el.append(body); else el.append(heading, body);
   }
   return count;
 }

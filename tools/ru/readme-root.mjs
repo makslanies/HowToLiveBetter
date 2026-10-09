@@ -19,6 +19,7 @@ const cov = { all: 0, ru: 0, uni: 0, none: 0, searched: 0, unchecked: 0, price: 
 for (const e of parseBook().flatMap((x) => x.entries)) {
   const sc = scope[keyOf(e)] || {}; cov.all++;
   if (e.price) cov.price++;
+  if (sc.t === 'r') { cov.only = (cov.only || 0) + 1; cov.all--; continue; }   // самостоятельные российские карточки в покрытие китайских пунктов не входят
   if (e.ru) cov.ru++; else if (sc.t === 'u') cov.uni++; else if (sc.a === 'none') cov.none++; else if (sc.a === 'searched') cov.searched++; else cov.unchecked++;
 }
 const needRu = cov.all - cov.uni;

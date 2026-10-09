@@ -95,7 +95,7 @@ export function validate() {
   if (existsSync('ru/scope.json')) {
     const sc = JSON.parse(readFileSync('ru/scope.json', 'utf8'));
     const keys = new Set(Object.entries(counts).flatMap(([sec, n]) => Array.from({ length: n }, (_, i) => `${sec}-${i + 1}`)));
-    const missing = [...keys].filter((k) => !sc[k]).length, extra = Object.keys(sc).filter((k) => !keys.has(k)).length, noWhy = Object.values(sc).filter((x) => x.t !== 'u' && !x.why).length;
+    const missing = [...keys].filter((k) => !sc[k]).length, extra = Object.keys(sc).filter((k) => !keys.has(k)).length, noWhy = Object.values(sc).filter((x) => x.t !== 'u' && x.t !== 'r' && !x.why).length;
     if (missing) W(`scope.json: у ${missing} пунктов нет ярлыка`);
     if (extra) E(`scope.json: ${extra} ключей без пункта`);
     if (noWhy) W(`scope.json: у ${noWhy} китайских и смешанных пунктов нет пояснения`);

@@ -69,7 +69,8 @@ test('generated browser code compiles and country renderer preserves both varian
 test('every generated entry, section and common page uses country-aware structure', () => {
   for (const e of entries) {
     const page = readFileSync(`dist-ru/site/p/${keyOf(e)}/index.html`, 'utf8');
-    assert.match(page, /Оценки выше относятся к исходной версии/);
+    if (scope[keyOf(e)] && scope[keyOf(e)].t === 'r') assert.match(page, /Российский материал/, keyOf(e));
+    else assert.match(page, /Оценки выше относятся к исходной версии/);
     assert.doesNotMatch(page, /В России \(российские данные\)|строка «В России»|Запись целиком описывает/);
     if (e.ru) {
       for (const field of ['human', 'cost', 'gain', 'note']) {
@@ -82,6 +83,7 @@ test('every generated entry, section and common page uses country-aware structur
   }
   for (const s of sections) {
     const page = readFileSync(`dist-ru/site/s/${s.n}/index.html`, 'utf8');
+    if (s.entries.every((e) => scope[keyOf(e)] && scope[keyOf(e)].t === 'r')) { assert.match(page, /самостоятельные российские материалы/); continue; }
     assert.match(page, /Введение ниже относится к исходной версии/);
     assert.match(page, /Российские данные есть у/);
   }
