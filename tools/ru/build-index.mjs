@@ -15,7 +15,7 @@ const re = (r, b) => { if (!r.test(s)) fail(`нет совпадения: ${r}`)
 
 // ---------- head ----------
 sub('<html lang="zh-CN">', '<html lang="ru">');
-const TITLE = 'Руководство по жизни с высокой отдачей';
+const TITLE = 'Руководство по жизни с высокой отдачей (高性价比人生指南)';
 const DESC = 'Руководство по жизни, расставленное по выгодности: ' + stats().entries + ' пунктов о здоровье и долголетии, первой помощи, деньгах, защите от мошенников и юридических красных линиях, безработице, риске своего дела, любви и детях, поездках и навыках. В каждом пункте затраты, выгода, надёжность доказательств и первоисточник. Неофициальный русский перевод, законы и органы в тексте китайские.';
 re(/<title>.*?<\/title>/, `<title>${TITLE} · меньше денег, времени и сил, больше здоровья, денег и свободы</title>`);
 re(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${DESC}">`);
@@ -215,7 +215,7 @@ sub("  renderText(f.cost, e.cost, terms);\n", "  renderText(f.cost, e.cost, term
   sub('.rel a{color:var(--brand-1)}', '.rel a{color:var(--brand-1)}\n.about-static{margin:20px 0}.about-static h2{font-size:18px;margin:0 0 8px}.about-static h3{font-size:15px;margin:14px 0 4px}.about-static details{margin:8px 0}.about-static summary{cursor:pointer;font-weight:600}.about-static ol{columns:2;padding-left:20px}@media(max-width:700px){.about-static ol{columns:1}}');
   sub('<div class="nav-r">', '<div class="nav-r">\n      <a class="nav-text" href="author/">Автор</a>');
   sub('.icon-btn:hover{', '.nav-text{font-size:14px;color:var(--t2);padding:0 10px;line-height:36px;border-radius:8px;white-space:nowrap}.nav-text:hover{background:var(--bg-soft);color:var(--t1);text-decoration:none}\n.icon-btn:hover{');
-  sub('<meta name="viewport"', '<link rel="alternate" type="application/atom+xml" title="Руководство по жизни с высокой отдачей" href="feed.xml">\n<meta name="viewport"');
+  sub('<meta name="viewport"', '<link rel="alternate" type="application/atom+xml" title="'+TITLE+'" href="feed.xml">\n<meta name="viewport"');
 }
 
 // путь к оглавлению для читателей без JavaScript и для поисковиков
@@ -315,6 +315,15 @@ sub("  if (e.ru) c.push('ru');\n  if (e.price) c.push('price');", "  if (sc.t ==
 sub('<button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>', '<button class="chip" data-v="only" aria-pressed="false">Российские материалы</button>\n      <button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>');
 
 sub("add(sc.t === 'u' ? 'plain' : 'warn',", "add(sc.t === 'u' || sc.t === 'r' ? 'plain' : 'warn',");
+
+// ---- китайское название в скобках отдельным блоком: не рвётся при переносе, в узкой шапке скрывается, чтобы не вытеснять поиск ----
+{
+  const zh = ' (高性价比人生指南)';
+  const ru = TITLE.replace(zh, '');
+  s = s.split('<h1>' + TITLE + '</h1>').join('<h1>' + ru + '<span class="zh">' + zh + '</span></h1>');
+  s = s.replace('</span><span>' + TITLE + '</span></a>', '</span><span>' + ru + '<span class="zh">' + zh + '</span></span></a>');
+  s = s.replace('.icon-btn:hover{', '.zh{white-space:nowrap}\n.gt small{margin-left:.4em}\n@media(max-width:1500px){.nav .zh{display:none}}\n.icon-btn:hover{');
+}
 
 s = s.replace(/^[\t ]+$/gm, '');
 writeFileSync('ru/index.html', s);

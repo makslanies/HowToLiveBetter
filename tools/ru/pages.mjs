@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { parseBook, keyOf, LENS, LABEL } from './parse.mjs';
 import { COUNTRY_GUIDE, countryView, countrySummary, countryStatus, sourceGroups, isRu } from './country-fields.mjs';
 
-const TITLE = 'Руководство по жизни с высокой отдачей';
+const TITLE = 'Руководство по жизни с высокой отдачей (高性价比人生指南)';
 const UPSTREAM = 'https://github.com/eternity4719/HowToLiveBetter';
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const unmd = (s) => s.replace(/\\([*_])/g, '$1');

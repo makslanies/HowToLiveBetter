@@ -1,4 +1,4 @@
-# Руководство по жизни с высокой отдачей · правила работы
+# Руководство по жизни с высокой отдачей (高性价比人生指南) · правила работы
 
 Это русская версия китайской книги «高性价比人生指南» (оригинал: https://github.com/eternity4719/HowToLiveBetter). Репозиторий: https://github.com/makslanies/HowToLiveBetter. Сайт: https://makslanies.github.io/HowToLiveBetter/. Автор русской версии: Максим Ланиес.
 

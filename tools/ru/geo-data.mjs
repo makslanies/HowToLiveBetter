@@ -3,7 +3,7 @@
 import { parseBook, keyOf } from './parse.mjs';
 import { COUNTRY_GUIDE } from './country-fields.mjs';
 
-export const TITLE = 'Руководство по жизни с высокой отдачей';
+export const TITLE = 'Руководство по жизни с высокой отдачей (高性价比人生指南)';
 export const UPSTREAM = 'https://github.com/eternity4719/HowToLiveBetter';
 export const OWNER = { name: 'makslanies', url: 'https://github.com/makslanies' };
 export const PUBLISHED = '2026-10-06';          // дата первой публикации русской версии
