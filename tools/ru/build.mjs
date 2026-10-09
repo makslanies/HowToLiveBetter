@@ -97,8 +97,10 @@ if (pg.broken.length) { for (const b of pg.broken.slice(0, 15)) console.error(' 
 // ---- 4б PDF ----
 if (WANT_PDF) {
   step('4б', 'PDF: книга, разделы, пункты');
-  const pr = await buildPdf({ out: OUT, siteUrl: SITE });
-  if (pr.failed) { console.error(`сборка остановлена: PDF не удалось создать: ${pr.failed}`); process.exit(1); }
+  // PDF нужны читателю, но сайт из-за них не должен вставать: сбой Chrome на сервере только предупреждаем, остальное публикуется
+  let pr; try { pr = await buildPdf({ out: OUT, siteUrl: SITE }); } catch (e) { pr = { failed: 0, error: e.message }; }
+  if (pr.error) console.error(`::warning::PDF не созданы (${pr.error}); сайт публикуется без них`);
+  else if (pr.failed) console.error(`::warning::PDF: не удалось создать ${pr.failed} файлов; остальное опубликовано`);
 } else console.error('\n[4б] PDF пропущены (нет Chrome, --no-pdf или --check)');
 
 // ---- 5 офлайн ----

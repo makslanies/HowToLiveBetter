@@ -20,9 +20,17 @@ export function findChrome() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function startChrome(chrome) {
+  let last;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try { return await startChromeOnce(chrome); } catch (e) { last = e; console.error(`  Chrome: попытка ${attempt} не удалась (${e.message})`); await sleep(2000 * attempt); }
+  }
+  throw last;
+}
+async function startChromeOnce(chrome) {
   const dir = mkdtempSync(join(tmpdir(), 'hltb-chrome-'));
-  const proc = spawn(chrome, ['--headless=new', '--disable-gpu', '--no-sandbox', '--hide-scrollbars', '--remote-debugging-port=0', `--user-data-dir=${dir}`, 'about:blank'], { stdio: 'ignore' });
-  for (let i = 0; i < 150 && !existsSync(join(dir, 'DevToolsActivePort')); i++) await sleep(100);
+  // на сервере сборки Chrome стартует медленно: ждём порт до 40 с и отключаем всё лишнее (общая память /dev/shm там мала)
+  const proc = spawn(chrome, ['--headless=new', '--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage', '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--hide-scrollbars', '--remote-debugging-port=0', `--user-data-dir=${dir}`, 'about:blank'], { stdio: 'ignore' });
+  for (let i = 0; i < 400 && !existsSync(join(dir, 'DevToolsActivePort')); i++) await sleep(100);
   if (!existsSync(join(dir, 'DevToolsActivePort'))) { proc.kill(); throw new Error('Chrome не открыл порт отладки'); }
   const port = readFileSync(join(dir, 'DevToolsActivePort'), 'utf8').split('\n')[0];
   let target;
