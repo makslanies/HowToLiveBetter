@@ -94,6 +94,7 @@ re(/<div class="doc-head">[\s\S]*?<details class="gloss" id="gloss">[\s\S]*?<\/d
         <button type="button" data-preset="russia">Есть российские данные</button>
         <button type="button" data-open-sections>Выбрать раздел</button>
       </div>
+      <button type="button" class="resume-reading" id="resume-reading" hidden><span>Продолжить чтение</span><small id="resume-label"></small></button>
       <details class="reader-guide">
         <summary>Как устроена книга</summary>
         <p>В каждом пункте два вопроса: что вы тратите и что получаете. Получатель выгоды тоже делится на уровни: вы сами, супруг и прямые родственники, друзья и коллеги, затем незнакомцы.</p>
@@ -350,11 +351,16 @@ sub('    <div id="list">', `    <nav class="section-reader" id="section-reader" 
         <div><strong id="reader-title"></strong><button type="button" id="reader-all">Все разделы</button></div>
         <div class="reader-progress"><i id="reader-progress"></i></div>
         <small id="reader-status"></small>
+        <div class="reader-entry">
+          <button type="button" id="reader-entry-prev" aria-label="Предыдущий пункт">‹</button>
+          <span id="reader-entry-title">Выберите пункт ниже</span>
+          <button type="button" id="reader-entry-next" aria-label="Следующий пункт">›</button>
+        </div>
       </div>
       <button type="button" id="reader-next" aria-label="Следующий раздел">→</button>
     </nav>
     <div id="list">`);
-sub('.doc-head .stat{', '.section-reader{position:sticky;top:calc(var(--nav-h) + 10px);z-index:12;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:12px;margin:0 0 18px;padding:10px 12px;border:1px solid var(--divider);border-radius:12px;background:color-mix(in srgb,var(--bg) 94%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(10px)}.section-reader[hidden]{display:none}.section-reader>button{width:40px;height:40px;border:1px solid var(--divider);border-radius:10px;background:var(--bg-elv);color:var(--brand-1);font-size:20px}.section-reader>button:disabled{opacity:.28;cursor:default}.section-reader-main{min-width:0}.section-reader-main>div:first-child{display:flex;gap:8px;align-items:baseline}.section-reader-main strong{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.section-reader-main #reader-all{margin-left:auto;flex:none;color:var(--brand-1);font-size:12px}.section-reader-main small{display:block;margin-top:3px;color:var(--t3);font-size:11px}.reader-progress{height:3px;margin-top:6px;overflow:hidden;border-radius:3px;background:var(--bg-mute)}.reader-progress i{display:block;width:0;height:100%;background:var(--brand-1);transition:width .2s}\n.doc-head .stat{');
+sub('.doc-head .stat{', '.resume-reading{display:flex;align-items:center;gap:10px;max-width:100%;margin:0 0 14px;padding:9px 13px;border:1px solid color-mix(in srgb,var(--brand-1) 45%,var(--divider));border-radius:10px;background:var(--bg-soft);color:var(--brand-1);text-align:left;font:inherit;cursor:pointer}.resume-reading[hidden]{display:none}.resume-reading span{flex:none;font-weight:700}.resume-reading small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2)}.section-reader{position:sticky;top:calc(var(--nav-h) + 10px);z-index:12;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:12px;margin:0 0 18px;padding:10px 12px;border:1px solid var(--divider);border-radius:12px;background:color-mix(in srgb,var(--bg) 94%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(10px)}.section-reader[hidden]{display:none}.section-reader>button{width:40px;height:40px;border:1px solid var(--divider);border-radius:10px;background:var(--bg-elv);color:var(--brand-1);font-size:20px}.section-reader>button:disabled{opacity:.28;cursor:default}.section-reader-main{min-width:0}.section-reader-main>div:first-child{display:flex;gap:8px;align-items:baseline}.section-reader-main strong{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.section-reader-main #reader-all{margin-left:auto;flex:none;color:var(--brand-1);font-size:12px}.section-reader-main small{display:block;margin-top:3px;color:var(--t3);font-size:11px}.reader-progress{height:3px;margin-top:6px;overflow:hidden;border-radius:3px;background:var(--bg-mute)}.reader-progress i{display:block;width:0;height:100%;background:var(--brand-1);transition:width .2s}.reader-entry{display:grid!important;grid-template-columns:28px minmax(0,1fr) 28px;align-items:center;gap:7px;margin-top:6px}.reader-entry button{width:28px;height:24px;border:1px solid var(--divider);border-radius:7px;background:var(--bg-elv);color:var(--brand-1);font-size:18px;line-height:1}.reader-entry button:disabled{opacity:.28}.reader-entry span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2);font-size:12px;text-align:center}\n.doc-head .stat{');
 sub('function apply(){', `function updateReaderNav(hit = ''){
   const nav = document.getElementById('section-reader');
   const selected = state.sec.size === 1 ? [...state.sec][0] : '';
@@ -362,12 +368,41 @@ sub('function apply(){', `function updateReaderNav(hit = ''){
   if (!selected) return;
   const order = [...SECS.keys()], at = order.indexOf(selected), sec = SECS.get(selected);
   document.getElementById('reader-title').textContent = selected + '. ' + sec.title;
-  const m = /^e-(\\d+)-(\\d+)$/.exec(hit || '');
-  const current = m && m[1] === selected ? Number(m[2]) : 0;
-  document.getElementById('reader-status').textContent = current ? 'Пункт ' + current + ' из ' + sec.entries.length : 'В разделе ' + sec.entries.length + ' пунктов';
-  document.getElementById('reader-progress').style.width = (current ? Math.min(100, current / sec.entries.length * 100) : 0) + '%';
+  const visible = CARDS.filter(c => String(c.e.sec) === selected && c.el.offsetParent);
+  const currentAt = visible.findIndex(c => c.el.id === hit), current = currentAt >= 0 ? visible[currentAt].e : null;
+  document.getElementById('reader-status').textContent = current ? 'Пункт ' + current.n + ' из ' + sec.entries.length : 'В разделе ' + sec.entries.length + ' пунктов';
+  document.getElementById('reader-progress').style.width = (current ? Math.min(100, Number(current.n) / sec.entries.length * 100) : 0) + '%';
+  document.getElementById('reader-entry-title').textContent = current ? current.n + '. ' + current.title : 'Выберите пункт ниже';
+  document.getElementById('reader-entry-prev').disabled = currentAt <= 0;
+  document.getElementById('reader-entry-next').disabled = !visible.length || currentAt >= visible.length - 1;
   document.getElementById('reader-prev').disabled = at <= 0;
   document.getElementById('reader-next').disabled = at < 0 || at >= order.length - 1;
+  rememberReading(hit);
+}
+const READING_KEY = 'hltb-reading-position-v1';
+function savedReading(){ try { const id = localStorage.getItem(READING_KEY) || ''; return /^e-\\d+-\\d+$/.test(id) && document.getElementById(id) ? id : ''; } catch(e) { return ''; } }
+function rememberReading(hit){
+  if (!/^e-\\d+-\\d+$/.test(hit || '')) return;
+  try { localStorage.setItem(READING_KEY, hit); } catch(e) {}
+}
+function wireResume(){
+  const button = document.getElementById('resume-reading'), id = savedReading();
+  if (!location.hash && id){
+    const e = ITEMS.get(id.slice(2));
+    if (e){ button.hidden = false; document.getElementById('resume-label').textContent = 'Раздел ' + e.sec + ', пункт ' + e.n + ': ' + e.title; }
+  }
+  button.addEventListener('click', () => {
+    const saved = savedReading(); if (!saved) return;
+    const key = saved.slice(2), e = ITEMS.get(key); if (!e) return;
+    state.q = ''; for (const d of DIMS) state[d].clear(); state.sec.add(String(e.sec)); state.dispute=false; state.todo=false;
+    spyLast = ''; apply(); gotoItem(key, '');
+  });
+}
+function moveReaderEntry(delta){
+  const selected = state.sec.size === 1 ? [...state.sec][0] : '';
+  const visible = CARDS.filter(c => String(c.e.sec) === selected && c.el.offsetParent);
+  const at = visible.findIndex(c => c.el.id === spyLast), target = visible[at + delta];
+  if (target) gotoItem(target.e.sec + '-' + target.e.n, spyLast);
 }
 function moveReaderSection(delta){
   const order = [...SECS.keys()], current = state.sec.size === 1 ? [...state.sec][0] : '', at = order.indexOf(current);
@@ -379,10 +414,12 @@ function apply(){`);
 sub("  syncControls(); writeUrl(); tocSync(spyLast);", "  syncControls(); writeUrl(); tocSync(spyLast); updateReaderNav(spyLast);");
 sub("    spyLast = hit; tocSync(hit);", "    spyLast = hit; tocSync(hit); updateReaderNav(hit);");
 sub("      spyLast = ''; tocSync('');", "      spyLast = ''; tocSync(''); updateReaderNav('');");
+sub("    tocSync(spyId);\n  };", "    tocSync(spyId); updateReaderNav(spyId);\n  };");
+sub("addEventListener('resize', () => { POP.hidden = true; });", "addEventListener('resize', () => { POP.hidden = true; spy(); });");
 sub("  const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');", "  const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');\n  const ft = document.getElementById('filters-toggle');\n  ft.addEventListener('click', () => { const on = !sb.classList.contains('filters-open'); sb.classList.toggle('filters-open', on); ft.setAttribute('aria-expanded', String(on)); });\n  const clearPreset = () => { state.q=''; for (const d of DIMS) state[d].clear(); state.dispute=false; state.todo=false; };\n  document.querySelector('.quick-start').addEventListener('click', e => {\n    const b = e.target.closest('button'); if (!b) return;\n    if (b.hasAttribute('data-open-sections')) { setMenu(true); document.getElementById('f-sec').scrollIntoView({block:'start'}); return; }\n    clearPreset();\n    if (b.dataset.preset === 'easy') { state.money.add('0'); state.will.add('否'); }\n    if (b.dataset.preset === 'evidence') state.grade.add('A');\n    if (b.dataset.preset === 'russia') { state.rus.add('ru'); state.rus.add('only'); }\n    apply(); scrollTo({top:document.getElementById('list').offsetTop - 72, behavior:'smooth'});\n  });");
-sub("  ft.addEventListener('click',", "  document.getElementById('reader-prev').addEventListener('click', () => moveReaderSection(-1));\n  document.getElementById('reader-next').addEventListener('click', () => moveReaderSection(1));\n  document.getElementById('reader-all').addEventListener('click', () => { state.sec.clear(); spyLast=''; apply(); scrollTo({top:document.getElementById('list').offsetTop - 72, behavior:'smooth'}); });\n  ft.addEventListener('click',");
+sub("  ft.addEventListener('click',", "  wireResume();\n  document.getElementById('reader-prev').addEventListener('click', () => moveReaderSection(-1));\n  document.getElementById('reader-next').addEventListener('click', () => moveReaderSection(1));\n  document.getElementById('reader-entry-prev').addEventListener('click', () => moveReaderEntry(-1));\n  document.getElementById('reader-entry-next').addEventListener('click', () => moveReaderEntry(1));\n  document.getElementById('reader-all').addEventListener('click', () => { state.sec.clear(); spyLast=''; apply(); scrollTo({top:document.getElementById('list').offsetTop - 72, behavior:'smooth'}); });\n  ft.addEventListener('click',");
 sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:960px){.nav-r .nav-text:not(#plain-toggle),.nav-r .icon-btn{display:none}.nav-r{gap:2px}.search{min-width:76px}.quick-start{display:grid;grid-template-columns:1fr 1fr}.quick-start button{min-height:44px;border-radius:10px}.doc-head{margin-bottom:18px}.doc-head .lead{font-size:15px}.reader-guide{margin-top:14px}.content{padding-top:calc(var(--nav-h) + 18px)}.card-more summary{min-height:36px;display:flex;align-items:center}}\n@media(max-width:700px){.nav-text.jump{display:none}}');
-sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:600px){.section-reader{top:calc(var(--nav-h) + 6px);grid-template-columns:38px 1fr 38px;gap:8px;margin-left:-8px;margin-right:-8px;padding:8px}.section-reader>button{width:38px;height:38px}.section-reader-main strong{font-size:13px}.section-reader-main #reader-all{font-size:11px}}\n@media(max-width:700px){.nav-text.jump{display:none}}');
+sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:600px){.resume-reading{display:block}.resume-reading span,.resume-reading small{display:block}.resume-reading small{margin-top:3px}.section-reader{top:calc(var(--nav-h) + 6px);grid-template-columns:38px 1fr 38px;gap:8px;margin-left:-8px;margin-right:-8px;padding:8px}.section-reader>button{width:38px;height:38px}.section-reader-main strong{font-size:13px}.section-reader-main #reader-all{font-size:11px}.reader-entry{grid-template-columns:30px minmax(0,1fr) 30px}.reader-entry button{height:28px}}\n@media(max-width:700px){.nav-text.jump{display:none}}');
 
 // ---- китайское название в скобках отдельным блоком: не рвётся при переносе, в узкой шапке скрывается, чтобы не вытеснять поиск ----
 {
