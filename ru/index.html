@@ -114,6 +114,7 @@ button.nav-text{border:0;background:none;cursor:pointer;font-family:inherit}
 #plain-toggle[aria-pressed="true"]{background:var(--bg-soft);color:var(--t1);font-weight:600}
 body.plain-only .rows,body.plain-only .src,body.plain-only .suggest,body.plain-only .scope{display:none}
 .relaxed{margin:12px 0;padding:8px 12px;border-left:3px solid var(--brand-1);background:var(--bg-soft);font-size:14px;color:var(--t2)}
+@media(max-width:960px){.nav-r .nav-text:not(#plain-toggle),.nav-r .icon-btn{display:none}.nav-r{gap:2px}.search{min-width:76px}.quick-start{display:grid;grid-template-columns:1fr 1fr}.quick-start button{min-height:44px;border-radius:10px}.doc-head{margin-bottom:18px}.doc-head .lead{font-size:15px}.reader-guide{margin-top:14px}.content{padding-top:calc(var(--nav-h) + 18px)}.card-more summary{min-height:36px;display:flex;align-items:center}}
 @media(max-width:700px){.nav-text.jump{display:none}}
 @media print{.nav,.sidebar,.backdrop,.foot,.pop,.suggest,.anchor,.relaxed,.empty,.status{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;box-shadow:none;border:1px solid #bbb;margin:0 0 10px}.sec-block{break-before:auto}a{color:inherit;text-decoration:none}mark{background:none;color:inherit}}
 .nav-in{position:relative}
@@ -130,6 +131,7 @@ body.plain-only .rows,body.plain-only .src,body.plain-only .suggest,body.plain-o
 .sug mark{background:rgba(255,200,0,.35);color:inherit;border-radius:2px}
 @media print{.sug{display:none!important}}
 .lib-link{margin:8px 0 0;font-size:13px}.lib-link a{font-weight:600}
+.advanced-filter{display:none}.sidebar.filters-open .advanced-filter{display:block}.filters-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;margin:0 0 20px;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;background:var(--bg-elv);color:var(--t2);font-weight:600}.filters-toggle:hover{border-color:var(--brand-1);color:var(--brand-1)}.filters-toggle span{transition:transform .2s}.sidebar.filters-open .filters-toggle span{transform:rotate(180deg)}
 .zh{white-space:nowrap}
 .gt small{margin-left:.4em}
 @media(max-width:1500px){.nav .zh{display:none}}
@@ -204,7 +206,7 @@ html.dark .switch .sun{display:none} html.dark .switch .moon{display:block}
 .doc-head{margin-bottom:28px}
 .doc-head h1{font-size:32px;line-height:40px;font-weight:700;letter-spacing:-.02em;margin:0 0 8px}
 .doc-head p{margin:0;color:var(--t2);font-size:16px}
-.doc-head .stat{color:var(--t3);font-size:14px;margin-top:6px}
+.doc-head .lead{max-width:66ch;font-size:17px;line-height:1.65;color:var(--t2)}.quick-start{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}.quick-start button{padding:8px 13px;border:1px solid var(--divider);border-radius:999px;background:var(--bg-elv);color:var(--t1);font-weight:600;font-size:13px}.quick-start button:first-child{background:var(--brand-1);border-color:var(--brand-1);color:#fff}.quick-start button:hover{border-color:var(--brand-1);color:var(--brand-1)}.quick-start button:first-child:hover{color:#fff;background:var(--brand-2)}.reader-guide{max-width:72ch;margin:0 0 10px;color:var(--t2);font-size:14px}.reader-guide summary{cursor:pointer;font-weight:600;color:var(--brand-1)}.reader-guide p{font-size:14px;margin:8px 0}.doc-head .stat{color:var(--t3);font-size:14px;margin-top:6px}
 .doc-head .stat b{color:var(--brand-1);font-weight:600}
 .sec-block{margin-top:40px}
 .sec-h{display:flex;align-items:baseline;gap:12px;padding-top:24px;border-top:1px solid var(--divider);margin-bottom:8px}
@@ -238,6 +240,7 @@ html.dark .switch .sun{display:none} html.dark .switch .moon{display:block}
 .rows .v{color:var(--t1);min-width:0;overflow-wrap:anywhere}
 .rows .v.note{color:var(--t2)}
 .rows .v strong,.human strong,.intro strong,.src .body strong{font-weight:600;color:var(--t1)}
+.card-more{margin:4px 0 0;border-top:1px solid var(--divider);padding-top:10px}.card-more summary{list-style:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--brand-1);margin-bottom:0}.card-more summary::-webkit-details-marker{display:none}.card-more summary::before{content:"";display:inline-block;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .2s;margin:0 9px 2px 2px}.card-more[open] summary{margin-bottom:10px}.card-more[open] summary::before{transform:rotate(45deg)}
 .src{margin-top:14px;border-top:1px solid var(--divider);padding-top:10px}
 .src summary{list-style:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);display:flex;align-items:center;gap:6px;user-select:none}
 .src summary::-webkit-details-marker{display:none}
@@ -391,7 +394,8 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
     <div class="gt">Разделы</div>
     <div class="sec-links" id="f-sec" data-dim="sec"></div>
   </div>
-  <div class="group">
+  <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false">Расширенные фильтры <span aria-hidden="true">⌄</span></button>
+  <div class="group advanced-filter">
     <div class="gt">Выгодность исходной версии <small>оценка автора, сравнима в одной единице счёта</small></div>
     <div class="chips" data-dim="ratio">
       <button class="chip" data-v="极高" aria-pressed="false">Очень высокая</button>
@@ -399,7 +403,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <button class="chip" data-v="一般" aria-pressed="false">Обычная</button>
     </div>
   </div>
-  <div class="group">
+  <div class="group advanced-filter">
     <div class="gt">Что получаете <small>единица счёта, разные единицы не сравниваются</small></div>
     <div class="chips" data-dim="lens">
       <button class="chip" data-v="死亡率" aria-pressed="false">Жизнь</button>
@@ -408,7 +412,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <button class="chip" data-v="自由" aria-pressed="false">Свобода</button>
     </div>
   </div>
-  <div class="group">
+  <div class="group advanced-filter">
     <div class="gt">Доказательность исходной версии <small>метаанализ/РКИ · есть исследования · консенсус</small></div>
     <div class="chips" data-dim="grade">
       <button class="chip" data-v="A" aria-pressed="false">A</button>
@@ -416,7 +420,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <button class="chip" data-v="C" aria-pressed="false">C</button>
     </div>
   </div>
-  <div class="group">
+  <div class="group advanced-filter">
     <div class="gt">Затраты денег</div>
     <div class="chips" data-dim="money">
       <button class="chip" data-v="0" aria-pressed="false">Бесплатно</button>
@@ -424,7 +428,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <button class="chip" data-v="多" aria-pressed="false">Много</button>
     </div>
   </div>
-  <div class="group">
+  <div class="group advanced-filter">
     <div class="gt">Затраты времени</div>
     <div class="chips" data-dim="time">
       <button class="chip" data-v="少" aria-pressed="false">Мимоходом</button>
@@ -432,7 +436,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <button class="chip" data-v="多" aria-pressed="false">Каждый день</button>
     </div>
   </div>
-  <div class="group">
+  <div class="group advanced-filter">
     <div class="gt">Сила воли</div>
     <div class="chips" data-dim="will">
       <button class="chip" data-v="否" aria-pressed="false">Не нужна</button>
@@ -458,10 +462,19 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
   <div class="doc">
     <div class="doc-head">
       <h1>Руководство по жизни с высокой отдачей<span class="zh"> (高性价比人生指南)</span></h1>
-      <p>В каждом пункте два вопроса: что вы тратите и что получаете.</p>
-      <p>Получатель выгоды тоже делится на уровни: вы сами, затем супруг и прямые родственники, затем друзья и коллеги, ниже всех незнакомцы. Ниже не значит ноль: вероятность ответной выгоды мала, и нужно смотреть на риски.</p>
-      <p>Делать всё не нужно: это список вариантов, расставленных по выгодности, а не перечень заданий. Достаточно одного-двух пунктов. Чтобы выбрать самое лёгкое, отметьте слева «Бесплатно» в затратах денег и «Не нужна» в силе воли. Ссылки с пунктиром вида «раздел 8, пункт 11» открываются на месте.</p>
-      <p><b>Это неофициальный перевод китайской книги.</b> Китайские условия и российские данные разделены внутри полей «Простыми словами», «Затраты», «Выгода» и «Примечания». Российские цены не означают проверку российских правил. Оценки выгодности, доказательности и затрат относятся к исходной версии, если отдельно не указано иное.</p>
+      <p class="lead">Выберите тему или найдите один полезный пункт. Делать всё не нужно: книга расставляет варианты по выгодности, а не выдаёт список заданий.</p>
+      <div class="quick-start" aria-label="Быстрый старт">
+        <button type="button" data-preset="easy">Бесплатно и без усилий</button>
+        <button type="button" data-preset="evidence">Самые доказательные</button>
+        <button type="button" data-preset="russia">Есть российские данные</button>
+        <button type="button" data-open-sections>Выбрать раздел</button>
+      </div>
+      <details class="reader-guide">
+        <summary>Как устроена книга</summary>
+        <p>В каждом пункте два вопроса: что вы тратите и что получаете. Получатель выгоды тоже делится на уровни: вы сами, супруг и прямые родственники, друзья и коллеги, затем незнакомцы.</p>
+        <p>Оценки выгодности, доказательности и затрат относятся к исходной версии. Китайские условия и российские данные разделены внутри полей «Простыми словами», «Затраты», «Выгода» и «Примечания». Российские цены не означают проверку российских правил. Оценки выгодности, доказательности и затрат относятся к исходной версии, если отдельно не указано иное. Российские цены не означают проверку российских правил.</p>
+        <p>Ссылки вида «раздел 8, пункт 11» открывают связанный пункт на месте.</p>
+      </details>
       <div class="stat" aria-live="polite">Показано <b id="cnt">–</b> из <span id="tot">–</span> пунктов</div>
       <div class="doc-links">Длинные статьи (на китайском, в оригинальном репозитории): <a href="https://github.com/eternity4719/HowToLiveBetter/tree/main/docs">папка docs</a></div>
       <section class="about-static" aria-label="О книге">
@@ -1031,14 +1044,14 @@ function build(sections){
         <div class="badges"></div>
         <div class="human"></div>
         <p class="scope" hidden></p>
-        <div class="rows">
+        <details class="card-more"><summary>Затраты, выгода и примечания</summary><div class="rows">
           <div class="k">Затраты</div><div class="v cost"></div>
           <div class="k price-k" hidden>Цена в России (ориентир)</div><div class="v price" hidden></div>
           <div class="k">Выгода</div><div class="v gain"></div>
 
           <div class="k">Примечания</div><div class="v note"></div>
           <div class="k rel-k" hidden>Смотрите также</div><div class="v rel" hidden></div>
-        </div>
+        </div></details>
         <details class="src"><summary>Источники<span class="cnt"></span></summary><div class="body"></div></details>
         <details class="src mat" hidden><summary>Российские материалы по теме<span class="cnt"></span></summary><div class="body"></div></details>
         <p class="suggest"><a class="sg" rel="noopener">Предложить правку</a><span> — ошибка, устаревший закон или лучший источник</span></p>`;
@@ -1057,7 +1070,7 @@ function build(sections){
       if (e.todo) add('warn', 'Есть непроверенное');
       block.appendChild(c);
       const sgl = c.querySelector('.sg'); if (sgl) sgl.href = suggestHref(e);
-      const card = {e, el:c, key:null, vis:false, f:{price:c.querySelector('.price'), priceK:c.querySelector('.price-k'), scope:c.querySelector('.scope'), rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), t:c.querySelector('.t'), cost:c.querySelector('.cost'), human:c.querySelector('.human'), gain:c.querySelector('.gain'), note:c.querySelector('.note'), src:c.querySelector('.src .body'), srcN:c.querySelector('.src summary .cnt'), details:c.querySelector('.src')}};
+      const card = {e, el:c, key:null, vis:false, f:{price:c.querySelector('.price'), priceK:c.querySelector('.price-k'), scope:c.querySelector('.scope'), rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), t:c.querySelector('.t'), cost:c.querySelector('.cost'), human:c.querySelector('.human'), gain:c.querySelector('.gain'), note:c.querySelector('.note'), src:c.querySelector('.src .body'), srcN:c.querySelector('.src summary .cnt'), more:c.querySelector('.card-more'), details:c.querySelector('.src')}};
       renderCard(card, [], '');
       CARDS.push(card); CARD_OF.set(c, card); CARD_IO.observe(c);
     }
@@ -1238,6 +1251,7 @@ function renderCard(card, terms, key){
   renderMaterials(card.el, e);
   f.srcN.textContent = nSrc > 1 ? ` · ${nSrc}` : '';
   const inBody = (e.title+e.human+e.cost+e.gain+e.note+e.ru).toLowerCase().replace(/ё/g, 'е');
+  f.more.open = terms.length > 0 && terms.some(t => (e.cost + e.gain + e.note + e.ru).toLowerCase().includes(t));
   f.details.open = terms.length > 0 && terms.some(t => e.src.toLowerCase().replace(/ё/g, 'е').includes(t)) && !terms.some(t => inBody.includes(t));
   card.key = key;
 }
@@ -1482,6 +1496,18 @@ function wire(){
   wireSuggest();
   const pb = document.getElementById("print-btn"); if (pb) pb.addEventListener("click", () => window.print());
   const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');
+  const ft = document.getElementById('filters-toggle');
+  ft.addEventListener('click', () => { const on = !sb.classList.contains('filters-open'); sb.classList.toggle('filters-open', on); ft.setAttribute('aria-expanded', String(on)); });
+  const clearPreset = () => { state.q=''; for (const d of DIMS) state[d].clear(); state.dispute=false; state.todo=false; };
+  document.querySelector('.quick-start').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-open-sections')) { setMenu(true); document.getElementById('f-sec').scrollIntoView({block:'start'}); return; }
+    clearPreset();
+    if (b.dataset.preset === 'easy') { state.money.add('0'); state.will.add('否'); }
+    if (b.dataset.preset === 'evidence') state.grade.add('A');
+    if (b.dataset.preset === 'russia') { state.rus.add('ru'); state.rus.add('only'); }
+    apply(); scrollTo({top:document.getElementById('list').offsetTop - 72, behavior:'smooth'});
+  });
   const setMenu = (on) => { sb.classList.toggle('open', on); bd.classList.toggle('on', on); mb.setAttribute('aria-expanded', String(on)); };
   // 筛选变了就顺手让 spy 重算一次 hash：writeUrl 是无条件把旧 hash 拼回去的，
   // 而滚回顶部时页面若本来就在顶部不会触发 scroll，hash 会僵在一个已经被筛掉的

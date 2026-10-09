@@ -87,10 +87,19 @@ re(/<div class="hint">[\s\S]*?<\/div>\n  <div class="group ad">[\s\S]*?<\/div>\n
 // ---------- заголовок документа ----------
 re(/<div class="doc-head">[\s\S]*?<details class="gloss" id="gloss">[\s\S]*?<\/details>/, `<div class="doc-head">
       <h1>${TITLE}</h1>
-      <p>В каждом пункте два вопроса: что вы тратите и что получаете.</p>
-      <p>Получатель выгоды тоже делится на уровни: вы сами, затем супруг и прямые родственники, затем друзья и коллеги, ниже всех незнакомцы. Ниже не значит ноль: вероятность ответной выгоды мала, и нужно смотреть на риски.</p>
-      <p>Делать всё не нужно: это список вариантов, расставленных по выгодности, а не перечень заданий. Достаточно одного-двух пунктов. Чтобы выбрать самое лёгкое, отметьте слева «Бесплатно» в затратах денег и «Не нужна» в силе воли. Ссылки с пунктиром вида «раздел 8, пункт 11» открываются на месте.</p>
-      <p><b>Это неофициальный перевод китайской книги.</b> Законы, органы, телефоны и выплаты в тексте китайские (КНР). Там, где проверена российская версия, под пунктом есть строка «В России». Где её нет, российская проверка ещё не проведена.</p>
+      <p class="lead">Выберите тему или найдите один полезный пункт. Делать всё не нужно: книга расставляет варианты по выгодности, а не выдаёт список заданий.</p>
+      <div class="quick-start" aria-label="Быстрый старт">
+        <button type="button" data-preset="easy">Бесплатно и без усилий</button>
+        <button type="button" data-preset="evidence">Самые доказательные</button>
+        <button type="button" data-preset="russia">Есть российские данные</button>
+        <button type="button" data-open-sections>Выбрать раздел</button>
+      </div>
+      <details class="reader-guide">
+        <summary>Как устроена книга</summary>
+        <p>В каждом пункте два вопроса: что вы тратите и что получаете. Получатель выгоды тоже делится на уровни: вы сами, супруг и прямые родственники, друзья и коллеги, затем незнакомцы.</p>
+        <p>Оценки выгодности, доказательности и затрат относятся к исходной версии. ${COUNTRY_GUIDE} Российские цены не означают проверку российских правил.</p>
+        <p>Ссылки вида «раздел 8, пункт 11» открывают связанный пункт на месте.</p>
+      </details>
       <div class="stat" aria-live="polite">Показано <b id="cnt">–</b> из <span id="tot">–</span> пунктов</div>
       <div class="doc-links">Длинные статьи (на китайском, в оригинальном репозитории): <a href="https://github.com/eternity4719/HowToLiveBetter/tree/main/docs">папка docs</a></div>
       <details class="gloss" id="gloss"><summary>Непонятные сокращения и термины</summary><p>Слова с пунктирным подчёркиванием можно нажать или навести на них курсор, появится пояснение. Весь список ниже.</p><dl></dl></details>`);
@@ -248,7 +257,6 @@ sub('    CUR_SEC = s.n;\n    for (const para of s.intro){', "    const countryIn
 sub('a.title = e.title;', "a.title = e.title + ' · ' + countryStatus(e, SCOPE[e.sec + '-' + e.n]);");
 sub("ru:c.querySelector('.ru'), ruK:c.querySelector('.ru-k'), ", '');
 sub('.scope{font-size:13px', '.country-part + .country-part{margin-top:10px}.source-country{font-weight:600;margin:12px 0 6px}\n.scope{font-size:13px');
-re(/Законы, органы, телефоны и выплаты в тексте китайские \(КНР\)\. Там, где проверена российская версия, под пунктом есть строка «В России»\. Где её нет, российская проверка ещё не проведена\./, COUNTRY_GUIDE);
 sub('<div class="gt">Выгодность <small>', '<div class="gt">Выгодность исходной версии <small>');
 sub('<div class="gt">Доказательность <small>', '<div class="gt">Доказательность исходной версии <small>');
 sub('<p>Тексты и теги берутся', '<p>Фильтры затрат и оценки относятся к исходной версии. Российские условия смотрите в полях с подписью «Россия».</p>\n    <p>Тексты и теги берутся');
@@ -307,6 +315,13 @@ sub('function renderCard(card, terms, key){', "// какие российски�
 sub('<aside class="sidebar" id="sidebar">', '<aside class="sidebar" id="sidebar">\n  <div class="group">\n    <div class="gt">Россия <small>что есть из российских данных</small></div>\n    <div class="chips" data-dim="rus">\n      <button class="chip" data-v="ru" aria-pressed="false">Есть российские данные</button>\n      <button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>\n      <button class="chip" data-v="mat" aria-pressed="false">Есть российские материалы</button>\n      <button class="chip" data-v="none" aria-pressed="false">Аналога в России нет</button>\n      <button class="chip" data-v="searched" aria-pressed="false">Аналог не найден</button>\n      <button class="chip" data-v="unchecked" aria-pressed="false">Не проверено</button>\n      <button class="chip" data-v="uni" aria-pressed="false">От страны не зависит</button>\n    </div>\n    <p class="lib-link"><a href="library/">Российская библиотека: ' + libN + ' официальных страниц →</a></p>\n  </div>');
 sub('.icon-btn:hover{', '.lib-link{margin:8px 0 0;font-size:13px}.lib-link a{font-weight:600}\n.icon-btn:hover{');
 
+// ---- оглавление остаётся основным содержимым боковой панели; сложные фильтры открываются отдельно ----
+for (const title of ['Выгодность исходной версии', 'Что получаете', 'Доказательность исходной версии', 'Затраты денег', 'Затраты времени', 'Сила воли']) {
+  sub(`<div class="group">\n    <div class="gt">${title}`, `<div class="group advanced-filter">\n    <div class="gt">${title}`);
+}
+sub('<div class="group advanced-filter">\n    <div class="gt">Выгодность исходной версии', '<button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false">Расширенные фильтры <span aria-hidden="true">⌄</span></button>\n  <div class="group advanced-filter">\n    <div class="gt">Выгодность исходной версии');
+sub('.icon-btn:hover{', '.advanced-filter{display:none}.sidebar.filters-open .advanced-filter{display:block}.filters-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;margin:0 0 20px;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;background:var(--bg-elv);color:var(--t2);font-weight:600}.filters-toggle:hover{border-color:var(--brand-1);color:var(--brand-1)}.filters-toggle span{transition:transform .2s}.sidebar.filters-open .filters-toggle span{transform:rotate(180deg)}\n.icon-btn:hover{');
+
 // ---- тип «Российский материал» (t:'r'): без пометок об исходной версии ----
 sub("t.textContent = 'Выгодность исходной версии: ' +", "t.textContent = 'Выгодность' + ((SCOPE[e.sec + '-' + e.n] || {}).t === 'r' ? '' : ' исходной версии') + ': ' +");
 sub("sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : 'Не зависит от страны');", "sc.t === 'c' ? 'Нормы Китая (КНР)' : sc.t === 'm' ? 'Частично Китай' : sc.t === 'r' ? 'Российский материал' : 'Не зависит от страны');");
@@ -315,6 +330,22 @@ sub("  if (e.ru) c.push('ru');\n  if (e.price) c.push('price');", "  if (sc.t ==
 sub('<button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>', '<button class="chip" data-v="only" aria-pressed="false">Российские материалы</button>\n      <button class="chip" data-v="price" aria-pressed="false">С российской ценой</button>');
 
 sub("add(sc.t === 'u' ? 'plain' : 'warn',", "add(sc.t === 'u' || sc.t === 'r' ? 'plain' : 'warn',");
+
+// ---- компактное чтение: сначала вывод, подробности карточки раскрываются по запросу ----
+{
+  const m = /        <div class="rows">([\s\S]*?)        <\/div>\n        <details class="src">/.exec(s);
+  if (!m) fail('нет блока подробностей карточки');
+  s = s.replace(m[0], `        <details class="card-more"><summary>Затраты, выгода и примечания</summary><div class="rows">${m[1]}        </div></details>
+        <details class="src">`);
+}
+sub("details:c.querySelector('.src')", "more:c.querySelector('.card-more'), details:c.querySelector('.src')");
+sub("  f.details.open = terms.length > 0", "  f.more.open = terms.length > 0 && terms.some(t => (e.cost + e.gain + e.note + e.ru).toLowerCase().includes(t));\n  f.details.open = terms.length > 0");
+sub('.src{margin-top:14px', '.card-more{margin:4px 0 0;border-top:1px solid var(--divider);padding-top:10px}.card-more summary{list-style:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--brand-1);margin-bottom:0}.card-more summary::-webkit-details-marker{display:none}.card-more summary::before{content:"";display:inline-block;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .2s;margin:0 9px 2px 2px}.card-more[open] summary{margin-bottom:10px}.card-more[open] summary::before{transform:rotate(45deg)}\n.src{margin-top:14px');
+
+// ---- быстрый старт и более спокойный первый экран ----
+sub('.doc-head .stat{', '.doc-head .lead{max-width:66ch;font-size:17px;line-height:1.65;color:var(--t2)}.quick-start{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}.quick-start button{padding:8px 13px;border:1px solid var(--divider);border-radius:999px;background:var(--bg-elv);color:var(--t1);font-weight:600;font-size:13px}.quick-start button:first-child{background:var(--brand-1);border-color:var(--brand-1);color:#fff}.quick-start button:hover{border-color:var(--brand-1);color:var(--brand-1)}.quick-start button:first-child:hover{color:#fff;background:var(--brand-2)}.reader-guide{max-width:72ch;margin:0 0 10px;color:var(--t2);font-size:14px}.reader-guide summary{cursor:pointer;font-weight:600;color:var(--brand-1)}.reader-guide p{font-size:14px;margin:8px 0}.doc-head .stat{');
+sub("  const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');", "  const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');\n  const ft = document.getElementById('filters-toggle');\n  ft.addEventListener('click', () => { const on = !sb.classList.contains('filters-open'); sb.classList.toggle('filters-open', on); ft.setAttribute('aria-expanded', String(on)); });\n  const clearPreset = () => { state.q=''; for (const d of DIMS) state[d].clear(); state.dispute=false; state.todo=false; };\n  document.querySelector('.quick-start').addEventListener('click', e => {\n    const b = e.target.closest('button'); if (!b) return;\n    if (b.hasAttribute('data-open-sections')) { setMenu(true); document.getElementById('f-sec').scrollIntoView({block:'start'}); return; }\n    clearPreset();\n    if (b.dataset.preset === 'easy') { state.money.add('0'); state.will.add('否'); }\n    if (b.dataset.preset === 'evidence') state.grade.add('A');\n    if (b.dataset.preset === 'russia') { state.rus.add('ru'); state.rus.add('only'); }\n    apply(); scrollTo({top:document.getElementById('list').offsetTop - 72, behavior:'smooth'});\n  });");
+sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:960px){.nav-r .nav-text:not(#plain-toggle),.nav-r .icon-btn{display:none}.nav-r{gap:2px}.search{min-width:76px}.quick-start{display:grid;grid-template-columns:1fr 1fr}.quick-start button{min-height:44px;border-radius:10px}.doc-head{margin-bottom:18px}.doc-head .lead{font-size:15px}.reader-guide{margin-top:14px}.content{padding-top:calc(var(--nav-h) + 18px)}.card-more summary{min-height:36px;display:flex;align-items:center}}\n@media(max-width:700px){.nav-text.jump{display:none}}');
 
 // ---- китайское название в скобках отдельным блоком: не рвётся при переносе, в узкой шапке скрывается, чтобы не вытеснять поиск ----
 {
