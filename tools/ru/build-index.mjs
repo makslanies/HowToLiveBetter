@@ -344,8 +344,45 @@ sub('.src{margin-top:14px', '.card-more{margin:4px 0 0;border-top:1px solid var(
 
 // ---- быстрый старт и более спокойный первый экран ----
 sub('.doc-head .stat{', '.doc-head .lead{max-width:66ch;font-size:17px;line-height:1.65;color:var(--t2)}.quick-start{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}.quick-start button{padding:8px 13px;border:1px solid var(--divider);border-radius:999px;background:var(--bg-elv);color:var(--t1);font-weight:600;font-size:13px}.quick-start button:first-child{background:var(--brand-1);border-color:var(--brand-1);color:#fff}.quick-start button:hover{border-color:var(--brand-1);color:var(--brand-1)}.quick-start button:first-child:hover{color:#fff;background:var(--brand-2)}.reader-guide{max-width:72ch;margin:0 0 10px;color:var(--t2);font-size:14px}.reader-guide summary{cursor:pointer;font-weight:600;color:var(--brand-1)}.reader-guide p{font-size:14px;margin:8px 0}.doc-head .stat{');
+sub('    <div id="list">', `    <nav class="section-reader" id="section-reader" aria-label="Навигация по разделу" hidden>
+      <button type="button" id="reader-prev" aria-label="Предыдущий раздел">←</button>
+      <div class="section-reader-main">
+        <div><strong id="reader-title"></strong><button type="button" id="reader-all">Все разделы</button></div>
+        <div class="reader-progress"><i id="reader-progress"></i></div>
+        <small id="reader-status"></small>
+      </div>
+      <button type="button" id="reader-next" aria-label="Следующий раздел">→</button>
+    </nav>
+    <div id="list">`);
+sub('.doc-head .stat{', '.section-reader{position:sticky;top:calc(var(--nav-h) + 10px);z-index:12;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:12px;margin:0 0 18px;padding:10px 12px;border:1px solid var(--divider);border-radius:12px;background:color-mix(in srgb,var(--bg) 94%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(10px)}.section-reader[hidden]{display:none}.section-reader>button{width:40px;height:40px;border:1px solid var(--divider);border-radius:10px;background:var(--bg-elv);color:var(--brand-1);font-size:20px}.section-reader>button:disabled{opacity:.28;cursor:default}.section-reader-main{min-width:0}.section-reader-main>div:first-child{display:flex;gap:8px;align-items:baseline}.section-reader-main strong{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.section-reader-main #reader-all{margin-left:auto;flex:none;color:var(--brand-1);font-size:12px}.section-reader-main small{display:block;margin-top:3px;color:var(--t3);font-size:11px}.reader-progress{height:3px;margin-top:6px;overflow:hidden;border-radius:3px;background:var(--bg-mute)}.reader-progress i{display:block;width:0;height:100%;background:var(--brand-1);transition:width .2s}\n.doc-head .stat{');
+sub('function apply(){', `function updateReaderNav(hit = ''){
+  const nav = document.getElementById('section-reader');
+  const selected = state.sec.size === 1 ? [...state.sec][0] : '';
+  nav.hidden = !selected;
+  if (!selected) return;
+  const order = [...SECS.keys()], at = order.indexOf(selected), sec = SECS.get(selected);
+  document.getElementById('reader-title').textContent = selected + '. ' + sec.title;
+  const m = /^e-(\\d+)-(\\d+)$/.exec(hit || '');
+  const current = m && m[1] === selected ? Number(m[2]) : 0;
+  document.getElementById('reader-status').textContent = current ? 'Пункт ' + current + ' из ' + sec.entries.length : 'В разделе ' + sec.entries.length + ' пунктов';
+  document.getElementById('reader-progress').style.width = (current ? Math.min(100, current / sec.entries.length * 100) : 0) + '%';
+  document.getElementById('reader-prev').disabled = at <= 0;
+  document.getElementById('reader-next').disabled = at < 0 || at >= order.length - 1;
+}
+function moveReaderSection(delta){
+  const order = [...SECS.keys()], current = state.sec.size === 1 ? [...state.sec][0] : '', at = order.indexOf(current);
+  const next = order[at + delta]; if (!next) return;
+  state.sec.clear(); state.sec.add(next); spyLast = ''; apply();
+  requestAnimationFrame(() => gotoItem('s' + next, ''));
+}
+function apply(){`);
+sub("  syncControls(); writeUrl(); tocSync(spyLast);", "  syncControls(); writeUrl(); tocSync(spyLast); updateReaderNav(spyLast);");
+sub("    spyLast = hit; tocSync(hit);", "    spyLast = hit; tocSync(hit); updateReaderNav(hit);");
+sub("      spyLast = ''; tocSync('');", "      spyLast = ''; tocSync(''); updateReaderNav('');");
 sub("  const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');", "  const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');\n  const ft = document.getElementById('filters-toggle');\n  ft.addEventListener('click', () => { const on = !sb.classList.contains('filters-open'); sb.classList.toggle('filters-open', on); ft.setAttribute('aria-expanded', String(on)); });\n  const clearPreset = () => { state.q=''; for (const d of DIMS) state[d].clear(); state.dispute=false; state.todo=false; };\n  document.querySelector('.quick-start').addEventListener('click', e => {\n    const b = e.target.closest('button'); if (!b) return;\n    if (b.hasAttribute('data-open-sections')) { setMenu(true); document.getElementById('f-sec').scrollIntoView({block:'start'}); return; }\n    clearPreset();\n    if (b.dataset.preset === 'easy') { state.money.add('0'); state.will.add('否'); }\n    if (b.dataset.preset === 'evidence') state.grade.add('A');\n    if (b.dataset.preset === 'russia') { state.rus.add('ru'); state.rus.add('only'); }\n    apply(); scrollTo({top:document.getElementById('list').offsetTop - 72, behavior:'smooth'});\n  });");
+sub("  ft.addEventListener('click',", "  document.getElementById('reader-prev').addEventListener('click', () => moveReaderSection(-1));\n  document.getElementById('reader-next').addEventListener('click', () => moveReaderSection(1));\n  document.getElementById('reader-all').addEventListener('click', () => { state.sec.clear(); spyLast=''; apply(); scrollTo({top:document.getElementById('list').offsetTop - 72, behavior:'smooth'}); });\n  ft.addEventListener('click',");
 sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:960px){.nav-r .nav-text:not(#plain-toggle),.nav-r .icon-btn{display:none}.nav-r{gap:2px}.search{min-width:76px}.quick-start{display:grid;grid-template-columns:1fr 1fr}.quick-start button{min-height:44px;border-radius:10px}.doc-head{margin-bottom:18px}.doc-head .lead{font-size:15px}.reader-guide{margin-top:14px}.content{padding-top:calc(var(--nav-h) + 18px)}.card-more summary{min-height:36px;display:flex;align-items:center}}\n@media(max-width:700px){.nav-text.jump{display:none}}');
+sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:600px){.section-reader{top:calc(var(--nav-h) + 6px);grid-template-columns:38px 1fr 38px;gap:8px;margin-left:-8px;margin-right:-8px;padding:8px}.section-reader>button{width:38px;height:38px}.section-reader-main strong{font-size:13px}.section-reader-main #reader-all{font-size:11px}}\n@media(max-width:700px){.nav-text.jump{display:none}}');
 
 // ---- китайское название в скобках отдельным блоком: не рвётся при переносе, в узкой шапке скрывается, чтобы не вытеснять поиск ----
 {

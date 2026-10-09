@@ -115,6 +115,7 @@ button.nav-text{border:0;background:none;cursor:pointer;font-family:inherit}
 body.plain-only .rows,body.plain-only .src,body.plain-only .suggest,body.plain-only .scope{display:none}
 .relaxed{margin:12px 0;padding:8px 12px;border-left:3px solid var(--brand-1);background:var(--bg-soft);font-size:14px;color:var(--t2)}
 @media(max-width:960px){.nav-r .nav-text:not(#plain-toggle),.nav-r .icon-btn{display:none}.nav-r{gap:2px}.search{min-width:76px}.quick-start{display:grid;grid-template-columns:1fr 1fr}.quick-start button{min-height:44px;border-radius:10px}.doc-head{margin-bottom:18px}.doc-head .lead{font-size:15px}.reader-guide{margin-top:14px}.content{padding-top:calc(var(--nav-h) + 18px)}.card-more summary{min-height:36px;display:flex;align-items:center}}
+@media(max-width:600px){.section-reader{top:calc(var(--nav-h) + 6px);grid-template-columns:38px 1fr 38px;gap:8px;margin-left:-8px;margin-right:-8px;padding:8px}.section-reader>button{width:38px;height:38px}.section-reader-main strong{font-size:13px}.section-reader-main #reader-all{font-size:11px}}
 @media(max-width:700px){.nav-text.jump{display:none}}
 @media print{.nav,.sidebar,.backdrop,.foot,.pop,.suggest,.anchor,.relaxed,.empty,.status{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;box-shadow:none;border:1px solid #bbb;margin:0 0 10px}.sec-block{break-before:auto}a{color:inherit;text-decoration:none}mark{background:none;color:inherit}}
 .nav-in{position:relative}
@@ -206,7 +207,8 @@ html.dark .switch .sun{display:none} html.dark .switch .moon{display:block}
 .doc-head{margin-bottom:28px}
 .doc-head h1{font-size:32px;line-height:40px;font-weight:700;letter-spacing:-.02em;margin:0 0 8px}
 .doc-head p{margin:0;color:var(--t2);font-size:16px}
-.doc-head .lead{max-width:66ch;font-size:17px;line-height:1.65;color:var(--t2)}.quick-start{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}.quick-start button{padding:8px 13px;border:1px solid var(--divider);border-radius:999px;background:var(--bg-elv);color:var(--t1);font-weight:600;font-size:13px}.quick-start button:first-child{background:var(--brand-1);border-color:var(--brand-1);color:#fff}.quick-start button:hover{border-color:var(--brand-1);color:var(--brand-1)}.quick-start button:first-child:hover{color:#fff;background:var(--brand-2)}.reader-guide{max-width:72ch;margin:0 0 10px;color:var(--t2);font-size:14px}.reader-guide summary{cursor:pointer;font-weight:600;color:var(--brand-1)}.reader-guide p{font-size:14px;margin:8px 0}.doc-head .stat{color:var(--t3);font-size:14px;margin-top:6px}
+.doc-head .lead{max-width:66ch;font-size:17px;line-height:1.65;color:var(--t2)}.quick-start{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}.quick-start button{padding:8px 13px;border:1px solid var(--divider);border-radius:999px;background:var(--bg-elv);color:var(--t1);font-weight:600;font-size:13px}.quick-start button:first-child{background:var(--brand-1);border-color:var(--brand-1);color:#fff}.quick-start button:hover{border-color:var(--brand-1);color:var(--brand-1)}.quick-start button:first-child:hover{color:#fff;background:var(--brand-2)}.reader-guide{max-width:72ch;margin:0 0 10px;color:var(--t2);font-size:14px}.reader-guide summary{cursor:pointer;font-weight:600;color:var(--brand-1)}.reader-guide p{font-size:14px;margin:8px 0}.section-reader{position:sticky;top:calc(var(--nav-h) + 10px);z-index:12;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:12px;margin:0 0 18px;padding:10px 12px;border:1px solid var(--divider);border-radius:12px;background:color-mix(in srgb,var(--bg) 94%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(10px)}.section-reader[hidden]{display:none}.section-reader>button{width:40px;height:40px;border:1px solid var(--divider);border-radius:10px;background:var(--bg-elv);color:var(--brand-1);font-size:20px}.section-reader>button:disabled{opacity:.28;cursor:default}.section-reader-main{min-width:0}.section-reader-main>div:first-child{display:flex;gap:8px;align-items:baseline}.section-reader-main strong{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.section-reader-main #reader-all{margin-left:auto;flex:none;color:var(--brand-1);font-size:12px}.section-reader-main small{display:block;margin-top:3px;color:var(--t3);font-size:11px}.reader-progress{height:3px;margin-top:6px;overflow:hidden;border-radius:3px;background:var(--bg-mute)}.reader-progress i{display:block;width:0;height:100%;background:var(--brand-1);transition:width .2s}
+.doc-head .stat{color:var(--t3);font-size:14px;margin-top:6px}
 .doc-head .stat b{color:var(--brand-1);font-weight:600}
 .sec-block{margin-top:40px}
 .sec-h{display:flex;align-items:baseline;gap:12px;padding-top:24px;border-top:1px solid var(--divider);margin-bottom:8px}
@@ -485,6 +487,15 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
     </section>
       <details class="gloss" id="gloss"><summary>Непонятные сокращения и термины</summary><p>Слова с пунктирным подчёркиванием можно нажать или навести на них курсор, появится пояснение. Весь список ниже.</p><dl></dl></details>
     </div>
+    <nav class="section-reader" id="section-reader" aria-label="Навигация по разделу" hidden>
+      <button type="button" id="reader-prev" aria-label="Предыдущий раздел">←</button>
+      <div class="section-reader-main">
+        <div><strong id="reader-title"></strong><button type="button" id="reader-all">Все разделы</button></div>
+        <div class="reader-progress"><i id="reader-progress"></i></div>
+        <small id="reader-status"></small>
+      </div>
+      <button type="button" id="reader-next" aria-label="Следующий раздел">→</button>
+    </nav>
     <div id="list">
       <div class="status" id="status"><span id="status-t">Загрузка текста …</span><div class="bar"><i id="status-b"></i></div></div>
       <p class="relaxed" id="relaxed" hidden>Точных совпадений нет. Показаны пункты, где есть хотя бы одно из слов запроса.</p>
@@ -847,7 +858,7 @@ function spy(){
     const firstBlock = BLOCKS.find(b => b.el.offsetParent)?.el;
     if (firstBlock && firstBlock.getBoundingClientRect().top > line){
       if (spyLast === '') return;
-      spyLast = ''; tocSync('');
+      spyLast = ''; tocSync(''); updateReaderNav('');
       history.replaceState(history.state, '', location.pathname + location.search);
       return;
     }
@@ -874,7 +885,7 @@ function spy(){
     hit = heads.find(([t]) => t >= top && t < innerHeight)?.[1]
       || heads.filter(([t]) => t < top).pop()?.[1] || '';
     if (hit === spyLast) return;
-    spyLast = hit; tocSync(hit);
+    spyLast = hit; tocSync(hit); updateReaderNav(hit);
     history.replaceState(history.state, '', location.pathname + location.search + (hit ? '#' + hit : ''));
   }, 160);
 }
@@ -1437,6 +1448,26 @@ function wireSuggest() {
   document.addEventListener('scroll', close, { passive: true });
 }
 
+function updateReaderNav(hit = ''){
+  const nav = document.getElementById('section-reader');
+  const selected = state.sec.size === 1 ? [...state.sec][0] : '';
+  nav.hidden = !selected;
+  if (!selected) return;
+  const order = [...SECS.keys()], at = order.indexOf(selected), sec = SECS.get(selected);
+  document.getElementById('reader-title').textContent = selected + '. ' + sec.title;
+  const m = /^e-(\d+)-(\d+)$/.exec(hit || '');
+  const current = m && m[1] === selected ? Number(m[2]) : 0;
+  document.getElementById('reader-status').textContent = current ? 'Пункт ' + current + ' из ' + sec.entries.length : 'В разделе ' + sec.entries.length + ' пунктов';
+  document.getElementById('reader-progress').style.width = (current ? Math.min(100, current / sec.entries.length * 100) : 0) + '%';
+  document.getElementById('reader-prev').disabled = at <= 0;
+  document.getElementById('reader-next').disabled = at < 0 || at >= order.length - 1;
+}
+function moveReaderSection(delta){
+  const order = [...SECS.keys()], current = state.sec.size === 1 ? [...state.sec][0] : '', at = order.indexOf(current);
+  const next = order[at + delta]; if (!next) return;
+  state.sec.clear(); state.sec.add(next); spyLast = ''; apply();
+  requestAnimationFrame(() => gotoItem('s' + next, ''));
+}
 function apply(){
   fillJump();
   const t0 = performance.now();
@@ -1475,7 +1506,7 @@ function apply(){
   for (const [n, sub] of TOC_SEC){ const none = !tocSec[n]; if (sub.lastElementChild.hidden === none) sub.lastElementChild.hidden = !none; }
   document.getElementById('cnt').textContent = shown;
   document.getElementById('empty').hidden = shown !== 0;
-  syncControls(); writeUrl(); tocSync(spyLast);
+  syncControls(); writeUrl(); tocSync(spyLast); updateReaderNav(spyLast);
   PERF.log('apply', t0, `命中 ${shown} 条，重渲染 ${rerender} 张`);
 }
 
@@ -1497,6 +1528,9 @@ function wire(){
   const pb = document.getElementById("print-btn"); if (pb) pb.addEventListener("click", () => window.print());
   const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop'), mb = document.getElementById('menu');
   const ft = document.getElementById('filters-toggle');
+  document.getElementById('reader-prev').addEventListener('click', () => moveReaderSection(-1));
+  document.getElementById('reader-next').addEventListener('click', () => moveReaderSection(1));
+  document.getElementById('reader-all').addEventListener('click', () => { state.sec.clear(); spyLast=''; apply(); scrollTo({top:document.getElementById('list').offsetTop - 72, behavior:'smooth'}); });
   ft.addEventListener('click', () => { const on = !sb.classList.contains('filters-open'); sb.classList.toggle('filters-open', on); ft.setAttribute('aria-expanded', String(on)); });
   const clearPreset = () => { state.q=''; for (const d of DIMS) state[d].clear(); state.dispute=false; state.todo=false; };
   document.querySelector('.quick-start').addEventListener('click', e => {
