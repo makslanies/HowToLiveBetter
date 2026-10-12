@@ -324,7 +324,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
 @media (max-width:960px){
   :root{--nav-h:56px}
   .nav-in{padding:0 16px;gap:10px}
-  .title span{display:none}
+  .title > span:not(.logo){display:none}
   .search{max-width:none}
   .search kbd{display:none}
   .menu-btn{display:grid}
@@ -358,7 +358,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
 <header class="nav">
   <div class="nav-in">
     <button class="icon-btn menu-btn" id="menu" aria-label="Открыть фильтры" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg></button>
-    <a class="title" href="./"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Руководство по жизни с высокой отдачей<span class="zh"> (高性价比人生指南)</span></span></a>
+    <a class="title" href="./" aria-label="Руководство по жизни с высокой отдачей (高性价比人生指南)"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Руководство по жизни с высокой отдачей<span class="zh"> (高性价比人生指南)</span></span></a>
     <label class="search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5" stroke-linecap="round"/></svg>
       <input id="q" type="search" placeholder="Поиск по пунктам" autocomplete="off" aria-label="Поиск по пунктам">
