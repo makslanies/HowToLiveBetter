@@ -16,7 +16,7 @@ const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : d; };
 const OUT = opt('out', 'dist-ru');
 const REPO = opt('repo-url', 'https://github.com/makslanies/HowToLiveBetter').replace(/\/$/, '');
-const SITE = opt('site-url', 'https://makslanies.github.io/HowToLiveBetter/');
+const SITE = opt('site-url', 'https://howtolivebetter.ru/');
 const CHECK = args.includes('--check');
 // PDF для скачивания (книга, разделы, пункты) собирает Chrome; без него или с --no-pdf ссылок на PDF на сайте нет
 const WANT_PDF = !CHECK && !args.includes('--no-pdf') && !!findChrome();

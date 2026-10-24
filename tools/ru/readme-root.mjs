@@ -8,7 +8,7 @@ import { validate } from './validate.mjs';
 import { parseBook, keyOf } from './parse.mjs';
 
 const a = process.argv.slice(2); const opt = (n, d) => { const i = a.indexOf(`--${n}`); return i >= 0 ? a[i + 1] : d; };
-const SITE = opt('site', 'https://makslanies.github.io/HowToLiveBetter/').replace(/\/?$/, '/');
+const SITE = opt('site', 'https://howtolivebetter.ru/').replace(/\/?$/, '/');
 const REPO = opt('repo', 'https://github.com/makslanies/HowToLiveBetter').replace(/\/$/, '');
 const UP = 'https://github.com/eternity4719/HowToLiveBetter';
 const st = validate().stats;

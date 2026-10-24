@@ -118,7 +118,7 @@ ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
   w(out, 'privacy/index.html', page({ root: '../', title: `Политика конфиденциальности и cookie · ${TITLE}`, desc: 'Какие данные собирает сайт, как работает Яндекс Метрика и как отказаться от cookie.', canonical: `${site}privacy/`, body: fillIn(tpl), ld: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Политика конфиденциальности и cookie', url: `${site}privacy/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` } } }));
 
   // ---- корневые файлы домена ----
-  const root = site.replace(/\/[^/]+\/?$/, '/');                 // https://makslanies.github.io/
+  const root = site;                                              // сайт открыт из корня домена: https://howtolivebetter.ru/
   w(rootOut, 'robots.txt', robotsTxt(site));
   w(rootOut, 'llms.txt', readFileSync(join(out, 'llms.txt'), 'utf8'));
   w(rootOut, 'ai/summary.json', readFileSync(join(out, 'ai/summary.json'), 'utf8'));

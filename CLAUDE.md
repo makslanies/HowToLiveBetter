@@ -1,6 +1,6 @@
 # Руководство по жизни с высокой отдачей (高性价比人生指南) · правила работы
 
-Это русская версия китайской книги «高性价比人生指南» (оригинал: https://github.com/eternity4719/HowToLiveBetter). Репозиторий: https://github.com/makslanies/HowToLiveBetter. Сайт: https://makslanies.github.io/HowToLiveBetter/. Автор русской версии: Максим Ланиес.
+Это русская версия китайской книги «高性价比人生指南» (оригинал: https://github.com/eternity4719/HowToLiveBetter). Репозиторий: https://github.com/makslanies/HowToLiveBetter. Сайт: https://howtolivebetter.ru/ (свой сервер, см. «Публикация»). Автор русской версии: Максим Ланиес.
 
 Правила ниже обязательны для любой работы в этом репозитории. Прочитайте их целиком перед правкой. Правила китайского оригинала (формат пункта, уровни доказательств, расчёт выгоды) лежат в его CLAUDE.md. Здесь они сжаты до того, что нужно русской версии. Прежний полный текст этого файла остался в истории git (коммит `40677eb`).
 
@@ -24,7 +24,7 @@
 - `.claude/skills/` и `skills/`: навыки для агентов (см. «Навыки»).
 - Каталог `dist-ru/` и `dist/`: результат сборки, в git не входит.
 
-Домен-корень `makslanies.github.io` обслуживает отдельный репозиторий `makslanies/makslanies.github.io` (там `robots.txt`, `llms.txt`, файл подтверждения Яндекса). Файлы корня домена собирает `tools/ru/geo.mjs` в `dist-ru/root`, на сервер их кладут вручную.
+Сайт открыт из корня домена `howtolivebetter.ru`. `robots.txt` и `llms.txt` попадают в `dist-ru/site` и выкладываются скриптом. `.well-known/ai.txt` и `ai/` лежат только в `dist-ru/root` (`tools/ru/geo.mjs`), скрипт деплоя их не копирует: если они меняются, скопируйте в каталог сайта на сервере вручную.
 
 ## Формат пункта
 
@@ -109,11 +109,20 @@ node --test tools/ru/country-fields.test.mjs tools/ru/prices.test.mjs   # обя
 
 - Ветка `main`. Удалённый репозиторий для публикации называется `fork` (`makslanies/HowToLiveBetter`), `origin` это upstream.
 - Автор коммитов: `makslanies <makslanies@users.noreply.github.com>`. Сообщения коммитов по-русски, по смыслу, без ссылок на тикеты. В конце сообщения добавляйте строку соавторства, если её требует среда.
-- После пуша GitHub Actions («Русская версия») собирает и публикует сайт примерно за минуту-две. PDF по разделам и пунктам собирает отдельный шаг.
+- **Публикация сайта только на свой сервер.** GitHub Pages и workflow «Русская версия» удалены (коммит `a5fae42`): пуш в `main` ничего не публикует. Выкладка: `tools/ru/deploy/deploy-server.sh --build` (сборка и выкладка) или без `--build`, если `dist-ru/site` уже собран; `--dry-run` показывает изменения без записи.
+  - Сервер `vm-voly` (ssh-алиас в `~/.ssh/config`, 88.218.67.164, пользователь `user1`). Сайт раздаёт контейнер `howtolivebetter` (nginx:1.27-alpine, порт 127.0.0.1:8120). Его read-only bind mount: `/home/user1/projects/howtolivebetter/site` → `/usr/share/nginx/html`. Конфиг контейнера `/home/user1/projects/howtolivebetter/nginx.conf` совпадает с `tools/ru/deploy/nginx.conf`.
+  - Публичный адрес: https://howtolivebetter.ru/ (через nginx хоста, `/etc/nginx/sites-enabled/howtolivebetter.ru.conf`).
+  - Скрипт синхронизирует `dist-ru/site` с `--delete`, но исключает `9ce6be1c87be61d9e769df6f1921395b.txt` (файл подтверждения домена на сервере). Новые файлы в корень сайта добавляйте в исключения, если их нет в сборке.
+  - Другие контейнеры на `vm-voly` (twenty, chatwoot, freepbx и т. д.) не трогать.
+- PDF по разделам и пунктам собирает `build.mjs` (шаг сборки, отдельного workflow нет).
 - Не пушить `ru-work/`, `.env`, ключи, `dist-ru/`, `.agents/`, `.claude/autoharness/`. В `.gitignore` уже есть шаблоны `commanding-way-*.json`, `*service-account*.json`, `*-credentials.json`.
 - Не использовать `git push --force` и не переписывать историю без прямого разрешения. Один раз так делали, чтобы убрать `ru-work` из коммита.
 - Яндекс Метрика (счётчик 113465970) подключается только после согласия посетителя (`tools/ru/spa/analytics.js`). Цели описаны в этом же файле и созданы в Метрике через API.
 - Вебмастер Яндекса, Search Console и 2index настраиваются через API (токены в `.env`). Переобход страниц и отправку карт сайта делайте только по прямой просьбе.
+- **2index.ninja (индексация).** Документация: https://2index.ninja/api-documentation. База `https://2index.ninja/api/v1/`, авторизация `Authorization: Bearer <2INDEX_TOKEN>` (токен берётся из `.env`, не печатать). Некоторые запросы с 403 просят заголовок `User-Agent` браузера (он уже есть в `tools/ru/index-2index.mjs`).
+  - Проверка аккаунта: `GET /account` (баланс, доступные проекты и ссылки, цена ссылки). Отправка: `POST /link/add_simple` с полями `project_name`, `links` (массив или текст), `google`, `yandex`, `bing`; проект создаётся сам. Ссылки для Google и Яндекса/Bing списываются с баланса.
+  - Скрипт: `node tools/ru/index-2index.mjs --urls <файл> ` показывает план без отправки, `--send` отправляет (пачками по 100). `--sitemap` берёт адреса из `dist-ru/site/sitemap.xml`.
+  - На 2026-10-24 на аккаунте баланс $0.80, доступных проектов 0 и доступных ссылок 0: отправлять нельзя, пока не пополнят баланс или не сменят тариф. Отправку и пополнение делает владелец.
 
 ## Секреты и доступы
 
