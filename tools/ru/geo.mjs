@@ -107,7 +107,9 @@ ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
 <p>Перевод сделан моделями ИИ с автоматической сверкой. Вычитки врачами и юристами не было, подробности — на странице <a href="../about/">«О проекте»</a>. Российский слой заполнен пока не для всех пунктов и дополняется.</p>
 <h2>Связаться</h2>
 <p>По всем вопросам и предложениям пишите на почту <a href="mailto:${MAIL}?subject=${SUBJECT}">${MAIL}</a>. Тема письма: «${SUBJECT}».</p>`;
-  const authorLd = { '@context': 'https://schema.org', '@type': 'ProfilePage', name: 'Автор', url: `${site}author/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@type': 'Person', name: 'Максим Ланиес', email: MAIL, url: OWNER.url } };
+  // Яндекс Вебмастер не принимает dateModified в виде одной даты: нужно время и пояс, например 2026-10-14T12:00:00+03:00
+  const modified = new Date().toISOString().replace(/\.\d{3}Z$/, '+00:00');
+  const authorLd = { '@context': 'https://schema.org', '@type': 'ProfilePage', name: 'Автор', url: `${site}author/`, inLanguage: 'ru', dateModified: modified, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@type': 'Person', name: 'Максим Ланиес', email: MAIL, url: OWNER.url } };
   w(out, 'author/index.html', page({ root: '../', title: `Автор · ${TITLE}`, desc: 'Максим Ланиес — автор русской версии: идея перевода, что добавлено к оригиналу, как связаться.', canonical: `${site}author/`, body: authorBody, ld: authorLd }));
 
   // ---- privacy/index.html ----

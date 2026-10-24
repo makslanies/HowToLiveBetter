@@ -62,11 +62,26 @@ cpSync('ru/book', `${OUT}/site/book`, { recursive: true });
 writeFileSync(`${OUT}/site/.nojekyll`, '');
 // подтверждение прав на сайт в Яндекс Вебмастере: файл с кодом в корне сайта
 writeFileSync(`${OUT}/site/yandex_0d7702b9fd71adfe.html`, '<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n    <body>Verification: 0d7702b9fd71adfe</body>\n</html>');
+writeFileSync(`${OUT}/site/9ce6be1c87be61d9e769df6f1921395b.txt`, '9ce6be1c87be61d9e769df6f1921395b');
 writeFileSync(`${OUT}/site/robots.txt`, `User-agent: *\nAllow: /\n${SITE ? `Sitemap: ${SITE}sitemap.xml\n` : ''}`);
 
 if (existsSync('ru/related.json')) cpSync('ru/related.json', `${OUT}/site/related.json`);
 if (existsSync('ru/scope.json')) cpSync('ru/scope.json', `${OUT}/site/scope.json`);
 if (existsSync('ru/materials.json')) cpSync('ru/materials.json', `${OUT}/site/materials.json`);
+// один файл вместо десятков book/*.md на главной (PageSpeed: total-byte-weight / LCP)
+{
+  const readme = readFileSync('ru/README.md', 'utf8');
+  const files = [...new Set([...readme.matchAll(/\]\((book\/[^)#\s]+\.md)\)/g)].map((m) => m[1]))].sort();
+  const corpus = {
+    readme,
+    parts: Object.fromEntries(files.map((f) => [f, readFileSync(`ru/${f}`, 'utf8')])),
+    scope: existsSync('ru/scope.json') ? JSON.parse(readFileSync('ru/scope.json', 'utf8')) : {},
+    related: existsSync('ru/related.json') ? JSON.parse(readFileSync('ru/related.json', 'utf8')) : {},
+    materials: existsSync('ru/materials.json') ? JSON.parse(readFileSync('ru/materials.json', 'utf8')) : {},
+  };
+  writeFileSync(`${OUT}/site/corpus.json`, JSON.stringify(corpus));
+  console.error(`  corpus.json: ${files.length} разделов, ${kb(statSync(`${OUT}/site/corpus.json`).size)}`);
+}
 // GEO: llms.txt, ai/*.json, лента, «О проекте», корневые файлы домена и разметка главной (tools/ru/geo.mjs)
 const geo = generateGeo({ out: `${OUT}/site`, rootOut: `${OUT}/root`, site: SITE, repo: REPO });
 writeFileSync(`${OUT}/site/robots.txt`, robotsTxt(SITE));

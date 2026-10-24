@@ -32,6 +32,15 @@ re(/<meta name="twitter:description" content="[^"]*">/, `<meta name="twitter:des
 // адреса оригинала и разметка поисковиков не наши
 for (const r of [/<link rel="canonical"[^>]*>\n/, /<meta property="og:url"[^>]*>\n/, /<meta property="og:image[^>]*>\n/g, /<meta name="twitter:image"[^>]*>\n/, /<script type="application\/ld\+json">[\s\S]*?<\/script>\n/]) re(r, '');
 re(/<!-- ga:start[\s\S]*?<!-- ga:end -->\n?/, '');   // чужая Google Analytics
+// PageSpeed: убрать блокирующий Inter с fonts.googleapis.com — системный шрифт, без CLS от подмены гарнитуры
+sub(`<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+`, '');
+sub('--font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;',
+  '--font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;');
+// запросы к corpus.json и прочим данным можно кэшировать браузером (раньше стояло no-cache)
+sub("fetch(path, {cache:'no-cache', signal})", "fetch(path, {cache:'force-cache', signal})");
 
 // ---------- noscript ----------
 re(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>
@@ -443,7 +452,55 @@ sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:6
   const ru = TITLE.replace(zh, '');
   s = s.split('<h1>' + TITLE + '</h1>').join('<h1>' + ru + '<span class="zh">' + zh + '</span></h1>');
   s = s.replace('</span><span>' + TITLE + '</span></a>', '</span><span>' + ru + '<span class="zh">' + zh + '</span></span></a>');
-  s = s.replace('.icon-btn:hover{', '.zh{white-space:nowrap}\n.gt small{margin-left:.4em}\n@media(max-width:1500px){.nav .zh{display:none}}\n.icon-btn:hover{');
+  s = s.replace('.icon-btn:hover{', '.zh{white-space:nowrap;font-family:inherit}\n.gt small{margin-left:.4em}\n@media(max-width:1500px){.nav .zh{display:none}}\n#list{contain:layout style}\n.doc-head h1{min-height:2.5em}\n.icon-btn:hover{');
+}
+
+// PageSpeed: один corpus.json вместо ~35 запросов book/*.md + json (см. tools/ru/build.mjs)
+{
+  const oldLoad = `    const md = EMBED ? EMBED.readme : await readText('README.md');
+    const files = [...new Set(Array.from(md.matchAll(/\\]\\((book\\/[^)]+\\.md)\\)/g), m => m[1]))].sort();
+    if (!files.length) throw new Error('empty');
+    let done = 0;
+    if (!EMBED) progress(0, files.length);
+    const parts = await Promise.all(files.map(async f => {
+      if (EMBED) {
+        const text = EMBED.parts[f];
+        if (text === undefined) throw new Error('В офлайн-копии нет '+f);
+        return text;
+      }
+      const text = await readText(f);
+      progress(++done, files.length);
+      return text;
+    }));
+    const t1 = performance.now();
+    const sections = parseReadme(parts.join('\\n\\n'));
+    if (!sections.length) throw new Error('empty');
+    MATS = EMBED ? (EMBED.materials || {}) : await readText('materials.json').then((t) => JSON.parse(t), () => ({}));
+    SCOPE = EMBED ? (EMBED.scope || {}) : await readText('scope.json').then((t) => JSON.parse(t), () => ({}));
+    RELATED = EMBED ? (EMBED.related || {}) : await readText('related.json').then((t) => JSON.parse(t), () => ({}));`;
+  const newLoad = `    let md, files, parts, pack = EMBED || null;
+    if (!pack) {
+      statusText.textContent = 'Загрузка текста …';
+      const res = await fetch('corpus.json', { cache: 'force-cache', signal: AbortSignal.timeout ? AbortSignal.timeout(60000) : undefined });
+      if (!res.ok) throw Object.assign(new Error('http '+res.status+'：corpus.json'), { net: res.status >= 500 || res.status === 429 });
+      pack = await res.json();
+    }
+    md = pack.readme;
+    files = [...new Set(Array.from(md.matchAll(/\\]\\((book\\/[^)]+\\.md)\\)/g), m => m[1]))].sort();
+    if (!files.length) throw new Error('empty');
+    parts = files.map(f => {
+      const text = pack.parts[f];
+      if (text === undefined) throw new Error((EMBED ? 'В офлайн-копии нет ' : 'В corpus.json нет ') + f);
+      return text;
+    });
+    const t1 = performance.now();
+    const sections = parseReadme(parts.join('\\n\\n'));
+    if (!sections.length) throw new Error('empty');
+    MATS = pack.materials || {};
+    SCOPE = pack.scope || {};
+    RELATED = pack.related || {};`;
+  if (!s.includes(oldLoad)) fail('нет блока загрузки corpus для замены');
+  s = s.replace(oldLoad, newLoad);
 }
 
 s = s.replace(/^[\t ]+$/gm, '');

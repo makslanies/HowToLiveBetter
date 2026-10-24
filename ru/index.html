@@ -22,9 +22,6 @@
 <meta name="twitter:title" content="Руководство по жизни с высокой отдачей (高性价比人生指南)">
 <meta name="twitter:description" content="Руководство по жизни, расставленное по выгодности: 681 пунктов о здоровье и долголетии, первой помощи, деньгах, защите от мошенников и юридических красных линиях, безработице, риске своего дела, любви и детях, поездках и навыках. В каждом пункте затраты, выгода, надёжность доказательств и первоисточник. Неофициальный русский перевод, законы и органы в тексте китайские.">
 <script>(function(){try{var s=localStorage.getItem('theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark')}catch(e){}})();</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#ffffff; --bg-alt:#f6f6f7; --bg-soft:#f6f6f7; --bg-mute:#f1f1f2; --bg-elv:#ffffff;
@@ -37,7 +34,7 @@
   --gray-1:#565a5f; --gray-soft:rgba(142,150,170,.14);
   --mark:rgba(234,179,8,.32);
   --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.06);
-  --font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
   --nav-h:64px; --side-w:272px;
   color-scheme:light;
@@ -133,9 +130,11 @@ body.plain-only .rows,body.plain-only .src,body.plain-only .suggest,body.plain-o
 @media print{.sug{display:none!important}}
 .lib-link{margin:8px 0 0;font-size:13px}.lib-link a{font-weight:600}
 .advanced-filter{display:none}.sidebar.filters-open .advanced-filter{display:block}.filters-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;margin:0 0 20px;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;background:var(--bg-elv);color:var(--t2);font-weight:600}.filters-toggle:hover{border-color:var(--brand-1);color:var(--brand-1)}.filters-toggle span{transition:transform .2s}.sidebar.filters-open .filters-toggle span{transform:rotate(180deg)}
-.zh{white-space:nowrap}
+.zh{white-space:nowrap;font-family:inherit}
 .gt small{margin-left:.4em}
 @media(max-width:1500px){.nav .zh{display:none}}
+#list{contain:layout style}
+.doc-head h1{min-height:2.5em}
 .icon-btn:hover{background:var(--bg-soft);color:var(--t1)}
 .icon-btn svg{width:20px;height:20px;fill:currentColor}
 .switch{position:relative;width:40px;height:22px;border-radius:11px;border:1px solid var(--divider);background:var(--bg-mute);transition:border-color .25s,background .25s;flex:none;margin-left:8px}
@@ -368,6 +367,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <select id="jump" class="nav-text jump" aria-label="Перейти к разделу"><option value="">Разделы…</option></select><a class="nav-text" href="library/">Библиотека</a><button type="button" class="nav-text" id="plain-toggle" aria-pressed="false" title="В карточках оставить только блок «Простыми словами»">Кратко</button><a class="nav-text" href="author/">Автор</a>
       <a class="icon-btn" href="README.md" title="Открыть README.md" aria-label="README"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6zm8 1.5V8h4.5zM8 12h8v1.5H8zm0 3.5h8V17H8z"/></svg></a>
       <a class="icon-btn" href="https://github.com/makslanies/HowToLiveBetter" target="_blank" rel="noopener" title="Русская версия на GitHub" aria-label="Репозиторий русской версии"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.6 18.3 6 18.3 6c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a>
+      <a class="icon-btn" id="pdf-btn" rel="nofollow" href="pdf/book.pdf" download title="Скачать всю книгу в PDF" aria-label="Скачать PDF"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="1.5" y="6" width="21" height="12" rx="2.5" fill="currentColor"/><text x="12" y="15.2" font-size="8.4" font-weight="800" text-anchor="middle" fill="var(--bg)" font-family="system-ui,sans-serif">PDF</text></svg></a>
       <button type="button" class="icon-btn" id="print-btn" title="Распечатать то, что сейчас показано на странице" aria-label="Печать"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M7 3h10v4H7zM5 8h14a3 3 0 0 1 3 3v6h-4v4H6v-4H2v-6a3 3 0 0 1 3-3zm3 7v4h8v-4zm10-3.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></button>
       <button class="switch" id="theme" aria-label="Тёмная тема" title="Тёмная тема"><span class="knob"><svg class="sun" viewBox="0 0 24 24"><path d="M12 4a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 13a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1zm8-6a1 1 0 1 1 0 2h-1a1 1 0 1 1 0-2zM5 11a1 1 0 1 1 0 2H4a1 1 0 1 1 0-2zm12.07-5.07a1 1 0 0 1 0 1.41l-.7.71a1 1 0 1 1-1.42-1.41l.71-.71a1 1 0 0 1 1.41 0zM8.05 16.95a1 1 0 0 1 0 1.41l-.7.71a1 1 0 1 1-1.42-1.41l.71-.71a1 1 0 0 1 1.41 0zm9.02 0l.7.71a1 1 0 1 1-1.41 1.41l-.71-.7a1 1 0 0 1 1.42-1.42zM6.34 5.93l.71.71a1 1 0 0 1-1.41 1.41l-.71-.7a1 1 0 0 1 1.41-1.42zM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg><svg class="moon" viewBox="0 0 24 24"><path d="M12.1 22c-5.5 0-10-4.5-10-10 0-4.8 3.4-8.9 8-9.8.5-.1.9.4.7.9A8 8 0 0 0 20.9 13c.5-.2 1 .2.9.7-.9 4.7-5 8.3-9.7 8.3z"/></svg></span></button>
     </div>
@@ -390,7 +390,7 @@ abbr.term:hover{border-bottom-color:var(--brand-1);color:var(--brand-1)}
       <button class="chip" data-v="unchecked" aria-pressed="false">Не проверено</button>
       <button class="chip" data-v="uni" aria-pressed="false">От страны не зависит</button>
     </div>
-    <p class="lib-link"><a href="library/">Российская библиотека: 343 официальных страниц →</a></p>
+    <p class="lib-link"><a href="library/">Российская библиотека: 352 официальных страниц →</a></p>
   </div>
   <div class="group">
     <div class="gt">Разделы</div>
@@ -1674,7 +1674,7 @@ async function readText(path, tries = 3){
     try {
       // 信号差时请求可能挂着不返回，给它一个上限，超时按可重试处理
       const signal = AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined;
-      const res = await fetch(path, {cache:'no-cache', signal});
+      const res = await fetch(path, {cache:'force-cache', signal});
       if (!res.ok){
         // 4xx 重试没意义（文件真不在），5xx 和 429 是服务端一时的事，值得再来一次
         retry = res.status >= 500 || res.status === 429;
@@ -1903,27 +1903,27 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !TIP.hid
   const EMBED = window.__CORPUS__;
   try {
     if (!EMBED && location.protocol === 'file:') throw new Error('file');
-    const md = EMBED ? EMBED.readme : await readText('README.md');
-    const files = [...new Set(Array.from(md.matchAll(/\]\((book\/[^)]+\.md)\)/g), m => m[1]))].sort();
+    let md, files, parts, pack = EMBED || null;
+    if (!pack) {
+      statusText.textContent = 'Загрузка текста …';
+      const res = await fetch('corpus.json', { cache: 'force-cache', signal: AbortSignal.timeout ? AbortSignal.timeout(60000) : undefined });
+      if (!res.ok) throw Object.assign(new Error('http '+res.status+'：corpus.json'), { net: res.status >= 500 || res.status === 429 });
+      pack = await res.json();
+    }
+    md = pack.readme;
+    files = [...new Set(Array.from(md.matchAll(/\]\((book\/[^)]+\.md)\)/g), m => m[1]))].sort();
     if (!files.length) throw new Error('empty');
-    let done = 0;
-    if (!EMBED) progress(0, files.length);
-    const parts = await Promise.all(files.map(async f => {
-      if (EMBED) {
-        const text = EMBED.parts[f];
-        if (text === undefined) throw new Error('В офлайн-копии нет '+f);
-        return text;
-      }
-      const text = await readText(f);
-      progress(++done, files.length);
+    parts = files.map(f => {
+      const text = pack.parts[f];
+      if (text === undefined) throw new Error((EMBED ? 'В офлайн-копии нет ' : 'В corpus.json нет ') + f);
       return text;
-    }));
+    });
     const t1 = performance.now();
     const sections = parseReadme(parts.join('\n\n'));
     if (!sections.length) throw new Error('empty');
-    MATS = EMBED ? (EMBED.materials || {}) : await readText('materials.json').then((t) => JSON.parse(t), () => ({}));
-    SCOPE = EMBED ? (EMBED.scope || {}) : await readText('scope.json').then((t) => JSON.parse(t), () => ({}));
-    RELATED = EMBED ? (EMBED.related || {}) : await readText('related.json').then((t) => JSON.parse(t), () => ({}));
+    MATS = pack.materials || {};
+    SCOPE = pack.scope || {};
+    RELATED = pack.related || {};
     GLOSS = parseGlossary(md);
     PERF.log('解析正文', t1, files.length + ' 个文件');
     status.remove();
