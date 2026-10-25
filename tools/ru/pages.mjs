@@ -47,6 +47,13 @@ const pdfOn = () => process.env.HLTB_PDF === '1';        // флаг читае�
 const PDF_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="1.5" y="6" width="21" height="12" rx="2.5" fill="currentColor"/><text x="12" y="15.2" font-size="8.4" font-weight="800" text-anchor="middle" fill="var(--bg)" font-family="system-ui,sans-serif">PDF</text></svg>';
 const CSS_V = createHash('sha1').update(CSS).digest('hex').slice(0, 8);
 
+// Форма «Предложить правку»: адрес обработчика (Cloudflare Worker) из HLTB_FEEDBACK_URL. Пусто = остаётся mailto.
+export function feedbackConfigJs() {
+  const endpoint = String(process.env.HLTB_FEEDBACK_URL || '').trim();
+  return `window.__HLTB_FEEDBACK__=${JSON.stringify({ endpoint })};\n`;
+}
+export const feedbackScripts = (root) => `<script src="${root}assets/feedback-config.js" defer></script>\n<script src="${root}assets/feedback.js" defer></script>`;
+
 function socialConfigJs() {
   const raw = process.env.HLTB_SOCIAL_URL;
   if (raw === 'off' || raw === '0' || raw === 'false') {
@@ -177,6 +184,8 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
   writeFileSync(join(out, 'assets/analytics.js'), readFileSync('tools/ru/spa/analytics.js', 'utf8'));
   writeFileSync(join(out, 'assets/social-config.js'), socialConfigJs());
   writeFileSync(join(out, 'assets/social.js'), readFileSync('tools/ru/spa/social.js', 'utf8'));
+  writeFileSync(join(out, 'assets/feedback-config.js'), feedbackConfigJs());
+  writeFileSync(join(out, 'assets/feedback.js'), readFileSync('tools/ru/spa/feedback.js', 'utf8'));
   if (existsSync('tools/ru/spa/og.png')) cpSync('tools/ru/spa/og.png', join(out, 'assets/og.png'));
   const image = ogImageUrl(site);
   const socialScripts = (root) => `<script src="${root}assets/social-config.js" defer></script>\n<script src="${root}assets/social.js" defer></script>`;
@@ -245,7 +254,7 @@ ${field('Выгода', 'gain')}
 ${field('Примечания', 'note')}
 <section class="src"><h2>Источники</h2>\n${srcItems}</section>
 ${(!e.ru && materials[keyOf(e)]) ? `<section class="mat"><h2>Российские материалы по теме</h2>\n<p class="note">Официальные страницы, которые нашёл автоматический поиск по теме пункта. Мы не проверяли их вручную и не утверждаем, что они подтверждают текст пункта.</p>\n<ul>${materials[keyOf(e)].map((m) => `<li><a href="${esc(m.u)}" rel="nofollow noopener" target="_blank">${esc(m.t)}</a> — ${esc(m.h)}${m.k === 'r' ? ' (справочная база закона)' : ''}</li>`).join('')}</ul></section>` : ''}
-<p class="suggest"><a href="${suggestHref(e, canonical)}">Предложить правку</a> — ошибка, устаревший закон или лучший источник.</p>
+<p class="suggest"><a href="${suggestHref(e, canonical)}" data-suggest data-sec="${e.sec}" data-n="${e.n}" data-title="${esc(e.title)}" data-url="${esc(canonical || '')}">Предложить правку</a> — ошибка, устаревший закон или лучший источник.</p>
 </article>
 ${socialBar}
 ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul>${rel.map((r) => `<li><a href="${root}p/${keyOf(r)}/">Раздел ${r.sec}, пункт ${r.n}: ${esc(r.title)}</a><span class="sub">${esc(countryStatus(r, scope[keyOf(r)]))}</span></li>`).join('')}</ul></aside>` : ''}
@@ -254,7 +263,7 @@ ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul
     const cites = [...new Set([...(e.src.matchAll(/https?:\/\/[^\s<>()；;]+/g))].map((m) => m[0].replace(/[.,;]+$/, '')))].slice(0, 8);
     const today = new Date().toISOString().slice(0, 10);
     const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: e.title.slice(0, 110), description: desc, inLanguage: 'ru', url: canonical || undefined, mainEntityOfPage: canonical || undefined, datePublished: '2026-10-06', dateModified: today, author: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, publisher: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, translator: { '@type': 'Person', name: 'makslanies', url: 'https://github.com/makslanies' }, isBasedOn: { '@type': 'Book', name: '高性价比人生指南', inLanguage: 'zh-CN', url: UPSTREAM }, isPartOf: { '@type': 'Book', name: TITLE }, articleSection: sec.title, license: 'https://creativecommons.org/licenses/by/4.0/', citation: cites.length ? cites : undefined, about: e.ru ? 'Содержит российские данные' : undefined };
-    put(`p/${keyOf(e)}`, page({ root, title: `${e.title} · раздел ${e.sec} · ${TITLE}`, desc, canonical, body, ld, image, pdf: { href: `${root}pdf/p/${keyOf(e)}.pdf`, title: 'Скачать пункт в PDF' }, scripts: socialScripts(root) }));
+    put(`p/${keyOf(e)}`, page({ root, title: `${e.title} · раздел ${e.sec} · ${TITLE}`, desc, canonical, body, ld, image, pdf: { href: `${root}pdf/p/${keyOf(e)}.pdf`, title: 'Скачать пункт в PDF' }, scripts: socialScripts(root) + '\n' + feedbackScripts(root) }));
     ARTS[keyOf(e)] = ((body.match(/<article>[\s\S]*?<\/article>/) || [''])[0]).replace(/<aside class="hltb-social"[\s\S]*?<\/aside>\n?/, '');
     (ORDER[e.sec] ||= []).push(keyOf(e));
     urls.push(`p/${keyOf(e)}/`);

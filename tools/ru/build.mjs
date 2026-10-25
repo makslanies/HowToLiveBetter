@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync, readdirSync, st
 import { spawnSync, execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { validate } from './validate.mjs';
-import { generatePages } from './pages.mjs';
+import { generatePages, feedbackScripts } from './pages.mjs';
 import { generateGeo, robotsTxt, jsonLdHome } from './geo.mjs';
 import { findChrome, buildPdf } from './pdf.mjs';
 
@@ -166,7 +166,7 @@ console.error(`  GEO: llms.txt, llms-full.txt, ai/*.json, feed.xml, about/, priv
   const gtag = readFileSync('tools/ru/spa/gtag-boot.html', 'utf8').trim() + '\n';
   h = h.replace('</head>', () => gtag + '</head>');
   h = h.replace(foot, () => '<a href="contents/">Оглавление без JavaScript</a>. <a href="privacy/">Политика конфиденциальности</a> · <a href="#cookie-settings" data-cookie-settings>Настройки cookie</a></div>');
-  h = h.replace('</body>', () => '<script src="assets/analytics.js" defer></script>\n</body>');
+  h = h.replace('</body>', () => `<script src="assets/analytics.js" defer></script>\n${feedbackScripts('')}\n</body>`);
   h = h.replace('href="about/"', () => `href="${SITE}about/"`);   // абсолютная ссылка «О проекте»: так её находят и люди, и проверяющие инструменты
   writeFileSync(f, h);
 }

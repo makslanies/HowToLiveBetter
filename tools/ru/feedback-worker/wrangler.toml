@@ -1,0 +1,16 @@
+# Worker формы «Предложить правку». Письмо уходит по SMTP с TLS (порт 465).
+# Деплой: cd tools/ru/feedback-worker && npx wrangler deploy
+# Пароль почты (в репозиторий не кладём): npx wrangler secret put SMTP_PASS
+name = "hltb-feedback"
+main = "worker.mjs"
+compatibility_date = "2026-10-01"
+
+[vars]
+SMTP_HOST = "box.voly.codes"
+SMTP_PORT = "465"
+SMTP_USER = "support@howtolivebetter.ru"
+# Кому приходят правки
+TO_EMAIL = "support@howtolivebetter.ru"
+FROM_EMAIL = "HowToLiveBetter <support@howtolivebetter.ru>"
+# Сайты, которым разрешено отправлять форму (CORS). Локальная сборка для проверки тоже указана.
+ALLOWED_ORIGINS = "https://howtolivebetter.ru,http://127.0.0.1:8080,http://localhost:8080"
