@@ -247,6 +247,7 @@ sub('при копировании и переработке укажите ав
 
 // Country-aware fields use the same model as static pages and offline output.
 const countryModel = readFileSync('tools/ru/country-fields.mjs', 'utf8').replace(/^export /gm, '');
+sub('  renderText(f.t, e.title, terms);', '  renderText(f.t.firstChild, e.title, terms);');
 sub('function renderCard(card, terms, key){', countryModel + '\n' + snip('country-card.js') + '\nfunction renderCard(card, terms, key){');
 sub('if ((m = /^- Затраты:\\s*(.*)$/.exec(line))) entry.cost = m[1];', 'if (readCountryField(entry, line)) continue;\n      else if ((m = /^- Затраты:\\s*(.*)$/.exec(line))) entry.cost = m[1];');
 sub('entry.src = m[1];', 'entry.src = m[1]; entry.srcOriginal = m[1];');
@@ -276,7 +277,7 @@ sub('<div class="gt">Доказательность <small>', '<div class="gt">�
 sub('<p>Тексты и теги берутся', '<p>Фильтры затрат и оценки относятся к исходной версии. Российские условия смотрите в полях с подписью «Россия».</p>\n    <p>Тексты и теги берутся');
 
 sub('<div class="body"></div></details>`;', '<div class="body"></div></details>\n        <p class="suggest"><a class="sg" rel="noopener">Предложить правку</a><span> — ошибка, устаревший закон или лучший источник</span></p>`;');
-sub('      const card = {e, el:c,', "      const sgl = c.querySelector('.sg'); if (sgl) { sgl.href = suggestHref(e); sgl.dataset.suggest = ''; sgl.dataset.sec = e.sec; sgl.dataset.n = e.n; sgl.dataset.title = e.title; sgl.dataset.url = location.origin + location.pathname + '#e-' + e.sec + '-' + e.n; }\n      const card = {e, el:c,");
+sub('      const card = {e, el:c,', "      c.querySelector('.card-h').insertAdjacentHTML('beforeend', '<span class=hltb-card-social></span>');\n      c.querySelector('h3.t').innerHTML = '<a href=p/' + e.sec + '-' + e.n + '/></a>';\n      const sgl = c.querySelector('.sg'); if (sgl) { sgl.href = suggestHref(e); sgl.dataset.suggest = ''; sgl.dataset.sec = e.sec; sgl.dataset.n = e.n; sgl.dataset.title = e.title; sgl.dataset.url = location.origin + location.pathname + '#e-' + e.sec + '-' + e.n; }\n      const card = {e, el:c,");
 sub('function renderCard(card, terms, key){', "function suggestHref(e){\n  const link = location.origin + location.pathname + '#e-' + e.sec + '-' + e.n;\n  return 'mailto:max0r@yandex.ru?subject=HowToLiveBetter&body=' + encodeURIComponent('Пункт: раздел ' + e.sec + ', пункт ' + e.n + '. ' + e.title + '\\n' + link + '\\n\\nЧто исправить и на какой источник опереться:\\n');\n}\nfunction renderCard(card, terms, key){");
 sub('.src summary .cnt{', '.suggest{margin:10px 0 0;font-size:13px;color:var(--t3)}.suggest a{font-weight:500}\n.src summary .cnt{');
 

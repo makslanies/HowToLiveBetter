@@ -5,7 +5,7 @@
 import { writeFileSync, appendFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { stats, faq, TITLE, UPSTREAM, OWNER, PUBLISHED } from './geo-data.mjs';
-import { page, ogImageUrl } from './pages.mjs';
+import { page, ogImageUrl, feedbackScripts } from './pages.mjs';
 import { COUNTRY_GUIDE, countrySummary } from './country-fields.mjs';
 
 const BOTS = readFileSync('tools/ru/spa/ai-bots.txt', 'utf8').split('\n').map((x) => x.trim()).filter(Boolean);
@@ -84,12 +84,12 @@ export function generateGeo({ out, rootOut, site, repo }) {
 <h2>Частые вопросы</h2>
 ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
 <h2>Связаться и сообщить об ошибке</h2>
-<p>Ошибку в тексте или устаревший закон можно сообщить через <a href="${repo}/issues" rel="noopener">раздел Issues репозитория</a>.</p>
+<p>Ошибку в тексте или устаревший закон можно сообщить через форму. <a href="mailto:max0r@yandex.ru?subject=HowToLiveBetter" data-suggest data-title="О проекте" data-url="${site}about/">Сообщить об ошибке</a></p>
 <h2>Лицензия</h2>
 <p>Текст: <a href="https://creativecommons.org/licenses/by/4.0/deed.ru" rel="noopener">CC BY 4.0</a>. Код: MIT. Обновлено: <time datetime="${today}">${today.split('-').reverse().join('.')}</time>.</p>`;
   const ld = { '@context': 'https://schema.org', '@type': 'AboutPage', name: 'О проекте', url: `${site}about/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@id': `${site}#project` } };
   const image = ogImageUrl(site);
-  w(out, 'about/index.html', page({ root: '../', title: `О проекте · ${TITLE}`, desc: cut(lead, 155), canonical: `${site}about/`, body, ld, image }));
+  w(out, 'about/index.html', page({ root: '../', title: `О проекте · ${TITLE}`, desc: cut(lead, 155), canonical: `${site}about/`, body, ld, image, scripts: feedbackScripts('../') }));
 
   // ---- author/index.html ----
   const MAIL = 'max0r@yandex.ru', SUBJECT = 'HowToLiveBetter';

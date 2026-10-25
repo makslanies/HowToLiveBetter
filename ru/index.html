@@ -1083,6 +1083,8 @@ function build(sections){
       if (e.dispute) add('danger', 'Спорно');
       if (e.todo) add('warn', 'Есть непроверенное');
       block.appendChild(c);
+      c.querySelector('.card-h').insertAdjacentHTML('beforeend', '<span class=hltb-card-social></span>');
+      c.querySelector('h3.t').innerHTML = '<a href=p/' + e.sec + '-' + e.n + '/></a>';
       const sgl = c.querySelector('.sg'); if (sgl) { sgl.href = suggestHref(e); sgl.dataset.suggest = ''; sgl.dataset.sec = e.sec; sgl.dataset.n = e.n; sgl.dataset.title = e.title; sgl.dataset.url = location.origin + location.pathname + '#e-' + e.sec + '-' + e.n; }
       const card = {e, el:c, key:null, vis:false, f:{price:c.querySelector('.price'), priceK:c.querySelector('.price-k'), scope:c.querySelector('.scope'), rel:c.querySelector('.rel'), relK:c.querySelector('.rel-k'), t:c.querySelector('.t'), cost:c.querySelector('.cost'), human:c.querySelector('.human'), gain:c.querySelector('.gain'), note:c.querySelector('.note'), src:c.querySelector('.src .body'), srcN:c.querySelector('.src summary .cnt'), more:c.querySelector('.card-more'), details:c.querySelector('.src')}};
       renderCard(card, [], '');
@@ -1240,7 +1242,7 @@ function ruCats(e){
 function renderCard(card, terms, key){
   const {e, f} = card;
   CUR_SEC = e.sec;                 // 「本节第 X 条」要按这张卡片所属的节来解析
-  renderText(f.t, e.title, terms);
+  renderText(f.t.firstChild, e.title, terms);
   const sc = SCOPE[e.sec + '-' + e.n]; const view = countryView(e, sc);
   renderCountryField(f.cost, 'cost', e, view, terms);
   f.price.hidden = f.priceK.hidden = !e.price;
