@@ -5,7 +5,7 @@
 import { writeFileSync, appendFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { stats, faq, TITLE, UPSTREAM, OWNER, PUBLISHED } from './geo-data.mjs';
-import { page } from './pages.mjs';
+import { page, ogImageUrl } from './pages.mjs';
 import { COUNTRY_GUIDE, countrySummary } from './country-fields.mjs';
 
 const BOTS = readFileSync('tools/ru/spa/ai-bots.txt', 'utf8').split('\n').map((x) => x.trim()).filter(Boolean);
@@ -88,7 +88,8 @@ ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
 <h2>Лицензия</h2>
 <p>Текст: <a href="https://creativecommons.org/licenses/by/4.0/deed.ru" rel="noopener">CC BY 4.0</a>. Код: MIT. Обновлено: <time datetime="${today}">${today.split('-').reverse().join('.')}</time>.</p>`;
   const ld = { '@context': 'https://schema.org', '@type': 'AboutPage', name: 'О проекте', url: `${site}about/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@id': `${site}#project` } };
-  w(out, 'about/index.html', page({ root: '../', title: `О проекте · ${TITLE}`, desc: cut(lead, 155), canonical: `${site}about/`, body, ld }));
+  const image = ogImageUrl(site);
+  w(out, 'about/index.html', page({ root: '../', title: `О проекте · ${TITLE}`, desc: cut(lead, 155), canonical: `${site}about/`, body, ld, image }));
 
   // ---- author/index.html ----
   const MAIL = 'max0r@yandex.ru', SUBJECT = 'HowToLiveBetter';
@@ -110,12 +111,12 @@ ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
   // Яндекс Вебмастер не принимает dateModified в виде одной даты: нужно время и пояс, например 2026-10-14T12:00:00+03:00
   const modified = new Date().toISOString().replace(/\.\d{3}Z$/, '+00:00');
   const authorLd = { '@context': 'https://schema.org', '@type': 'ProfilePage', name: 'Автор', url: `${site}author/`, inLanguage: 'ru', dateModified: modified, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@type': 'Person', name: 'Максим Ланиес', email: MAIL, url: OWNER.url } };
-  w(out, 'author/index.html', page({ root: '../', title: `Автор · ${TITLE}`, desc: 'Максим Ланиес — автор русской версии: идея перевода, что добавлено к оригиналу, как связаться.', canonical: `${site}author/`, body: authorBody, ld: authorLd }));
+  w(out, 'author/index.html', page({ root: '../', title: `Автор · ${TITLE}`, desc: 'Максим Ланиес — автор русской версии: идея перевода, что добавлено к оригиналу, как связаться.', canonical: `${site}author/`, body: authorBody, ld: authorLd, image }));
 
   // ---- privacy/index.html ----
   const tpl = readFileSync('tools/ru/spa/privacy-body.txt', 'utf8');
   const fillIn = (t) => t.replace(/\$\{(\w+)\}/g, (_, k) => ({ TITLE, OWNER_URL: OWNER.url, OWNER_NAME: OWNER.name, REPO: repo, TODAY: today, TODAY_RU: today.split('-').reverse().join('.') })[k] ?? '');
-  w(out, 'privacy/index.html', page({ root: '../', title: `Политика конфиденциальности и cookie · ${TITLE}`, desc: 'Какие данные собирает сайт, как работает Яндекс Метрика и как отказаться от cookie.', canonical: `${site}privacy/`, body: fillIn(tpl), ld: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Политика конфиденциальности и cookie', url: `${site}privacy/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` } } }));
+  w(out, 'privacy/index.html', page({ root: '../', title: `Политика конфиденциальности и cookie · ${TITLE}`, desc: 'Какие данные собирает сайт, как работают Яндекс Метрика и Google Analytics и как отказаться от cookie.', canonical: `${site}privacy/`, body: fillIn(tpl), ld: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Политика конфиденциальности и cookie', url: `${site}privacy/`, inLanguage: 'ru', dateModified: today, isPartOf: { '@id': `${site}#website` } }, image }));
 
   // ---- корневые файлы домена ----
   const root = site;                                              // сайт открыт из корня домена: https://howtolivebetter.ru/

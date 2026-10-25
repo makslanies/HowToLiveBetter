@@ -1,0 +1,17 @@
+[Unit]
+Description=HowToLiveBetter anonymous likes/reposts API
+After=network.target
+
+[Service]
+Type=simple
+User=user1
+WorkingDirectory=/home/user1/projects/howtolivebetter
+Environment=HLTB_SOCIAL_PORT=8090
+Environment=HLTB_SOCIAL_DB=/home/user1/projects/howtolivebetter/social/social.sqlite
+Environment=HLTB_SOCIAL_ORIGINS=https://howtolivebetter.ru,http://howtolivebetter.ru,http://127.0.0.1:8080,http://localhost:8080
+ExecStart=/usr/bin/node /home/user1/projects/howtolivebetter/social-server.mjs --port 8090 --db /home/user1/projects/howtolivebetter/social/social.sqlite
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -40,10 +40,20 @@ if (v.errors.length) { console.error(`\nсборка остановлена: о�
 console.error(`  записей ${v.stats.entries}, A/B/C ${v.stats.A}/${v.stats.B}/${v.stats.C}, спорных ${v.stats.disputes}, «В России» ${v.stats.russia}, сносок ${v.stats.xrefs} (битых ${v.stats.badXrefs})`);
 
 // ---- 6 (для исходников): секреты и чужая аналитика ----
-const LEAKS = [[/sk-(?:proj-)?[A-Za-z0-9_-]{20,}/, 'ключ в стиле OpenAI'], [/OPENAI_API_KEY\s*=|SREZAI_API_KEY\s*=/, 'строка из .env'], [/googletagmanager|google-analytics|G-[A-Z0-9]{8,}/, 'аналитика Google'], [/mcyyy|wechat-reward/, 'реклама или донат из оригинала']];
+const GA_OK = 'G-X3XN8KBL24';   // единственный разрешённый счётчик Google; скрипт только в assets/analytics.js после согласия
+const LEAKS = [[/sk-(?:proj-)?[A-Za-z0-9_-]{20,}/, 'ключ в стиле OpenAI'], [/OPENAI_API_KEY\s*=|SREZAI_API_KEY\s*=/, 'строка из .env'], [/mcyyy|wechat-reward/, 'реклама или донат из оригинала']];
 function scan(label, files) {
   const hits = [];
-  for (const f of files) { const t = readFileSync(f, 'utf8'); for (const [re, what] of LEAKS) if (re.test(t)) hits.push(`${f}: ${what}`); }
+  for (const f of files) {
+    const t = readFileSync(f, 'utf8');
+    const norm = f.replace(/\\/g, '/');
+    for (const [re, what] of LEAKS) if (re.test(t)) hits.push(`${f}: ${what}`);
+    // чужой GA запрещён; наш ID и gtag.js с Consent Mode — в analytics.js, gtag-boot.html и страницах сайта
+    const ids = [...t.matchAll(/\bG-[A-Z0-9]{6,}\b/g)].map((m) => m[0]);
+    const badId = ids.find((id) => id !== GA_OK);
+    if (badId) hits.push(`${f}: аналитика Google (${badId})`);
+    else if (/googletagmanager|google-analytics/i.test(t) && ids.length && ids.some((id) => id !== GA_OK)) hits.push(`${f}: аналитика Google`);
+  }
   if (hits.length) { console.error(`\nОШИБКА: ${label}:\n  ` + hits.join('\n  ')); process.exit(1); }
 }
 const srcFiles = ['ru/index.html', 'ru/README.md', ...readdirSync('ru/book').map((f) => `ru/book/${f}`)];
@@ -55,10 +65,64 @@ step(4, `статический сайт → ${OUT}/site`);
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(`${OUT}/site/book`, { recursive: true });
 let indexHtml = readFileSync('ru/index.html', 'utf8');
-if (SITE) indexHtml = indexHtml.replace('<meta name="viewport"', `<link rel="canonical" href="${SITE}">\n<meta name="viewport"`);
+if (SITE) {
+  const ogImg = `${SITE.replace(/\/?$/, '/')}assets/og.png`;
+  indexHtml = indexHtml.replace('<meta name="viewport"', `<link rel="canonical" href="${SITE}">\n<meta property="og:url" content="${SITE}">\n<meta property="og:image" content="${ogImg}">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:image" content="${ogImg}">\n<meta name="viewport"`);
+}
 writeFileSync(`${OUT}/site/index.html`, indexHtml);
 cpSync('ru/README.md', `${OUT}/site/README.md`);
 cpSync('ru/book', `${OUT}/site/book`, { recursive: true });
+// /book/ без index даёт 403 у nginx; страница-указатель ведёт на оглавление
+{
+  const base = SITE ? SITE.replace(/\/?$/, '/') : '../';
+  const home = SITE || '../';
+  // каталог без index давал 403; страница с навигацией и каноном на оглавление
+  writeFileSync(`${OUT}/site/book/index.html`, `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разделы книги · Руководство по жизни с высокой отдачей</title>
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0;url=${base}contents/">
+${SITE ? `<link rel="canonical" href="${base}contents/">\n` : ''}</head>
+<body>
+<p>Исходные файлы разделов лежат здесь для сборки. Читать книгу удобнее в <a href="${base}contents/">оглавлении</a> или на <a href="${home}">главной</a> с поиском.</p>
+</body>
+</html>
+`);
+  // страница ошибки: заметная ссылка назад (nginx error_page 404/403 → /404.html)
+  writeFileSync(`${OUT}/site/404.html`, `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Страница не найдена · Руководство по жизни с высокой отдачей</title>
+<meta name="robots" content="noindex">
+<style>
+body{margin:0;font:18px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f6f6f7;color:#222}
+main{max-width:560px;margin:12vh auto;padding:28px 24px;background:#fff;border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 8px 28px rgba(0,0,0,.06)}
+h1{font-size:26px;margin:0 0 10px}p{margin:0 0 14px;color:#444}
+nav{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+a.btn{display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600}
+a.primary{background:#3451b2;color:#fff}a.secondary{background:#eef0f7;color:#3451b2}
+</style>
+</head>
+<body>
+<main>
+<h1>Страница не найдена</h1>
+<p>Такого адреса на сайте нет. Можно вернуться на главную с поиском и фильтрами или открыть оглавление разделов.</p>
+<nav>
+<a class="btn primary" href="${home}">На главную</a>
+<a class="btn secondary" href="${base}contents/">Оглавление</a>
+<a class="btn secondary" href="${base}library/">Библиотека</a>
+<a class="btn secondary" href="${base}about/">О проекте</a>
+</nav>
+</main>
+</body>
+</html>
+`);
+}
 writeFileSync(`${OUT}/site/.nojekyll`, '');
 // подтверждение прав на сайт в Яндекс Вебмастере: файл с кодом в корне сайта
 writeFileSync(`${OUT}/site/yandex_0d7702b9fd71adfe.html`, '<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n    <body>Verification: 0d7702b9fd71adfe</body>\n</html>');
@@ -94,11 +158,13 @@ writeFileSync(`${OUT}/site/robots.txt`, robotsTxt(SITE));
   indexHtml = readFileSync(f, 'utf8');            // офлайн-версия берёт уже готовую главную
 }
 console.error(`  GEO: llms.txt, llms-full.txt, ai/*.json, feed.xml, about/, privacy/; корневые файлы домена в ${OUT}/root`);
-// Яндекс Метрика только в онлайн-версии, и только после согласия (assets/analytics.js); indexHtml для офлайн-файла остаётся без неё
+// Яндекс Метрика после согласия; Google gtag в HTML с Consent Mode (denied), после согласия — granted. Офлайн-файл без них (берёт indexHtml до этой вставки).
 {
   const f = `${OUT}/site/index.html`; let h = readFileSync(f, 'utf8');
   const foot = '<a href="contents/">Оглавление без JavaScript</a>.</div>';
-  if (!h.includes(foot) || !h.includes('</body>')) { console.error('ОШИБКА: в index.html нет подвала или </body> для счётчика'); process.exit(1); }
+  if (!h.includes(foot) || !h.includes('</body>') || !h.includes('</head>')) { console.error('ОШИБКА: в index.html нет подвала, </head> или </body> для счётчика'); process.exit(1); }
+  const gtag = readFileSync('tools/ru/spa/gtag-boot.html', 'utf8').trim() + '\n';
+  h = h.replace('</head>', () => gtag + '</head>');
   h = h.replace(foot, () => '<a href="contents/">Оглавление без JavaScript</a>. <a href="privacy/">Политика конфиденциальности</a> · <a href="#cookie-settings" data-cookie-settings>Настройки cookie</a></div>');
   h = h.replace('</body>', () => '<script src="assets/analytics.js" defer></script>\n</body>');
   h = h.replace('href="about/"', () => `href="${SITE}about/"`);   // абсолютная ссылка «О проекте»: так её находят и люди, и проверяющие инструменты

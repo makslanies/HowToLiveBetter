@@ -16,21 +16,22 @@ const re = (r, b) => { if (!r.test(s)) fail(`нет совпадения: ${r}`)
 // ---------- head ----------
 sub('<html lang="zh-CN">', '<html lang="ru">');
 const TITLE = 'Руководство по жизни с высокой отдачей (高性价比人生指南)';
+const TITLE_RU = 'Руководство по жизни с высокой отдачей';
 const DESC = 'Руководство по жизни, расставленное по выгодности: ' + stats().entries + ' пунктов о здоровье и долголетии, первой помощи, деньгах, защите от мошенников и юридических красных линиях, безработице, риске своего дела, любви и детях, поездках и навыках. В каждом пункте затраты, выгода, надёжность доказательств и первоисточник. Неофициальный русский перевод, законы и органы в тексте китайские.';
-re(/<title>.*?<\/title>/, `<title>${TITLE} · меньше денег, времени и сил, больше здоровья, денег и свободы</title>`);
+re(/<title>.*?<\/title>/, `<title>${TITLE_RU} · меньше денег, времени и сил, больше здоровья, денег и свободы</title>`);
 re(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${DESC}">`);
 re(/<meta name="keywords" content="[^"]*">/, '<meta name="keywords" content="долголетие,здоровье,доказательная медицина,экономия,защита от мошенников,первая помощь,юридические красные линии,безработица,выгодность">');
 re(/<meta name="author" content="[^"]*">/, `<meta name="author" content="${TITLE}">`);
 // подтверждение прав на сайт в Google Search Console (только на главной странице); Яндекс подтверждается файлом в корне, его кладёт build.mjs
 sub('<meta name="viewport"', '<meta name="google-site-verification" content="wLzQi1ukjxvHhg1tqMvbR_SGp3KLrD01b5IqgRD3LW4" />\n<meta name="viewport"');
-re(/<meta property="og:site_name" content="[^"]*">/, `<meta property="og:site_name" content="${TITLE}">`);
+re(/<meta property="og:site_name" content="[^"]*">/, `<meta property="og:site_name" content="${TITLE_RU}">`);
 re(/<meta property="og:locale" content="[^"]*">/, '<meta property="og:locale" content="ru_RU">');
-re(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${TITLE}">`);
+re(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${TITLE_RU}">`);
 re(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${DESC}">`);
-re(/<meta name="twitter:title" content="[^"]*">/, `<meta name="twitter:title" content="${TITLE}">`);
+re(/<meta name="twitter:title" content="[^"]*">/, `<meta name="twitter:title" content="${TITLE_RU}">`);
 re(/<meta name="twitter:description" content="[^"]*">/, `<meta name="twitter:description" content="${DESC}">`);
-// адреса оригинала и разметка поисковиков не наши
-for (const r of [/<link rel="canonical"[^>]*>\n/, /<meta property="og:url"[^>]*>\n/, /<meta property="og:image[^>]*>\n/g, /<meta name="twitter:image"[^>]*>\n/, /<script type="application\/ld\+json">[\s\S]*?<\/script>\n/]) re(r, '');
+// адреса оригинала и разметка поисковиков не наши (og:url / og:image подставит build.mjs под SITE)
+for (const r of [/<link rel="canonical"[^>]*>\n/, /<meta property="og:url"[^>]*>\n/, /<meta property="og:image[^>]*>\n/g, /<meta name="twitter:image"[^>]*>\n/, /<meta name="twitter:card"[^>]*>\n/, /<script type="application\/ld\+json">[\s\S]*?<\/script>\n/]) re(r, '');
 re(/<!-- ga:start[\s\S]*?<!-- ga:end -->\n?/, '');   // чужая Google Analytics
 // PageSpeed: убрать блокирующий Inter с fonts.googleapis.com — системный шрифт, без CLS от подмены гарнитуры
 sub(`<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,8 +46,8 @@ sub("fetch(path, {cache:'no-cache', signal})", "fetch(path, {cache:'force-cache'
 // ---------- noscript ----------
 re(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>
   <div style="max-width:760px;margin:0 auto;padding:32px 20px;line-height:1.7">
-    <h1>${TITLE}</h1>
-    <p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него: оглавление в <a href="README.md">README.md</a>, разделы в папке <a href="book/">book/</a>.</p>
+    <p><strong>${TITLE_RU}</strong></p>
+    <p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него: оглавление в <a href="README.md">README.md</a>, <a href="contents/">оглавление со ссылками на разделы</a>.</p>
   </div>
 </noscript>`);
 
@@ -90,14 +91,14 @@ sub('<button class="reset" id="reset">清空筛选</button>', '<button class="re
 re(/<div class="hint">[\s\S]*?<\/div>\n  <div class="group ad">[\s\S]*?<\/div>\n<\/aside>/, `<div class="hint">
     <p>Раздел можно выбрать только один, затраты и уровни доказательности можно отмечать по несколько. Внутри одной группы условия соединяются через «или», между группами через «и».</p>
     <p>Внутри раздела пункты идут от более выгодных к менее выгодным, поиск порядок не меняет.</p>
-    <p>Тексты и теги берутся из файлов в папке <a href="book/">book/</a>: 34 раздела.</p>
+    <p>Тексты и теги берутся из <a href="contents/">оглавления</a>: 34 раздела.</p>
   </div>
   <div class="group ad" hidden><button type="button" class="tip-open" id="tip-open" hidden></button></div>
 </aside>`);
 
 // ---------- заголовок документа ----------
 re(/<div class="doc-head">[\s\S]*?<details class="gloss" id="gloss">[\s\S]*?<\/details>/, `<div class="doc-head">
-      <h1>${TITLE}</h1>
+      <h1>${TITLE_RU}</h1>
       <p class="lead">Выберите тему или найдите один полезный пункт. Делать всё не нужно: книга расставляет варианты по выгодности, а не выдаёт список заданий.</p>
       <div class="quick-start" aria-label="Быстрый старт">
         <button type="button" data-preset="easy">Бесплатно и без усилий</button>
@@ -121,7 +122,7 @@ sub('<div><button id="reset2">清空筛选</button></div>', '<div><button id="re
 re(/<div class="foot">[\s\S]*?<\/div>\n  <\/div>\n<\/main>/, `<div class="foot">Единица счёта указана в самих пунктах: разделы 1 и 2 считают общую смертность или отдельные причины смерти, разделы 3 и 4 силы и время, раздел 5 деньги, раздел 7 деньги и социальные гарантии, разделы 8 и 9 деньги и личную свободу. Между собой они не пересчитываются. Источники проверялись по оригиналу (<a href="https://github.com/eternity4719/HowToLiveBetter/tree/main/docs">журнал проверки на китайском</a>). Текст опубликован по лицензии <a href="https://creativecommons.org/licenses/by/4.0/deed.ru">CC BY 4.0</a>: при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>.</div>
   </div>
 </main>`);
-sub('rel="noopener">在 GitHub 打开</a><button type="button" id="dm-x" aria-label="关闭">', 'rel="noopener">Открыть на GitHub</a><button type="button" id="dm-x" aria-label="Закрыть">');
+sub('<a id="dm-gh" target="_blank" rel="noopener">在 GitHub 打开</a><button type="button" id="dm-x" aria-label="关闭">', `<a id="dm-gh" href="${MY_REPO}" target="_blank" rel="noopener">Открыть на GitHub</a><button type="button" id="dm-x" aria-label="Закрыть">`);
 re(/<div id="tip-mask" hidden>[\s\S]*?<\/div>\n<\/div>\n\n<div id="xref-pop"/, '<div id="tip-mask" hidden>\n  <div id="tip-box"><button type="button" id="tip-x">×</button></div>\n</div>\n\n<div id="xref-pop"');
 sub('<button class="xp-go" type="button">跳过去</button><button class="xp-x" type="button" aria-label="关闭">', '<button class="xp-go" type="button">Перейти</button><button class="xp-x" type="button" aria-label="Закрыть">');
 
@@ -240,7 +241,8 @@ sub("  renderText(f.cost, e.cost, terms);\n", "  renderText(f.cost, e.cost, term
 }
 
 // путь к оглавлению для читателей без JavaScript и для поисковиков
-sub('<p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него:', '<p>Для фильтров на этой странице нужен JavaScript. Текст можно читать и без него: <a href="contents/">оглавление со ссылками на все разделы и пункты</a>,');
+// contents/ уже в noscript выше
+
 sub('при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>.</div>', 'при копировании и переработке укажите авторов и ссылку на <a href="https://github.com/eternity4719/HowToLiveBetter">оригинал</a>. <a href="contents/">Оглавление без JavaScript</a>.</div>');
 
 // Country-aware fields use the same model as static pages and offline output.
@@ -446,13 +448,11 @@ sub("  ft.addEventListener('click',", "  wireResume();\n  document.getElementByI
 sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:960px){.nav-r .nav-text:not(#plain-toggle),.nav-r .icon-btn{display:none}.nav-r{gap:2px}.search{min-width:76px}.quick-start{display:grid;grid-template-columns:1fr 1fr}.quick-start button{min-height:44px;border-radius:10px}.doc-head{margin-bottom:18px}.doc-head .lead{font-size:15px}.reader-guide{margin-top:14px}.content{padding-top:calc(var(--nav-h) + 18px)}.card-more summary{min-height:36px;display:flex;align-items:center}}\n@media(max-width:700px){.nav-text.jump{display:none}}');
 sub('@media(max-width:700px){.nav-text.jump{display:none}}', '@media(max-width:600px){.resume-reading{display:block}.resume-reading span,.resume-reading small{display:block}.resume-reading small{margin-top:3px}.section-reader{top:calc(var(--nav-h) + 6px);grid-template-columns:38px 1fr 38px;gap:8px;margin-left:-8px;margin-right:-8px;padding:8px}.section-reader>button{width:38px;height:38px}.section-reader-main strong{font-size:13px}.section-reader-main #reader-all{font-size:11px}.reader-entry{grid-template-columns:30px minmax(0,1fr) 30px}.reader-entry button{height:28px}}\n@media(max-width:700px){.nav-text.jump{display:none}}');
 
-// ---- китайское название в скобках отдельным блоком: не рвётся при переносе, в узкой шапке скрывается, чтобы не вытеснять поиск ----
+// ---- китайское название только в шапке (не в H1): не рвётся при переносе, на узком экране скрывается ----
 {
   const zh = ' (高性价比人生指南)';
-  const ru = TITLE.replace(zh, '');
-  s = s.split('<h1>' + TITLE + '</h1>').join('<h1>' + ru + '<span class="zh">' + zh + '</span></h1>');
-  s = s.replace('</span><span>' + TITLE + '</span></a>', '</span><span>' + ru + '<span class="zh">' + zh + '</span></span></a>');
-  s = s.replace('.icon-btn:hover{', '.zh{white-space:nowrap;font-family:inherit}\n.gt small{margin-left:.4em}\n@media(max-width:1500px){.nav .zh{display:none}}\n#list{contain:layout style}\n.doc-head h1{min-height:2.5em}\n.icon-btn:hover{');
+  s = s.replace('</span><span>' + TITLE + '</span></a>', '</span><span>' + TITLE_RU + '<span class="zh">' + zh + '</span></span></a>');
+  s = s.replace('.icon-btn:hover{', '.zh{white-space:nowrap;font-family:inherit}\n.gt small{margin-left:.4em}\n@media(max-width:1500px){.nav .zh{display:none}}\n#list{contain:layout style}\n.icon-btn:hover{');
 }
 
 // PageSpeed: один corpus.json вместо ~35 запросов book/*.md + json (см. tools/ru/build.mjs)
