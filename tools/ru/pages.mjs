@@ -21,7 +21,7 @@ export const SOCIAL_CSS = `
 .hltb-social .hltb-act.is-on{background:#e2556b;border-color:#e2556b;color:#fff}
 .hltb-social .hltb-act:disabled{opacity:.55;cursor:not-allowed;transform:none}
 .hltb-social .hltb-ico{width:22px;height:22px;display:block}
-.hltb-social [data-count]{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--brand);color:#fff;font-size:11px;font-variant-numeric:tabular-nums;display:inline-grid;place-items:center;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.hltb-social [data-count]{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--t1,#222);color:var(--bg,#fff);font-size:11px;font-variant-numeric:tabular-nums;display:inline-grid;place-items:center;box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .hltb-share-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;position:relative}
 .hltb-share-menu{display:none;flex-direction:column;align-items:center;gap:10px;padding:0;border:0;background:transparent;box-shadow:none}
 .hltb-share-menu.is-open{display:flex}
