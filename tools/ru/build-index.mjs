@@ -3,7 +3,7 @@
 // переводятся подписи, названия полей, сноски «раздел N, пункт M». Аналитику, рекламу и донаты вырезает.
 //   node tools/ru/build-index.mjs
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { stats, faq } from './geo-data.mjs';
+import { stats, faq, pluralPunkt } from './geo-data.mjs';
 import { COUNTRY_GUIDE } from './country-fields.mjs';
 
 // репозиторий русской версии (ссылка в шапке); оригинал остаётся только в подвале и README как указание авторов
@@ -17,7 +17,7 @@ const re = (r, b) => { if (!r.test(s)) fail(`нет совпадения: ${r}`)
 sub('<html lang="zh-CN">', '<html lang="ru">');
 const TITLE = 'Руководство по жизни с высокой отдачей (高性价比人生指南)';
 const TITLE_RU = 'Руководство по жизни с высокой отдачей';
-const DESC = 'Руководство по жизни, расставленное по выгодности: ' + stats().entries + ' пунктов о здоровье и долголетии, первой помощи, деньгах, защите от мошенников и юридических красных линиях, безработице, риске своего дела, любви и детях, поездках и навыках. В каждом пункте затраты, выгода, надёжность доказательств и первоисточник. Неофициальный русский перевод, законы и органы в тексте китайские.';
+const DESC = 'Руководство по жизни, расставленное по выгодности: ' + pluralPunkt(stats().entries) + ' о здоровье и долголетии, первой помощи, деньгах, защите от мошенников и юридических красных линиях, безработице, риске своего дела, любви и детях, поездках и навыках. В каждом пункте затраты, выгода, надёжность доказательств и первоисточник. Неофициальный русский перевод, законы и органы в тексте китайские.';
 re(/<title>.*?<\/title>/, `<title>${TITLE_RU} · меньше денег, времени и сил, больше здоровья, денег и свободы</title>`);
 re(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${DESC}">`);
 re(/<meta name="keywords" content="[^"]*">/, '<meta name="keywords" content="долголетие,здоровье,доказательная медицина,экономия,защита от мошенников,первая помощь,юридические красные линии,безработица,выгодность">');
@@ -235,12 +235,12 @@ sub("  renderText(f.cost, e.cost, terms);\n", "  renderText(f.cost, e.cost, term
   const e2 = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const faqHtml = faq(st).map((x) => '<h3>' + e2(x.q) + '</h3><p>' + e2(x.a) + '</p>').join('');
   const secHtml = st.secs.map((x) => '<li><a href="s/' + x.n + '/">' + x.n + '. ' + e2(x.title) + '</a> (пунктов: ' + x.entries.length + ')</li>').join('');
-  const block = '<section class="about-static" aria-label="О книге">\n      <h2>О книге</h2>\n      <p>«Руководство по жизни с высокой отдачей» — неофициальный русский перевод китайской книги «高性价比人生指南»: ' + st.entries + ' пунктов в ' + st.sections + ' разделах о здоровье, деньгах, праве, работе, семье и безопасности. Подробнее: <a href="about/">о проекте и методе</a>, <a href="contents/">оглавление</a>, <a href="llms.txt">llms.txt</a>.</p>\n      <details><summary>Частые вопросы</summary>' + faqHtml + '</details>\n      <details><summary>Разделы книги (ссылки работают без JavaScript)</summary><ol>' + secHtml + '</ol></details>\n    </section>\n      ';
+  const block = '<section class="about-static" aria-label="О книге">\n      <h2>О книге</h2>\n      <p>«Руководство по жизни с высокой отдачей» — неофициальный русский перевод китайской книги «高性价比人生指南»: ' + pluralPunkt(st.entries) + ' в ' + st.sections + ' разделах о здоровье, деньгах, праве, работе, семье и безопасности. Подробнее: <a href="about/">о проекте и методе</a>, <a href="contents/">оглавление</a>, <a href="llms.txt">llms.txt</a>.</p>\n      <details><summary>Частые вопросы</summary>' + faqHtml + '</details>\n      <details><summary>Разделы книги (ссылки работают без JavaScript)</summary><ol>' + secHtml + '</ol></details>\n    </section>\n      ';
   sub('<details class="gloss" id="gloss">', block + '<details class="gloss" id="gloss">');
   sub('.rel a{color:var(--brand-1)}', '.rel a{color:var(--brand-1)}\n.about-static{margin:20px 0}.about-static h2{font-size:18px;margin:0 0 8px}.about-static h3{font-size:15px;margin:14px 0 4px}.about-static details{margin:8px 0}.about-static summary{cursor:pointer;font-weight:600}.about-static ol{columns:2;padding-left:20px}@media(max-width:700px){.about-static ol{columns:1}}');
   sub('<div class="nav-r">', '<div class="nav-r">\n      <a class="nav-text" href="author/">Автор</a>');
   sub('.icon-btn:hover{', '.nav-text{font-size:14px;color:var(--t2);padding:0 10px;line-height:36px;border-radius:8px;white-space:nowrap}.nav-text:hover{background:var(--bg-soft);color:var(--t1);text-decoration:none}\n.icon-btn:hover{');
-  sub('<meta name="viewport"', '<link rel="alternate" type="application/atom+xml" title="'+TITLE+'" href="feed.xml">\n<meta name="viewport"');
+  sub('<meta name="viewport"', '<link rel="alternate" type="application/atom+xml" title="'+TITLE_RU+'" href="feed.xml">\n<meta name="viewport"');
 }
 
 // путь к оглавлению для читателей без JavaScript и для поисковиков
