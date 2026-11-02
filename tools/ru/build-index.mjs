@@ -42,6 +42,9 @@ sub('--font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Pin
   '--font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;');
 // запросы к corpus.json и прочим данным можно кэшировать браузером (раньше стояло no-cache)
 sub("fetch(path, {cache:'no-cache', signal})", "fetch(path, {cache:'force-cache', signal})");
+// тач-таргет кнопок шапки (фильтры, GitHub, печать, тема) до рекомендуемых ~44px вместо 36px
+sub('.icon-btn{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;color:var(--t2);transition:background .25s,color .25s}',
+  '.icon-btn{width:44px;height:44px;border-radius:8px;display:grid;place-items:center;color:var(--t2);transition:background .25s,color .25s}');
 
 // ---------- noscript ----------
 re(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>
@@ -110,7 +113,7 @@ re(/<div class="doc-head">[\s\S]*?<details class="gloss" id="gloss">[\s\S]*?<\/d
       <details class="reader-guide">
         <summary>Как устроена книга</summary>
         <p>В каждом пункте два вопроса: что вы тратите и что получаете. Получатель выгоды тоже делится на уровни: вы сами, супруг и прямые родственники, друзья и коллеги, затем незнакомцы.</p>
-        <p>Оценки выгодности, доказательности и затрат относятся к исходной версии. ${COUNTRY_GUIDE} Российские цены не означают проверку российских правил.</p>
+        <p>${COUNTRY_GUIDE}</p>
         <p>Ссылки вида «раздел 8, пункт 11» открывают связанный пункт на месте.</p>
       </details>
       <div class="stat" aria-live="polite">Показано <b id="cnt">–</b> из <span id="tot">–</span> пунктов</div>

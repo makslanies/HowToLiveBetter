@@ -16,6 +16,8 @@ const cut = (s, n) => { const t = oneLine(s); return t.length <= n ? t : t.slice
 export const robotsTxt = (site) => `# robots.txt: ИИ-краулерам разрешён весь сайт (список ботов из geo-optimizer-skill)
 User-agent: *
 Allow: /
+# Content Signals (черновик политики Cloudflare): явно разрешаем то же, что уже открыто ботам ниже
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 # PDF-копии страниц нужны читателям для скачивания, в поиске они были бы дублями страниц
 Disallow: ${new URL(site).pathname.replace(/\/?$/, '/')}pdf/
 
