@@ -4,7 +4,7 @@
 // Проверять результат можно инструментом https://github.com/Auriti-Labs/geo-optimizer-skill (geo audit --url ...).
 import { writeFileSync, appendFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { stats, faq, TITLE, UPSTREAM, OWNER, PUBLISHED } from './geo-data.mjs';
+import { stats, faq, pluralPunkt, authorPerson, TITLE, UPSTREAM, OWNER, PUBLISHED } from './geo-data.mjs';
 import { page, ogImageUrl, feedbackScripts } from './pages.mjs';
 import { COUNTRY_GUIDE, countrySummary } from './country-fields.mjs';
 
@@ -28,9 +28,9 @@ export function jsonLdHome({ site, repo, st, today }) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'WebSite', '@id': `${site}#website`, url: site, name: TITLE, inLanguage: 'ru', description: `Неофициальный русский перевод китайской книги о жизни с высокой отдачей: ${st.entries} пунктов с доказательствами и источниками.`, publisher: { '@id': `${site}#project` }, dateModified: today, potentialAction: { '@type': 'SearchAction', target: { '@type': 'EntryPoint', urlTemplate: `${site}?q={search_term_string}` }, 'query-input': 'required name=search_term_string' } },
+      { '@type': 'WebSite', '@id': `${site}#website`, url: site, name: TITLE, inLanguage: 'ru', description: `Неофициальный русский перевод китайской книги о жизни с высокой отдачей: ${pluralPunkt(st.entries)} с доказательствами и источниками.`, publisher: { '@id': `${site}#project` }, dateModified: today, potentialAction: { '@type': 'SearchAction', target: { '@type': 'EntryPoint', urlTemplate: `${site}?q={search_term_string}` }, 'query-input': 'required name=search_term_string' } },
       { '@type': 'Organization', '@id': `${site}#project`, name: `${TITLE} (русская версия)`, url: site, sameAs: [repo, UPSTREAM, OWNER.url], contactPoint: { '@type': 'ContactPoint', contactType: 'editorial', url: `${repo}/issues`, availableLanguage: 'ru' } },
-      { '@type': 'Book', '@id': `${site}#book`, name: TITLE, inLanguage: 'ru', url: site, license: 'https://creativecommons.org/licenses/by/4.0/', datePublished: PUBLISHED, dateModified: today, translator: { '@type': 'Person', name: OWNER.name, url: OWNER.url }, isBasedOn: { '@type': 'Book', name: '高性价比人生指南', inLanguage: 'zh-CN', url: UPSTREAM }, isAccessibleForFree: true, about: ['здоровье', 'долголетие', 'личные финансы', 'первая помощь', 'защита от мошенников', 'трудовое право'] },
+      { '@type': 'Book', '@id': `${site}#book`, name: TITLE, inLanguage: 'ru', url: site, license: 'https://creativecommons.org/licenses/by/4.0/', datePublished: PUBLISHED, dateModified: today, translator: authorPerson(site), isBasedOn: { '@type': 'Book', name: '高性价比人生指南', inLanguage: 'zh-CN', url: UPSTREAM }, isAccessibleForFree: true, about: ['здоровье', 'долголетие', 'личные финансы', 'первая помощь', 'защита от мошенников', 'трудовое право'] },
       { '@type': 'FAQPage', '@id': `${site}#faq`, mainEntity: f.map((x) => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) },
     ],
   };
@@ -46,7 +46,7 @@ export function generateGeo({ out, rootOut, site, repo }) {
   const st = stats(); const today = new Date().toISOString().slice(0, 10);
   const toc = tocDescriptions();
   const w = (dir, name, text) => { mkdirSync(join(dir, ...name.split('/').slice(0, -1)), { recursive: true }); writeFileSync(join(dir, name), text); };
-  const lead = `Неофициальный русский перевод китайской книги «高性价比人生指南»: ${st.entries} пунктов о здоровье, деньгах, праве, работе, семье и безопасности. В каждом пункте: что вы тратите, что получаете, насколько надёжны доказательства (A, B или C) и источники. ${COUNTRY_GUIDE}`;
+  const lead = `Неофициальный русский перевод китайской книги «高性价比人生指南»: ${pluralPunkt(st.entries)} о здоровье, деньгах, праве, работе, семье и безопасности. В каждом пункте: что вы тратите, что получаете, насколько надёжны доказательства (A, B или C) и источники. ${COUNTRY_GUIDE}`;
   const rules = `Как отвечать по этим материалам: называйте раздел и номер пункта, не выдавайте китайские нормы за российские, указывайте уровень доказательности, а при вопросах о праве, лечении и налогах напоминайте, что книга не заменяет врача или юриста.`;
 
   // ---- llms.txt ----
@@ -110,7 +110,7 @@ ${f.map((x) => `<h3>${esc(x.q)}</h3>\n<p>${esc(x.a)}</p>`).join('\n')}
 <p>По всем вопросам и предложениям пишите на почту <a href="mailto:${MAIL}?subject=${SUBJECT}">${MAIL}</a>. Тема письма: «${SUBJECT}».</p>`;
   // Яндекс Вебмастер не принимает dateModified в виде одной даты: нужно время и пояс, например 2026-10-14T12:00:00+03:00
   const modified = new Date().toISOString().replace(/\.\d{3}Z$/, '+00:00');
-  const authorLd = { '@context': 'https://schema.org', '@type': 'ProfilePage', name: 'Автор', url: `${site}author/`, inLanguage: 'ru', dateModified: modified, isPartOf: { '@id': `${site}#website` }, mainEntity: { '@type': 'Person', name: 'Максим Ланиес', email: MAIL, url: OWNER.url } };
+  const authorLd = { '@context': 'https://schema.org', '@type': 'ProfilePage', name: 'Автор', url: `${site}author/`, inLanguage: 'ru', dateModified: modified, isPartOf: { '@id': `${site}#website` }, mainEntity: { ...authorPerson(site), email: MAIL } };
   w(out, 'author/index.html', page({ root: '../', title: `Автор · ${TITLE}`, desc: 'Максим Ланиес — автор русской версии: идея перевода, что добавлено к оригиналу, как связаться.', canonical: `${site}author/`, body: authorBody, ld: authorLd, image }));
 
   // ---- privacy/index.html ----

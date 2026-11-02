@@ -4,10 +4,11 @@
 import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync, cpSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { parseBook, keyOf, LENS, LABEL } from './parse.mjs';
-import { COUNTRY_GUIDE, countryView, countrySummary, countryStatus, sourceGroups, isRu } from './country-fields.mjs';
+import { COUNTRY_GUIDE, countryView, countryStatus, sourceGroups, isRu } from './country-fields.mjs';
+import { authorPerson, pluralPunkt, TITLE } from './geo-data.mjs';
 
-const TITLE = 'Руководство по жизни с высокой отдачей (高性价比人生指南)';
 const UPSTREAM = 'https://github.com/eternity4719/HowToLiveBetter';
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const unmd = (s) => s.replace(/\\([*_])/g, '$1');
@@ -166,9 +167,10 @@ const GTAG_BOOT = readFileSync('tools/ru/spa/gtag-boot.html', 'utf8').trim() + '
 
 export const ogImageUrl = (site) => (site ? `${String(site).replace(/\/?$/, '/')}assets/og.png` : '');
 
-export function page({ root, title, desc, canonical, body, ld, pdf, image, scripts = '' }) {
+export function page({ root, title, desc, canonical, body, ld, pdf, image, scripts = '', modified }) {
   const pdfLink = pdfOn() ? `<a class="print-icon pdf-icon" rel="nofollow" href="${pdf ? pdf.href : root + 'pdf/book.pdf'}" download title="${pdf ? pdf.title : 'Скачать всю книгу в PDF'}" aria-label="Скачать PDF">${PDF_ICON}</a>` : '';
   const ogImage = image || '';
+  const modifiedAt = modified || new Date().toISOString().slice(0, 10);
   return `<!doctype html>
 <html lang="ru">
 <head>
@@ -184,7 +186,7 @@ ${canonical ? `<link rel="canonical" href="${esc(canonical)}">\n<meta property="
 ${ogImage ? `<meta property="og:image" content="${esc(ogImage)}">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:image" content="${esc(ogImage)}">` : ''}
 <link rel="stylesheet" href="${root}assets/page.css?v=${CSS_V}">
 <link rel="alternate" type="application/atom+xml" title="${TITLE}" href="${root}feed.xml">
-<meta property="article:modified_time" content="${new Date().toISOString().slice(0, 10)}">
+<meta property="article:modified_time" content="${modifiedAt}">
 ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` : ''}
 ${GTAG_BOOT}</head>
 <body>
@@ -212,9 +214,24 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
   const byKey = Object.fromEntries(all.map((e) => [keyOf(e), e]));
   const url = (p) => (site ? `${site.replace(/\/?$/, '/')}${p}` : '');
   const urls = [''];
+  const urlLastmod = {};
   let nLinks = 0, nRel = 0;
   const ARTS = {}, SECH = {}, ORDER = {};
   const put = (p, html) => { const f = join(out, p, 'index.html'); mkdirSync(dirname(f), { recursive: true }); writeFileSync(f, html); };
+  // дата реального изменения раздела (git) вместо даты сборки — иначе lastmod/dateModified
+  // у всех 722 страниц совпадают и ничего не говорят о свежести конкретного пункта
+  const buildDay = new Date().toISOString().slice(0, 10);
+  const lastmodCache = new Map();
+  const gitLastmod = (file) => {
+    if (lastmodCache.has(file)) return lastmodCache.get(file);
+    let d = buildDay;
+    try {
+      const logged = execFileSync('git', ['log', '-1', '--format=%cs', '--', file], { cwd: resolve('.'), stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+      if (logged) d = logged;
+    } catch { /* нет git или файл не отслеживается — оставляем дату сборки */ }
+    lastmodCache.set(file, d);
+    return d;
+  };
 
   mkdirSync(join(out, 'assets'), { recursive: true });
   writeFileSync(join(out, 'assets/page.css'), CSS);
@@ -252,7 +269,9 @@ export function generatePages({ out, site = '', relatedPath = 'ru/related.json' 
     const srcItems = sourceGroups(e, sc).map((g) => `${g.title === 'Источники' ? '' : `<h3>${esc(g.title)}</h3>`}<ol>${splitSrc(g.text).map((x) => `<li>${f(x)}</li>`).join('')}</ol>`).join('');
     const prev = flat[idx - 1], next = flat[idx + 1];
     const badges = [e.ratio ? badge(`Выгодность${isRu(sc) ? '' : ' исходной версии'}: ${e.ratio}`, e.ratio === 'очень высокая' || e.ratio === 'высокая' ? 'hi' : '') : '', badge(`Доказательность ${e.grade}${isRu(sc) ? '' : ' · исходная версия'}`), e.tag.lens ? badge(LENS[e.tag.lens]) : '', ...['money', 'time', 'will'].filter((d) => e.tag[d]).map((d) => badge(LABEL[d][e.tag[d]])), scopeBadge(scope[keyOf(e)], e.ru), e.dispute ? badge('Спорно', 'warn') : '', e.ru ? badge('Российские данные: частично') : ''].join('');
-    const desc = firstSentence(countrySummary(e, sc) || e.title);
+    // Сам текст, без префикса "Китай — исходная версия:" (он нужен в видимой карточке на главной,
+    // но в <meta description> съедал весь сниппет выдачи раньше, чем начиналась суть пункта).
+    const desc = firstSentence(e.human || e.gain || e.title);
     const canonical = url(`p/${keyOf(e)}/`);
     const shareUrl = canonical || `https://howtolivebetter.ru/p/${keyOf(e)}/`;
     const socialBar = socialBarHtml({ key: keyOf(e), title: e.title, url: shareUrl });
@@ -275,12 +294,20 @@ ${rel.length ? `<aside class="related"><h2>Смотрите также</h2>\n<ul
 <nav class="pager" aria-label="Соседние пункты"><span>${prev ? `← <a href="${root}p/${keyOf(prev)}/">${prev.sec}.${prev.n} ${esc(prev.title.slice(0, 50))}…</a>` : ''}</span><span>${next ? `<a href="${root}p/${keyOf(next)}/">${next.sec}.${next.n} ${esc(next.title.slice(0, 50))}…</a> →` : ''}</span></nav>
 <p class="note"><a href="${root}#e-${e.sec}-${e.n}">Открыть этот пункт в поиске с фильтрами</a> · <button type="button" class="print-btn" onclick="window.print()">Распечатать страницу</button></p>`;
     const cites = [...new Set([...(e.src.matchAll(/https?:\/\/[^\s<>()；;]+/g))].map((m) => m[0].replace(/[.,;]+$/, '')))].slice(0, 8);
-    const today = new Date().toISOString().slice(0, 10);
-    const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: e.title.slice(0, 110), description: desc, inLanguage: 'ru', url: canonical || undefined, mainEntityOfPage: canonical || undefined, datePublished: '2026-10-06', dateModified: today, author: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, publisher: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, translator: { '@type': 'Person', name: 'makslanies', url: 'https://github.com/makslanies' }, isBasedOn: { '@type': 'Book', name: '高性价比人生指南', inLanguage: 'zh-CN', url: UPSTREAM }, isPartOf: { '@type': 'Book', name: TITLE }, articleSection: sec.title, license: 'https://creativecommons.org/licenses/by/4.0/', citation: cites.length ? cites : undefined, about: e.ru ? 'Содержит российские данные' : undefined };
-    put(`p/${keyOf(e)}`, page({ root, title: `${e.title} · раздел ${e.sec} · ${TITLE}`, desc, canonical, body, ld, image, pdf: { href: `${root}pdf/p/${keyOf(e)}.pdf`, title: 'Скачать пункт в PDF' }, scripts: socialScripts(root) + '\n' + feedbackScripts(root) }));
+    const today = gitLastmod(`ru/book/${sec.file}`);
+    const author = site ? authorPerson(site) : { '@type': 'Person', name: 'Максим Ланиес' };
+    const article = { '@type': 'Article', headline: e.title.slice(0, 110), description: desc, image: image || undefined, inLanguage: 'ru', url: canonical || undefined, mainEntityOfPage: canonical || undefined, datePublished: '2026-10-06', dateModified: today, author, publisher: { '@type': 'Organization', name: `${TITLE} (русская версия)`, url: site || undefined }, translator: author, isBasedOn: { '@type': 'Book', name: '高性价比人生指南', inLanguage: 'zh-CN', url: UPSTREAM }, isPartOf: { '@type': 'Book', name: TITLE }, articleSection: sec.title, license: 'https://creativecommons.org/licenses/by/4.0/', citation: cites.length ? cites : undefined, about: e.ru ? 'Содержит российские данные' : undefined };
+    const breadcrumb = { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Оглавление', item: url('contents/') || undefined },
+      { '@type': 'ListItem', position: 2, name: `${e.sec}. ${sec.title}`, item: url(`s/${e.sec}/`) || undefined },
+      { '@type': 'ListItem', position: 3, name: e.title },
+    ] };
+    const ld = { '@context': 'https://schema.org', '@graph': [article, breadcrumb] };
+    put(`p/${keyOf(e)}`, page({ root, title: `${e.title} · раздел ${e.sec} · ${TITLE}`, desc, canonical, body, ld, image, modified: today, pdf: { href: `${root}pdf/p/${keyOf(e)}.pdf`, title: 'Скачать пункт в PDF' }, scripts: socialScripts(root) + '\n' + feedbackScripts(root) }));
     ARTS[keyOf(e)] = ((body.match(/<article>[\s\S]*?<\/article>/) || [''])[0]).replace(/<aside class="hltb-social"[\s\S]*?<\/aside>\n?/, '');
     (ORDER[e.sec] ||= []).push(keyOf(e));
     urls.push(`p/${keyOf(e)}/`);
+    urlLastmod[`p/${keyOf(e)}/`] = today;
   });
 
   // разделы
@@ -298,8 +325,10 @@ ${intro}
 <ol class="list" style="padding-left:0;list-style:none">${list}</ol>
 <p class="note"><a href="${root}?sec=${s.n}">Открыть раздел в поиске с фильтрами</a></p>`;
     SECH[s.n] = { title: s.title, intro };
-    put(`s/${s.n}`, page({ root, pdf: { href: `${root}pdf/s/${s.n}.pdf`, title: 'Скачать раздел в PDF' }, title: `${s.n}. ${s.title} · ${TITLE}`, desc: firstSentence(s.intro[0] || s.title), canonical: url(`s/${s.n}/`), body, ld: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: s.title, inLanguage: 'ru', url: url(`s/${s.n}/`) || undefined, isPartOf: { '@type': 'Book', name: TITLE } }, image }));
+    const secModified = gitLastmod(`ru/book/${s.file}`);
+    put(`s/${s.n}`, page({ root, pdf: { href: `${root}pdf/s/${s.n}.pdf`, title: 'Скачать раздел в PDF' }, title: `${s.n}. ${s.title} · ${TITLE}`, desc: firstSentence(s.intro[0] || s.title), canonical: url(`s/${s.n}/`), body, ld: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: s.title, inLanguage: 'ru', url: url(`s/${s.n}/`) || undefined, dateModified: secModified, isPartOf: { '@type': 'Book', name: TITLE } }, image, modified: secModified }));
     urls.push(`s/${s.n}/`);
+    urlLastmod[`s/${s.n}/`] = secModified;
   }
 
   // оглавление: описания разделов берём из ru/README.md
@@ -313,7 +342,7 @@ ${intro}
 <p>${all.length} пунктов в ${secs.length} разделах. В каждом пункте: что вы тратите, что получаете, насколько надёжны доказательства и откуда сведения. Для поиска и фильтров по стоимости откройте <a href="${root}">главную страницу</a>.</p>
 <p class="scope">${esc(COUNTRY_GUIDE)}</p>
 <ol class="list" style="padding-left:0;list-style:none">${items}</ol>`;
-    put('contents', page({ root, title: `Оглавление · ${TITLE}`, desc: `Оглавление: ${secs.length} разделов и ${all.length} пунктов руководства по жизни с высокой отдачей.`, canonical: url('contents/'), body, image }));
+    put('contents', page({ root, title: `Оглавление · ${TITLE}`, desc: `Оглавление: ${secs.length} разделов и ${pluralPunkt(all.length)} руководства по жизни с высокой отдачей.`, canonical: url('contents/'), body, image }));
     const libItems = existsSync('ru/library.json') ? JSON.parse(readFileSync('ru/library.json', 'utf8')) : [];
     if (libItems.length) {
       const bySec = new Map();
@@ -330,10 +359,10 @@ ${intro}
     urls.push('contents/', 'about/', 'author/', 'privacy/');
   }
 
-  // sitemap
+  // sitemap: lastmod реальный (дата последнего коммита исходного book/*.md) для пунктов
+  // и разделов; у страниц без одного исходного файла (оглавление, о проекте и т. п.) — дата сборки
   if (site) {
-    const day = new Date().toISOString().slice(0, 10);
-    writeFileSync(join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${url(u)}</loc><lastmod>${day}</lastmod></url>`).join('\n')}\n</urlset>\n`);
+    writeFileSync(join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${url(u)}</loc><lastmod>${urlLastmod[u] || buildDay}</lastmod></url>`).join('\n')}\n</urlset>\n`);
   }
 
   if (pdfOn()) { const tmp = join(dirname(out), 'pdf-tmp'); mkdirSync(tmp, { recursive: true }); writeFileSync(join(tmp, 'articles.json'), JSON.stringify({ arts: ARTS, secs: SECH, order: ORDER })); }

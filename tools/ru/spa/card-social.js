@@ -25,13 +25,38 @@
     window.__hltbSocialMount(panel);
   }
 
+  // Когда список только отрисован, десятки карточек могут пересечь порог одновременно:
+  // IntersectionObserver отдаёт их одним пакетом. Монтируем по одной за простой кадр,
+  // иначе цикл mountCard (fetch счётчиков + слушатели на карточку) даёт одну длинную
+  // задачу на весь пакет и рушит INP/TBT главной страницы.
+  var queue = [];
+  var flushScheduled = false;
+  function flushOne(deadline) {
+    var budget = deadline && deadline.timeRemaining ? deadline.timeRemaining() : 8;
+    while (queue.length && budget > 4) {
+      mountCard(queue.shift());
+      budget = deadline && deadline.timeRemaining ? deadline.timeRemaining() : 0;
+    }
+    if (queue.length) scheduleFlush();
+    else flushScheduled = false;
+  }
+  function scheduleFlush() {
+    flushScheduled = true;
+    if ('requestIdleCallback' in window) requestIdleCallback(flushOne, { timeout: 300 });
+    else setTimeout(flushOne, 16);
+  }
+  function enqueue(card) {
+    queue.push(card);
+    if (!flushScheduled) scheduleFlush();
+  }
+
   var io = new IntersectionObserver(function (entries) {
     entries.forEach(function (en) {
       if (!en.isIntersecting) return;
-      mountCard(en.target);
+      enqueue(en.target);
       io.unobserve(en.target);
     });
-  }, { rootMargin: '600px 0px' });
+  }, { rootMargin: '300px 0px' });
 
   function watch() {
     document.querySelectorAll('article.card[id^="e-"]:not([data-social-watch])').forEach(function (card) {

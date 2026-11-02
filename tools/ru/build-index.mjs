@@ -21,7 +21,7 @@ const DESC = 'Руководство по жизни, расставленное
 re(/<title>.*?<\/title>/, `<title>${TITLE_RU} · меньше денег, времени и сил, больше здоровья, денег и свободы</title>`);
 re(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${DESC}">`);
 re(/<meta name="keywords" content="[^"]*">/, '<meta name="keywords" content="долголетие,здоровье,доказательная медицина,экономия,защита от мошенников,первая помощь,юридические красные линии,безработица,выгодность">');
-re(/<meta name="author" content="[^"]*">/, `<meta name="author" content="${TITLE}">`);
+re(/<meta name="author" content="[^"]*">/, `<meta name="author" content="${TITLE_RU}">`);
 // подтверждение прав на сайт в Google Search Console (только на главной странице); Яндекс подтверждается файлом в корне, его кладёт build.mjs
 sub('<meta name="viewport"', '<meta name="google-site-verification" content="wLzQi1ukjxvHhg1tqMvbR_SGp3KLrD01b5IqgRD3LW4" />\n<meta name="viewport"');
 re(/<meta property="og:site_name" content="[^"]*">/, `<meta property="og:site_name" content="${TITLE_RU}">`);
@@ -53,7 +53,7 @@ re(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>
 
 // ---------- шапка ----------
 sub('aria-label="打开筛选"', 'aria-label="Открыть фильтры"');
-sub('<a class="title" href="./">', `<a class="title" href="./" aria-label="${TITLE}">`);
+sub('<a class="title" href="./">', `<a class="title" href="./" aria-label="${TITLE_RU}">`);
 sub('.title span{display:none}', '.title > span:not(.logo){display:none}');
 sub('<span>高性价比人生指南</span>', `<span>${TITLE}</span>`);
 sub('placeholder="搜索条目" autocomplete="off" aria-label="搜索条目"', 'placeholder="Поиск по пунктам" autocomplete="off" aria-label="Поиск по пунктам"');
