@@ -97,6 +97,7 @@ ${SITE ? `<link rel="canonical" href="${base}contents/">\n` : ''}</head>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%233451b2'/%3E%3Cpath d='M17 33l10 11 20-24' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <title>Страница не найдена · Руководство по жизни с высокой отдачей</title>
 <meta name="robots" content="noindex">
 <style>
